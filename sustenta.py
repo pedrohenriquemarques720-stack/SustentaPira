@@ -427,10 +427,11 @@ if dispositivo == "mobile":
             .cor-nome {
                 font-weight: 700;
                 font-size: 17px;
+                color: #000000;
             }
 
             .cor-desc {
-                color: #2a5e45;
+                color: #000000;
                 font-size: 13px;
             }
 
@@ -449,6 +450,15 @@ if dispositivo == "mobile":
                 margin-bottom: 5px;
             }
 
+            .evento-titulo {
+                color: #000000;
+                font-weight: 700;
+            }
+
+            .evento-local {
+                color: #000000;
+            }
+
             /* ECOPONTOS */
             .cat-ecoponto {
                 background: white;
@@ -460,10 +470,11 @@ if dispositivo == "mobile":
 
             .cat-titulo {
                 font-size: 18px;
-                color: #0f5c3f;
+                color: #000000;
                 border-bottom: 2px solid #c2e8d4;
                 padding-bottom: 5px;
                 margin-bottom: 8px;
+                font-weight: 700;
             }
 
             .ponto-item {
@@ -471,6 +482,7 @@ if dispositivo == "mobile":
                 border-bottom: 1px dashed #cbe6d7;
                 background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="%23308563"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>') left center no-repeat;
                 background-size: 14px;
+                color: #000000;
             }
 
             /* CADASTRO */
@@ -489,7 +501,7 @@ if dispositivo == "mobile":
                 display: block;
                 margin-bottom: 5px;
                 font-weight: 600;
-                color: #0f5c3f;
+                color: #000000;
             }
 
             .form-group input, .form-group select {
@@ -499,6 +511,7 @@ if dispositivo == "mobile":
                 border-radius: 40px;
                 font-size: 15px;
                 background: #f4fbf7;
+                color: #000000;
             }
 
             .btn-salvar {
@@ -522,6 +535,7 @@ if dispositivo == "mobile":
                 padding: 10px;
                 margin-bottom: 8px;
                 border-left: 4px solid #0f5c3f;
+                color: #000000;
             }
 
             .bottom-nav {
@@ -731,8 +745,8 @@ if dispositivo == "mobile":
                     html += `
                         <div class="evento-card">
                             <div class="evento-data"><i class="far fa-calendar"></i> ${p.data}</div>
-                            <div style="font-weight:700;">${p.titulo}</div>
-                            <div style="color:#467a61;"><i class="fas fa-map-marker-alt"></i> ${p.local}</div>
+                            <div class="evento-titulo" style="font-weight:700;">${p.titulo}</div>
+                            <div class="evento-local" style="color:#467a61;"><i class="fas fa-map-marker-alt"></i> ${p.local}</div>
                         </div>
                     `;
                 });
@@ -887,14 +901,14 @@ else:
         }
         .main-title {
             text-align: center;
-            color: #0f5c3f;
+            color: #000000;
             font-size: 3rem;
             font-weight: 700;
             margin-bottom: 0.5rem;
         }
         .sub-title {
             text-align: center;
-            color: #1a8c5f;
+            color: #000000;
             font-size: 1.5rem;
             margin-bottom: 2rem;
         }
@@ -906,12 +920,11 @@ else:
             border: 1px solid #c1dfd0;
             margin-bottom: 20px;
         }
-        .cor-badge {
-            display: inline-block;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            margin-right: 10px;
+        .desktop-card p {
+            color: #000000 !important;
+        }
+        .desktop-card h3 {
+            color: #000000 !important;
         }
         .evento-item {
             background: #f8fff9;
@@ -919,6 +932,13 @@ else:
             padding: 15px;
             margin-bottom: 10px;
             border-left: 4px solid #ff9f4b;
+            color: #000000;
+        }
+        .evento-item h3 {
+            color: #000000;
+        }
+        .evento-item p {
+            color: #000000;
         }
         .ecoponto-cat {
             background: #f8fff9;
@@ -926,6 +946,36 @@ else:
             padding: 15px;
             margin-bottom: 15px;
             border: 1px solid #c2e0cf;
+            color: #000000;
+        }
+        .ecoponto-cat h4 {
+            color: #000000 !important;
+        }
+        .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6 {
+            color: #000000;
+        }
+        .stTabs [data-baseweb="tab-list"] button p {
+            color: #000000;
+        }
+        .stTabs [data-baseweb="tab-panel"] p {
+            color: #000000;
+        }
+        .stAlert p {
+            color: #000000;
+        }
+        .st-bb {
+            color: #000000;
+        }
+        .row-widget stMarkdown p {
+            color: #000000;
+        }
+        div[data-testid="stMarkdownContainer"] p {
+            color: #000000;
+        }
+        div[data-testid="stMarkdownContainer"] h1, 
+        div[data-testid="stMarkdownContainer"] h2, 
+        div[data-testid="stMarkdownContainer"] h3 {
+            color: #000000;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -937,7 +987,7 @@ else:
     # Login/Cadastro na sidebar
     with st.sidebar:
         st.image("https://cdn-icons-png.flaticon.com/512/4148/4148460.png", width=150)
-        st.title("🔐 Acesso")
+        st.markdown('<h2 style="color: #000000;">🔐 Acesso</h2>', unsafe_allow_html=True)
         
         if 'usuario_logado' not in st.session_state:
             st.session_state.usuario_logado = None
@@ -990,8 +1040,8 @@ else:
                 st.rerun()
         
         st.markdown("---")
-        st.markdown("### 📍 Piracicaba - SP")
-        st.markdown("### 📅 Eventos 2026")
+        st.markdown('<h3 style="color: #000000;">📍 Piracicaba - SP</h3>', unsafe_allow_html=True)
+        st.markdown('<h3 style="color: #000000;">📅 Eventos 2026</h3>', unsafe_allow_html=True)
         st.info("Acompanhe as palestras e ações sustentáveis na cidade")
 
     # Conteúdo principal (só aparece se logado)
@@ -1003,8 +1053,8 @@ else:
             st.markdown("""
             <div style="background: white; padding: 20px; border-radius: 15px; text-align: center;">
                 <i class="fas fa-palette" style="font-size: 40px; color: #0f5c3f;"></i>
-                <h3>Cores da Coleta</h3>
-                <p>Guia completo sobre o que descartar em cada cor</p>
+                <h3 style="color: #000000;">Cores da Coleta</h3>
+                <p style="color: #000000;">Guia completo sobre o que descartar em cada cor</p>
             </div>
             """, unsafe_allow_html=True)
         
@@ -1012,8 +1062,8 @@ else:
             st.markdown("""
             <div style="background: white; padding: 20px; border-radius: 15px; text-align: center;">
                 <i class="fas fa-calendar" style="font-size: 40px; color: #0f5c3f;"></i>
-                <h3>Eventos 2026</h3>
-                <p>Palestras e atividades em Piracicaba</p>
+                <h3 style="color: #000000;">Eventos 2026</h3>
+                <p style="color: #000000;">Palestras e atividades em Piracicaba</p>
             </div>
             """, unsafe_allow_html=True)
         
@@ -1021,8 +1071,8 @@ else:
             st.markdown("""
             <div style="background: white; padding: 20px; border-radius: 15px; text-align: center;">
                 <i class="fas fa-trash-alt" style="font-size: 40px; color: #0f5c3f;"></i>
-                <h3>Ecopontos</h3>
-                <p>Locais de descarte por categoria</p>
+                <h3 style="color: #000000;">Ecopontos</h3>
+                <p style="color: #000000;">Locais de descarte por categoria</p>
             </div>
             """, unsafe_allow_html=True)
     
@@ -1031,7 +1081,7 @@ else:
         tab1, tab2, tab3, tab4 = st.tabs(["🎨 Cores da Coleta", "📅 Eventos 2026", "🗺️ Ecopontos", "📝 Meu Cadastro"])
         
         with tab1:
-            st.markdown('<h2 style="color: #0f5c3f;">Cores da Coleta Seletiva</h2>', unsafe_allow_html=True)
+            st.markdown('<h2 style="color: #000000;">Cores da Coleta Seletiva</h2>', unsafe_allow_html=True)
             
             cores = [
                 {"cor": "Azul", "desc": "Papel e papelão", "ex": "jornais, revistas, caixas", "bg": "#2196F3"},
@@ -1052,15 +1102,15 @@ else:
                         <div style="display: flex; align-items: center;">
                             <div style="width: 50px; height: 50px; background: {cor['bg']}; border-radius: 50%; margin-right: 15px;"></div>
                             <div>
-                                <h3 style="margin: 0; color: #0f5c3f;">{cor['cor']}</h3>
-                                <p style="margin: 5px 0 0;"><strong>{cor['desc']}</strong> · {cor['ex']}</p>
+                                <h3 style="margin: 0; color: #000000;">{cor['cor']}</h3>
+                                <p style="margin: 5px 0 0; color: #000000;"><strong>{cor['desc']}</strong> · {cor['ex']}</p>
                             </div>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
         
         with tab2:
-            st.markdown('<h2 style="color: #0f5c3f;">Palestras e Eventos 2026</h2>', unsafe_allow_html=True)
+            st.markdown('<h2 style="color: #000000;">Palestras e Eventos 2026</h2>', unsafe_allow_html=True)
             
             palestras = [
                 {"data": "15 mar 2026 • 19h", "titulo": "Economia Circular e Resíduos Eletrônicos", "local": "Engenho Central", "palestrante": "Dra. Ana Lúcia"},
@@ -1075,10 +1125,10 @@ else:
                 <div class="evento-item">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <span style="background: #ffd966; padding: 5px 15px; border-radius: 50px; font-weight: 600;">{p['data']}</span>
-                            <h3 style="margin: 10px 0 5px;">{p['titulo']}</h3>
-                            <p><i class="fas fa-map-marker-alt"></i> {p['local']}</p>
-                            <p><small>{p['palestrante']}</small></p>
+                            <span style="background: #ffd966; padding: 5px 15px; border-radius: 50px; font-weight: 600; color: #000000;">{p['data']}</span>
+                            <h3 style="margin: 10px 0 5px; color: #000000;">{p['titulo']}</h3>
+                            <p style="color: #000000;"><i class="fas fa-map-marker-alt"></i> {p['local']}</p>
+                            <p style="color: #000000;"><small>{p['palestrante']}</small></p>
                         </div>
                         <i class="fas fa-calendar-check" style="font-size: 40px; color: #0f5c3f;"></i>
                     </div>
@@ -1086,7 +1136,7 @@ else:
                 """, unsafe_allow_html=True)
         
         with tab3:
-            st.markdown('<h2 style="color: #0f5c3f;">Ecopontos em Piracicaba</h2>', unsafe_allow_html=True)
+            st.markdown('<h2 style="color: #000000;">Ecopontos em Piracicaba</h2>', unsafe_allow_html=True)
             
             # Busca
             busca = st.text_input("🔍 Buscar local de descarte", placeholder="Ex: pilhas, vidros, eletrônicos...")
@@ -1101,12 +1151,12 @@ else:
             }
             
             if busca:
-                st.markdown(f"### Resultados para: {busca}")
+                st.markdown(f"<h3 style='color: #000000;'>Resultados para: {busca}</h3>", unsafe_allow_html=True)
                 encontrou = False
                 for cat, locs in locais.items():
                     for l in locs:
                         if busca.lower() in l.lower() or busca.lower() in cat.lower():
-                            st.markdown(f"✅ **{cat}:** {l}")
+                            st.markdown(f"<p style='color: #000000;'>✅ **{cat}:** {l}</p>", unsafe_allow_html=True)
                             encontrou = True
                 if not encontrou:
                     st.warning("Nenhum local encontrado")
@@ -1115,14 +1165,14 @@ else:
                 for cat, locs in locais.items():
                     st.markdown(f"""
                     <div class="ecoponto-cat">
-                        <h4 style="color: #0f5c3f; border-bottom: 2px solid #c2e8d4; padding-bottom: 5px;">{cat}</h4>
+                        <h4 style="color: #000000; border-bottom: 2px solid #c2e8d4; padding-bottom: 5px;">{cat}</h4>
                     """, unsafe_allow_html=True)
                     for l in locs:
-                        st.markdown(f"📍 {l}")
+                        st.markdown(f"<p style='color: #000000;'>📍 {l}</p>", unsafe_allow_html=True)
                     st.markdown("</div>", unsafe_allow_html=True)
         
         with tab4:
-            st.markdown('<h2 style="color: #0f5c3f;">Meu Cadastro</h2>', unsafe_allow_html=True)
+            st.markdown('<h2 style="color: #000000;">Meu Cadastro</h2>', unsafe_allow_html=True)
             
             col1, col2 = st.columns(2)
             
@@ -1164,7 +1214,7 @@ else:
                 for cad in cadastros:
                     st.markdown(f"""
                     <div style="background: #e5f3ec; border-radius: 10px; padding: 10px; margin-bottom: 5px; border-left: 4px solid #0f5c3f;">
-                        <strong>{cad[3]}</strong> · {cad[4]}<br>
-                        <small>{cad[2]} | {cad[5]}</small>
+                        <strong style="color: #000000;">{cad[3]}</strong> <span style="color: #000000;">· {cad[4]}</span><br>
+                        <small style="color: #000000;">{cad[2]} | {cad[5]}</small>
                     </div>
                     """, unsafe_allow_html=True)
