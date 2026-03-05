@@ -977,6 +977,41 @@ else:
         div[data-testid="stMarkdownContainer"] h3 {
             color: #000000;
         }
+        
+        /* ESTILOS ESPECÍFICOS PARA A SIDEBAR - TEXTO BRANCO NO MODO DARK */
+        .stSidebar .stMarkdown p,
+        .stSidebar .stMarkdown h1,
+        .stSidebar .stMarkdown h2,
+        .stSidebar .stMarkdown h3,
+        .stSidebar .stMarkdown h4,
+        .stSidebar .stMarkdown h5,
+        .stSidebar .stMarkdown h6,
+        .stSidebar .stText,
+        .stSidebar .stAlert p,
+        .stSidebar div[data-testid="stMarkdownContainer"] p,
+        .stSidebar div[data-testid="stMarkdownContainer"] h1,
+        .stSidebar div[data-testid="stMarkdownContainer"] h2,
+        .stSidebar div[data-testid="stMarkdownContainer"] h3,
+        .stSidebar div[data-testid="stMarkdownContainer"] h4,
+        .stSidebar div[data-testid="stMarkdownContainer"] h5,
+        .stSidebar div[data-testid="stMarkdownContainer"] h6 {
+            color: #FFFFFF !important;
+        }
+        
+        /* Estilo específico para o texto de informação na sidebar */
+        .stSidebar .st-info p {
+            color: #FFFFFF !important;
+        }
+        
+        /* Estilo para os títulos das abas na sidebar */
+        .stSidebar .stTabs [data-baseweb="tab-list"] button p {
+            color: #000000 !important;
+        }
+        
+        /* Estilo para o texto dos botões na sidebar */
+        .stSidebar .stButton button {
+            color: #000000;
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -987,7 +1022,7 @@ else:
     # Login/Cadastro na sidebar
     with st.sidebar:
         st.image("https://cdn-icons-png.flaticon.com/512/4148/4148460.png", width=150)
-        st.markdown('<h2 style="color: #000000;">🔐 Acesso</h2>', unsafe_allow_html=True)
+        st.markdown('<h2 style="color: #FFFFFF;">🔐 Acesso</h2>', unsafe_allow_html=True)
         
         if 'usuario_logado' not in st.session_state:
             st.session_state.usuario_logado = None
@@ -1040,8 +1075,8 @@ else:
                 st.rerun()
         
         st.markdown("---")
-        st.markdown('<h3 style="color: #000000;">📍 Piracicaba - SP</h3>', unsafe_allow_html=True)
-        st.markdown('<h3 style="color: #000000;">📅 Eventos 2026</h3>', unsafe_allow_html=True)
+        st.markdown('<h3 style="color: #FFFFFF;">📍 Piracicaba - SP</h3>', unsafe_allow_html=True)
+        st.markdown('<h3 style="color: #FFFFFF;">📅 Eventos 2026</h3>', unsafe_allow_html=True)
         st.info("Acompanhe as palestras e ações sustentáveis na cidade")
 
     # Conteúdo principal (só aparece se logado)
