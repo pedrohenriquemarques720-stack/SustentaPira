@@ -3,7 +3,6 @@ import streamlit.components.v1 as components
 import pandas as pd
 import sqlite3
 from datetime import datetime
-import user_agents
 
 # Configuração da página
 st.set_page_config(
@@ -13,15 +12,26 @@ st.set_page_config(
     initial_sidebar_state="auto"
 )
 
-# Detectar dispositivo
+# Detectar dispositivo de forma simples (sem bibliotecas externas)
 def detectar_dispositivo():
-    """Detecta se é mobile ou desktop baseado no user agent"""
-    user_agent_string = st.context.headers.get("User-Agent", "")
-    user_agent = user_agents.parse(user_agent_string)
-    
-    if user_agent.is_mobile or user_agent.is_tablet:
-        return "mobile"
-    else:
+    """Detecta se é mobile baseado no user agent de forma simples"""
+    try:
+        # Tenta obter o user agent dos headers
+        user_agent = st.context.headers.get("User-Agent", "").lower()
+        
+        # Lista de palavras-chave de dispositivos mobile
+        mobile_keywords = ['android', 'iphone', 'ipad', 'ipod', 'mobile', 'phone', 'tablet', 
+                          'blackberry', 'windows phone', 'opera mini', 'iemobile']
+        
+        # Verifica se é mobile
+        for keyword in mobile_keywords:
+            if keyword in user_agent:
+                return "mobile"
+        
+        # Se não encontrar palavras-chave mobile, assume desktop
+        return "desktop"
+    except:
+        # Em caso de erro, retorna desktop como padrão
         return "desktop"
 
 # Inicializar banco de dados SQLite
@@ -78,7 +88,7 @@ init_database()
 dispositivo = detectar_dispositivo()
 
 if dispositivo == "mobile":
-    # ========== INTERFACE MOBILE (código HTML original) ==========
+    # ========== INTERFACE MOBILE ==========
     st.markdown("""
     <style>
         .stApp {
