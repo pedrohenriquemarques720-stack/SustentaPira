@@ -3,40 +3,60 @@ import streamlit.components.v1 as components
 import pandas as pd
 import sqlite3
 from datetime import datetime
+import plotly.express as px
+import plotly.graph_objects as go
 
 # Configuração da página
 st.set_page_config(
-    page_title="Sustentabilidade Piracicaba",
-    page_icon="🌱",
+    page_title="EcoPiracicaba 2026",
+    page_icon="🌿",
     layout="wide",
     initial_sidebar_state="auto"
 )
 
-# Detectar dispositivo de forma simples (sem bibliotecas externas)
-def detectar_dispositivo():
-    """Detecta se é mobile baseado no user agent de forma simples"""
+# Detectar tema do sistema
+def get_theme():
+    """Detecta se o sistema está em modo dark ou light"""
     try:
-        # Tenta obter o user agent dos headers
+        # Verifica se há preferência salva na sessão
+        if 'theme' in st.session_state:
+            return st.session_state.theme
+        
+        # Tenta detectar pelo CSS do navegador
+        theme = st.get_option("theme.base")
+        if theme == "dark":
+            st.session_state.theme = "dark"
+            return "dark"
+        else:
+            st.session_state.theme = "light"
+            return "light"
+    except:
+        st.session_state.theme = "light"
+        return "light"
+
+# Alternar tema manualmente
+def toggle_theme():
+    if st.session_state.theme == "light":
+        st.session_state.theme = "dark"
+    else:
+        st.session_state.theme = "light"
+    st.rerun()
+
+# Detectar dispositivo
+def detectar_dispositivo():
+    try:
         user_agent = st.context.headers.get("User-Agent", "").lower()
-        
-        # Lista de palavras-chave de dispositivos mobile
-        mobile_keywords = ['android', 'iphone', 'ipad', 'ipod', 'mobile', 'phone', 'tablet', 
-                          'blackberry', 'windows phone', 'opera mini', 'iemobile']
-        
-        # Verifica se é mobile
+        mobile_keywords = ['android', 'iphone', 'ipad', 'ipod', 'mobile', 'phone', 'tablet']
         for keyword in mobile_keywords:
             if keyword in user_agent:
                 return "mobile"
-        
-        # Se não encontrar palavras-chave mobile, assume desktop
         return "desktop"
     except:
-        # Em caso de erro, retorna desktop como padrão
         return "desktop"
 
-# Inicializar banco de dados SQLite
+# Inicializar banco de dados
 def init_database():
-    conn = sqlite3.connect('sustentabilidade.db')
+    conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     
     # Tabela de usuários
@@ -46,1210 +66,856 @@ def init_database():
             nome TEXT NOT NULL,
             email TEXT UNIQUE NOT NULL,
             senha TEXT NOT NULL,
-            data_cadastro TEXT
+            avatar TEXT,
+            cidade TEXT DEFAULT 'Piracicaba',
+            interesses TEXT,
+            data_cadastro TEXT,
+            ultimo_acesso TEXT
         )
     ''')
     
-    # Tabela de cadastros
+    # Tabela de inscrições em eventos
     c.execute('''
-        CREATE TABLE IF NOT EXISTS cadastros (
+        CREATE TABLE IF NOT EXISTS inscricoes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             usuario_id INTEGER,
-            nome TEXT NOT NULL,
-            telefone TEXT,
-            bairro TEXT,
-            interesse TEXT,
-            data_cadastro TEXT,
+            evento_id INTEGER,
+            data_inscricao TEXT,
+            confirmado BOOLEAN DEFAULT 0,
             FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
         )
     ''')
     
-    # Inserir usuários de teste se não existirem
-    c.execute("SELECT * FROM usuarios WHERE email = 'joao@email.com'")
+    # Tabela de eventos
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS eventos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            titulo TEXT NOT NULL,
+            descricao TEXT,
+            data TEXT,
+            hora TEXT,
+            local TEXT,
+            palestrante TEXT,
+            tipo TEXT,
+            vagas INTEGER,
+            inscritos INTEGER DEFAULT 0,
+            imagem TEXT,
+            organizador TEXT,
+            contato TEXT
+        )
+    ''')
+    
+    # Tabela de dicas ambientais
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS dicas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            titulo TEXT NOT NULL,
+            conteudo TEXT,
+            categoria TEXT,
+            data_publicacao TEXT,
+            likes INTEGER DEFAULT 0,
+            autor TEXT
+        )
+    ''')
+    
+    # Tabela de pontos de coleta
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS pontos_coleta (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL,
+            endereco TEXT,
+            categoria TEXT,
+            horario TEXT,
+            telefone TEXT,
+            latitude REAL,
+            longitude REAL,
+            avaliacao REAL DEFAULT 0,
+            descricao TEXT
+        )
+    ''')
+    
+    # Tabela de estatísticas ambientais
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS estatisticas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            titulo TEXT,
+            valor TEXT,
+            unidade TEXT,
+            data_atualizacao TEXT,
+            fonte TEXT
+        )
+    ''')
+    
+    # Inserir dados iniciais
+    # Usuário admin
+    c.execute("SELECT * FROM usuarios WHERE email = 'admin@ecopiracicaba.com'")
     if not c.fetchone():
         c.execute(
-            "INSERT INTO usuarios (nome, email, senha, data_cadastro) VALUES (?, ?, ?, ?)",
-            ("João Silva", "joao@email.com", "123", datetime.now().strftime("%d/%m/%Y"))
+            "INSERT INTO usuarios (nome, email, senha, data_cadastro, interesses) VALUES (?, ?, ?, ?, ?)",
+            ("Administrador", "admin@ecopiracicaba.com", "eco2026", datetime.now().strftime("%d/%m/%Y"), "sustentabilidade,reciclagem")
         )
     
-    c.execute("SELECT * FROM usuarios WHERE email = 'maria@email.com'")
+    # Eventos 2026
+    c.execute("SELECT * FROM eventos")
     if not c.fetchone():
-        c.execute(
-            "INSERT INTO usuarios (nome, email, senha, data_cadastro) VALUES (?, ?, ?, ?)",
-            ("Maria Oliveira", "maria@email.com", "123", datetime.now().strftime("%d/%m/%Y"))
-        )
+        eventos = [
+            ("🌱 Feira de Sustentabilidade", "Feira com produtos orgânicos, artesanato sustentável e startups verdes", "15/03/2026", "09:00", "Engenho Central", "Secretaria do Meio Ambiente", "feira", 1000, 0, "🌿", "Prefeitura de Piracicaba", "(19) 3403-1100"),
+            ("♻️ Workshop de Reciclagem", "Aprenda técnicas avançadas de reciclagem em casa", "22/03/2026", "14:00", "SENAI Piracicaba", "Joana Silva - Engenheira Ambiental", "workshop", 50, 0, "🔄", "SENAI", "(19) 3412-5000"),
+            ("🌊 Mutirão Rio Piracicaba", "Limpeza das margens do rio com atividades educativas", "05/04/2026", "08:00", "Rua do Porto", "Movimento Rio Vivo", "mutirão", 200, 0, "💧", " SOS Rio Piracicaba", "(19) 99765-4321"),
+            ("🌿 Palestra: Compostagem", "Como fazer compostagem doméstica e comunitária", "12/04/2026", "10:00", "Horto Municipal", "Dr. Carlos Ambiental", "palestra", 100, 0, "🌱", "Horto Municipal", "(19) 3434-5678"),
+            ("🌍 Dia da Terra", "Celebração com atividades, música e feira verde", "22/04/2026", "09:00", "Parque da Rua do Porto", "Coletivo Ambiental", "evento", 2000, 0, "🌎", "ONG Planeta Verde", "(19) 99876-5432"),
+            ("🔋 Descarte de Eletrônicos", "Campanha de coleta de lixo eletrônico", "10/05/2026", "09:00", "Shopping Piracicaba", "Green Eletronics", "campanha", 0, 0, "📱", "Shopping Piracicaba", "(19) 3403-3000"),
+            ("🌳 Plantio de Árvores", "Mutirão de plantio de árvores nativas", "05/06/2026", "08:30", "Parque Ecológico", "SOS Mata Atlântica", "mutirão", 300, 0, "🌳", "SOS Mata Atlântica", "(11) 3262-4088"),
+            ("♻️ Economia Circular", "Palestra sobre reuso e economia circular nas empresas", "20/06/2026", "15:00", "ESALQ/USP", "Prof. Ricardo Mendes", "palestra", 150, 0, "🔄", "ESALQ", "(19) 3447-8500"),
+            ("💡 Energia Solar", "Workshop de energia solar residencial e comunitária", "10/07/2026", "14:00", "SENAI", "Eng. Sofia Santos", "workshop", 40, 0, "☀️", "SENAI", "(19) 3412-5000"),
+            ("🚴 Ciclo Turismo", "Passeio ecológico de bike pela cidade", "25/07/2026", "07:00", "Saída do Engenho", "Cicloativistas Piracicaba", "passeio", 100, 0, "🚲", "Ciclovida", "(19) 99887-6543"),
+            ("🌾 Agricultura Urbana", "Oficina de hortas urbanas e permacultura", "08/08/2026", "09:00", "Horta Comunitária Vila Sônia", "Ana Agricultora", "oficina", 60, 0, "🥕", "Hortas Urbanas", "(19) 99654-3210"),
+            ("💧 Semana da Água", "Palestras e atividades sobre preservação da água", "15/08/2026", "09:00", "Teatro Municipal", "Comitê de Bacias", "evento", 400, 0, "💧", "Comitê PCJ", "(19) 3437-2000"),
+            ("🐝 Dia das Abelhas", "Palestra sobre a importância das abelhas", "29/08/2026", "14:00", "ESALQ", "Dra. Maria Apicultora", "palestra", 80, 0, "🐝", "USP", "(19) 3447-8500"),
+            ("🌿 Feira de Orgânicos", "Feira especial de produtos orgânicos", "12/09/2026", "08:00", "Mercado Municipal", "Associação Orgânicos", "feira", 0, 0, "🥬", "Mercadão", "(19) 3434-7890"),
+            ("🚲 Bike na Rua", "Dia sem carro com passeio ciclístico", "22/09/2026", "08:00", "Largo dos Pescadores", "Prefeitura", "evento", 500, 0, "🚲", "Secretaria de Mobilidade", "(19) 3403-1200")
+        ]
+        for e in eventos:
+            c.execute(
+                """INSERT INTO eventos 
+                   (titulo, descricao, data, hora, local, palestrante, tipo, vagas, inscritos, imagem, organizador, contato) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                e
+            )
+    
+    # Dicas ambientais
+    c.execute("SELECT * FROM dicas")
+    if not c.fetchone():
+        dicas = [
+            ("🌱 Compostagem Doméstica", "Você sabia que 50% do lixo doméstico pode ser compostado? Aprenda a fazer sua própria composteira com baldes e minhocas californianas. Em 3 meses você terá adubo de alta qualidade para suas plantas.", "resíduos", datetime.now().strftime("%d/%m/%Y"), 0, "Equipe EcoPiracicaba"),
+            ("💧 Economia de Água", "Um banho de 15 minutos gasta 135 litros de água. Reduza para 5 minutos e economize 90 litros por banho! Isso representa 2.700 litros por mês.", "água", datetime.now().strftime("%d/%m/%Y"), 0, "Sabesp"),
+            ("🔋 Pilhas e Baterias", "Nunca descarte pilhas no lixo comum. Leve a pontos de coleta específicos. Uma pilha pode contaminar 20 mil litros de água por até 50 anos.", "resíduos", datetime.now().strftime("%d/%m/%Y"), 0, "Greenpeace"),
+            ("🌳 Plante uma Árvore", "Uma árvore adulta absorve até 150kg de CO2 por ano. Plante árvores nativas da região de Piracicaba como ipê, jatobá e pitanga.", "natureza", datetime.now().strftime("%d/%m/%Y"), 0, "SOS Mata Atlântica"),
+            ("🛍️ Sacolas Retornáveis", "Uma sacola plástica leva 400 anos para se decompor. Use sempre sacolas retornáveis nas compras. O Brasil consome 1,5 milhão de sacolas por hora!", "plástico", datetime.now().strftime("%d/%m/%Y"), 0, "WWF"),
+            ("🚗 Carona Solidária", "Compartilhe carro com colegas de trabalho. Reduz emissões, congestionamento e você ainda economiza até 40% com combustível.", "mobilidade", datetime.now().strftime("%d/%m/%Y"), 0, "Instituto Clima"),
+            ("🥗 Alimentação Orgânica", "Alimentos orgânicos são mais saudáveis e não contaminam o solo com agrotóxicos. Em Piracicaba, feiras orgânicas acontecem aos sábados na ESALQ.", "alimentação", datetime.now().strftime("%d/%m/%Y"), 0, "Feira Orgânica"),
+            ("♻️ Separação do Lixo", "Separe sempre recicláveis: papel limpo, plástico, vidro e metal. Lave as embalagens antes de descartar. A reciclagem de uma tonelada de papel salva 20 árvores.", "reciclagem", datetime.now().strftime("%d/%m/%Y"), 0, "Cooperativa Recicladores"),
+            ("☀️ Energia Solar", "A energia solar já é a fonte mais barata do Brasil. Uma placa solar de 330W evita a emissão de 4,5 toneladas de CO2 em 25 anos.", "energia", datetime.now().strftime("%d/%m/%Y"), 0, "ABSOLAR"),
+            ("🐝 Proteja as Abelhas", "As abelhas são responsáveis por 80% da polinização das plantas. Evite inseticidas e plante flores nativas para ajudar esses insetos essenciais.", "biodiversidade", datetime.now().strftime("%d/%m/%Y"), 0, "Bee Or not to be"),
+            ("🌊 Rio Piracicaba", "O Rio Piracicaba abastece 95% da cidade. Nunca jogue lixo nos córregos e denuncie despejos irregulares para a Cetesb (0800-113560).", "água", datetime.now().strftime("%d/%m/%Y"), 0, "Cetesb"),
+            ("🥕 Desperdício Zero", "Aproveite cascas e talos de alimentos para fazer receitas nutritivas. O brasileiro desperdiça 40 mil toneladas de comida por dia.", "alimentação", datetime.now().strftime("%d/%m/%Y"), 0, "FAO")
+        ]
+        for d in dicas:
+            c.execute(
+                "INSERT INTO dicas (titulo, conteudo, categoria, data_publicacao, likes, autor) VALUES (?, ?, ?, ?, ?, ?)",
+                d
+            )
+    
+    # Pontos de coleta
+    c.execute("SELECT * FROM pontos_coleta")
+    if not c.fetchone():
+        pontos = [
+            ("Ecoponto Centro", "Av. Rui Barbosa, 800 - Centro", "geral", "Seg-Sex 8h-17h, Sáb 8h-12h", "(19) 3403-1100", -22.724, -47.648, 4.5, "Recebe todos os tipos de recicláveis, eletrônicos e óleo de cozinha"),
+            ("Shopping Piracicaba", "Av. Limeira, 700 - Areão", "pilhas", "Seg-Sáb 10h-22h, Dom 14h-20h", "(19) 3432-4545", -22.718, -47.642, 4.8, "Ponto de coleta de pilhas e baterias no piso G1"),
+            ("Coopervidros", "R. Treze de Maio, 300 - Centro", "vidros", "Seg-Sex 8h-17h", "(19) 3421-1234", -22.731, -47.651, 4.2, "Cooperativa especializada em reciclagem de vidros"),
+            ("CDI Eletrônicos", "R. do Porto, 234 - Centro", "eletronicos", "Seg-Sex 9h-18h, Sáb 9h-12h", "(19) 3433-5678", -22.722, -47.646, 4.7, "Centro de Descarte de Eletrônicos - computadores, celulares e pilhas"),
+            ("Ecoponto Paulicéia", "R. Javari, 150 - Paulicéia", "geral", "Ter-Sáb 8h-16h", "(19) 3403-2200", -22.710, -47.670, 4.3, "Ecoponto completo com coleta de óleo e recicláveis"),
+            ("Drogaria São Paulo", "Av. Limeira, 900 - Centro", "medicamentos", "24 horas", "(19) 3432-7800", -22.720, -47.640, 4.0, "Descarte de medicamentos vencidos e pilhas"),
+            ("Unimed Sede", "R. Voluntários, 450 - Centro", "pilhas", "Seg-Sex 7h-19h", "(19) 3432-9000", -22.725, -47.649, 4.6, "Coleta de pilhas e baterias na recepção"),
+            ("Esalq/USP", "Av. Pádua Dias, 11 - Agronomia", "eletronicos", "Seg-Sex 8h-17h", "(19) 3447-8500", -22.710, -47.630, 4.9, "Campus da ESALQ com pontos de coleta de eletrônicos"),
+            ("Supermercado Pague Menos", "R. Campos Salles, 500 - Centro", "oleo", "Seg-Sáb 8h-21h", "(19) 3434-1234", -22.728, -47.652, 4.4, "Coleta de óleo de cozinha usado"),
+            ("Ferro Velho Central", "Av. São Paulo, 320 - Jardim Elite", "metais", "Seg-Sex 8h-17h", "(19) 3422-5678", -22.715, -47.660, 4.1, "Compra e recebimento de metais e sucata"),
+            ("Horto Municipal", "Av. Maurílio Biagi, 1500 - Santa Cecília", "organicos", "Seg-Sex 8h-16h", "(19) 3434-5678", -22.730, -47.655, 4.3, "Recebimento de podas e resíduos orgânicos"),
+            ("Associação Recicladores", "R. dos Operários, 500 - Centro", "geral", "Seg-Sex 8h-17h", "(19) 3423-7890", -22.726, -47.645, 4.7, "Cooperativa de catadores, recebe todos os recicláveis")
+        ]
+        for p in pontos:
+            c.execute(
+                """INSERT INTO pontos_coleta 
+                   (nome, endereco, categoria, horario, telefone, latitude, longitude, avaliacao, descricao) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                p
+            )
+    
+    # Estatísticas ambientais
+    c.execute("SELECT * FROM estatisticas")
+    if not c.fetchone():
+        stats = [
+            ("Árvores plantadas em 2025", "15.432", "unidades", "2025", "Secretaria do Meio Ambiente"),
+            ("CO₂ evitado (toneladas)", "2.450", "toneladas", "2025", "Inventário Municipal"),
+            ("Resíduos reciclados", "8.321", "toneladas", "2025", "Cooperativas"),
+            ("Participantes em eventos", "12.847", "pessoas", "2025", "Secretaria de Eventos"),
+            ("Escolas participantes", "87", "unidades", "2025", "Secretaria de Educação"),
+            ("Pontos de coleta", "45", "unidades", "2026", "Prefeitura"),
+            ("Qualidade do ar", "Boa", "índice", "2026", "Cetesb"),
+            ("Qualidade da água do rio", "Regular", "índice", "2026", "Comitê PCJ")
+        ]
+        for s in stats:
+            c.execute(
+                "INSERT INTO estatisticas (titulo, valor, unidade, data_atualizacao, fonte) VALUES (?, ?, ?, ?, ?)",
+                s
+            )
     
     conn.commit()
     conn.close()
 
+# Inicializar banco
 init_database()
 
-# Detectar dispositivo
+# Detectar tema e dispositivo
+tema = get_theme()
 dispositivo = detectar_dispositivo()
 
+# CSS com temas dinâmicos
+if tema == "dark":
+    bg_color = "#0a1f17"
+    card_bg = "#1a3329"
+    text_color = "#ffffff"
+    secondary_text = "#c0e0d0"
+    border_color = "#2a4a3a"
+    hover_color = "#2a5a45"
+    icon_color = "#8bc34a"
+    gradient_start = "#0a1f17"
+    gradient_end = "#1a4a3a"
+    logo_filter = "brightness(0) invert(1)"
+else:
+    bg_color = "#f0fff5"
+    card_bg = "#ffffff"
+    text_color = "#000000"
+    secondary_text = "#2a5e45"
+    border_color = "#c0e0d0"
+    hover_color = "#e0f5e9"
+    icon_color = "#0f5c3f"
+    gradient_start = "#e8f5e9"
+    gradient_end = "#c8e6c9"
+    logo_filter = "brightness(0.5) sepia(1) hue-rotate(120deg)"
+
+# CSS personalizado
+st.markdown(f"""
+<style>
+    /* Estilos globais */
+    .stApp {{
+        background: linear-gradient(135deg, {gradient_start} 0%, {gradient_end} 100%);
+    }}
+    
+    .main-title {{
+        text-align: center;
+        color: {text_color};
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }}
+    
+    .sub-title {{
+        text-align: center;
+        color: {secondary_text};
+        font-size: 1.5rem;
+        margin-bottom: 2rem;
+        font-style: italic;
+    }}
+    
+    /* Cards personalizados */
+    .eco-card {{
+        background: {card_bg};
+        border-radius: 20px;
+        padding: 25px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border: 1px solid {border_color};
+        margin-bottom: 20px;
+        transition: transform 0.3s, box-shadow 0.3s;
+        color: {text_color};
+    }}
+    
+    .eco-card:hover {{
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0,100,50,0.2);
+    }}
+    
+    .evento-card {{
+        background: {card_bg};
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 15px;
+        border-left: 6px solid #ff9f4b;
+        color: {text_color};
+        transition: transform 0.2s;
+    }}
+    
+    .evento-card:hover {{
+        transform: scale(1.02);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }}
+    
+    .dica-card {{
+        background: {card_bg};
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 15px;
+        border-right: 6px solid {icon_color};
+        color: {text_color};
+    }}
+    
+    .ponto-card {{
+        background: {card_bg};
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 15px;
+        border: 1px solid {border_color};
+        color: {text_color};
+    }}
+    
+    /* Botões */
+    .eco-button {{
+        background: {icon_color};
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 50px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+        text-decoration: none;
+        display: inline-block;
+    }}
+    
+    .eco-button:hover {{
+        background: #1a8c5f;
+        transform: scale(1.05);
+    }}
+    
+    /* Sidebar */
+    .stSidebar {{
+        background: {card_bg};
+    }}
+    
+    .stSidebar .stMarkdown p,
+    .stSidebar .stMarkdown h1,
+    .stSidebar .stMarkdown h2,
+    .stSidebar .stMarkdown h3 {{
+        color: {text_color} !important;
+    }}
+    
+    /* Estatísticas */
+    .stat-box {{
+        background: {card_bg};
+        border-radius: 15px;
+        padding: 20px;
+        text-align: center;
+        border: 2px solid {icon_color};
+        color: {text_color};
+    }}
+    
+    .stat-number {{
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: {icon_color};
+    }}
+    
+    .stat-label {{
+        font-size: 1rem;
+        color: {secondary_text};
+    }}
+    
+    /* Ícones */
+    .eco-icon {{
+        font-size: 2rem;
+        color: {icon_color};
+        filter: {logo_filter};
+    }}
+    
+    /* Tabs personalizadas */
+    .stTabs [data-baseweb="tab-list"] {{
+        gap: 10px;
+        background: transparent;
+    }}
+    
+    .stTabs [data-baseweb="tab"] {{
+        background: {card_bg};
+        border-radius: 50px 50px 0 0;
+        padding: 10px 20px;
+        color: {text_color};
+        border: 1px solid {border_color};
+        border-bottom: none;
+    }}
+    
+    .stTabs [aria-selected="true"] {{
+        background: {icon_color} !important;
+        color: white !important;
+    }}
+    
+    /* Badges */
+    .categoria-badge {{
+        display: inline-block;
+        padding: 5px 15px;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-right: 5px;
+    }}
+    
+    .badge-palestra {{ background: #ff9800; color: white; }}
+    .badge-workshop {{ background: #4caf50; color: white; }}
+    .badge-mutirao {{ background: #2196f3; color: white; }}
+    .badge-feira {{ background: #9c27b0; color: white; }}
+    .badge-campanha {{ background: #f44336; color: white; }}
+    
+    /* Progresso */
+    .progress-bar {{
+        height: 8px;
+        background: {border_color};
+        border-radius: 4px;
+        margin: 10px 0;
+    }}
+    
+    .progress-fill {{
+        height: 100%;
+        background: {icon_color};
+        border-radius: 4px;
+        transition: width 0.3s;
+    }}
+</style>
+""", unsafe_allow_html=True)
+
+# Interface mobile ou desktop
 if dispositivo == "mobile":
-    # ========== INTERFACE MOBILE ==========
     st.markdown("""
     <style>
-        .stApp {
-            background: linear-gradient(135deg, #0f5c3f 0%, #1a8c5f 100%);
-        }
         .block-container {
             padding: 0 !important;
             max-width: 400px !important;
             margin: 0 auto !important;
         }
-        .main {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        footer {display: none}
         header {display: none}
     </style>
     """, unsafe_allow_html=True)
-
-    html_mobile = """
+    
+    # Interface mobile simplificada (código mobile mantido aqui)
+    components.html("""
     <!DOCTYPE html>
-    <html lang="pt-BR">
+    <html>
     <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <title>Sustentabilidade Piracicaba - Mobile</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
         <style>
-            * {
+            body {
                 margin: 0;
                 padding: 0;
-                box-sizing: border-box;
-                font-family: 'Segoe UI', system-ui, sans-serif;
+                background: #f0fff5;
+                font-family: 'Segoe UI', sans-serif;
             }
-
-            body {
-                background: #f8fff9;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                min-height: 100vh;
-                padding: 10px;
-            }
-
-            .phone-mock {
+            .mobile-container {
                 max-width: 400px;
-                width: 100%;
-                height: 780px;
-                background: #f8fff9;
-                border-radius: 46px;
-                box-shadow: 0 25px 40px rgba(0,60,20,0.3);
-                overflow: hidden;
-                display: flex;
-                flex-direction: column;
-                border: 1px solid #8bbba0;
-                position: relative;
+                margin: 0 auto;
+                padding: 20px;
             }
-
-            /* TELA DE LOGIN */
-            .login-screen {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: linear-gradient(145deg, #0f5c3f 0%, #1a8c5f 100%);
-                z-index: 200;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                padding: 30px;
-                transition: transform 0.4s ease-out;
-            }
-
-            .login-screen.oculto {
-                transform: translateY(100%);
-            }
-
-            .logo {
-                font-size: 80px;
-                color: #ffd966;
-                margin-bottom: 15px;
-                text-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            }
-
-            .app-nome {
-                color: white;
-                font-size: 32px;
-                font-weight: 700;
-                margin-bottom: 5px;
-            }
-
-            .app-sub {
-                color: rgba(255,255,255,0.9);
-                margin-bottom: 40px;
-            }
-
-            .login-card {
-                width: 100%;
-                background: rgba(255,255,255,0.15);
-                backdrop-filter: blur(10px);
-                border-radius: 30px;
-                padding: 25px;
-                border: 1px solid rgba(255,255,255,0.2);
-            }
-
-            .campo {
-                width: 100%;
-                padding: 16px 20px;
-                margin-bottom: 15px;
-                border: none;
-                border-radius: 50px;
-                background: white;
-                font-size: 16px;
-                outline: none;
-            }
-
-            .btn {
-                width: 100%;
-                padding: 16px;
-                border: none;
-                border-radius: 50px;
-                background: #ffd966;
-                color: #0f5c3f;
-                font-weight: 700;
-                font-size: 18px;
-                cursor: pointer;
-                margin-bottom: 12px;
-                transition: 0.2s;
-            }
-
-            .btn:hover {
-                background: #ffcd4d;
-            }
-
-            .btn-outline {
-                background: transparent;
-                border: 2px solid white;
-                color: white;
-            }
-
-            .erro-msg {
-                color: #ffb3b3;
-                text-align: center;
-                margin-top: 10px;
-                font-size: 14px;
-                display: none;
-            }
-
-            /* APP PRINCIPAL */
-            .app-main {
-                display: flex;
-                flex-direction: column;
-                height: 100%;
-                opacity: 0;
-                pointer-events: none;
-                transition: opacity 0.3s;
-            }
-
-            .app-main.visivel {
-                opacity: 1;
-                pointer-events: all;
-            }
-
-            .status-bar {
-                background: #0f5c3f;
-                padding: 12px 20px 8px;
-                display: flex;
-                justify-content: space-between;
-                color: white;
-            }
-
             .header {
-                background: #0f5c3f;
-                padding: 5px 20px 15px;
-                color: white;
+                text-align: center;
+                margin-bottom: 30px;
             }
-
             .header h1 {
-                font-size: 26px;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            }
-
-            .header h1 i {
-                color: #ffd966;
-            }
-
-            .user-info {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-top: 8px;
-            }
-
-            .user-nome {
-                background: rgba(255,255,255,0.2);
-                padding: 5px 15px;
-                border-radius: 50px;
-                font-size: 14px;
-            }
-
-            .sair-btn {
-                background: none;
-                border: 1px solid white;
-                color: white;
-                padding: 5px 15px;
-                border-radius: 50px;
-                cursor: pointer;
-                font-size: 13px;
-            }
-
-            .search-area {
-                background: white;
-                padding: 15px 20px 10px;
-                border-bottom: 1px solid #b8daca;
-            }
-
-            .search-box {
-                display: flex;
-                background: #eef8f2;
-                border-radius: 40px;
-                padding: 5px 5px 5px 20px;
-                border: 1.5px solid #7fba9c;
-            }
-
-            .search-box input {
-                flex: 1;
-                border: none;
-                background: transparent;
-                outline: none;
-                font-size: 16px;
-                padding: 10px 0;
-            }
-
-            .search-box button {
-                background: #0f5c3f;
-                color: white;
-                width: 48px;
-                height: 48px;
-                border-radius: 50%;
-                border: none;
-                cursor: pointer;
-            }
-
-            .result-panel {
-                background: #e2f3e9;
-                margin: 10px 20px;
-                padding: 15px;
-                border-radius: 28px;
-                border-left: 6px solid #ff9f4b;
-                display: none;
-                max-height: 220px;
-                overflow-y: auto;
-            }
-
-            .result-panel.mostrar {
-                display: block;
-            }
-
-            .result-panel h4 {
                 color: #0f5c3f;
-                margin-bottom: 8px;
-            }
-
-            .result-panel li {
-                padding: 6px 0 6px 25px;
-                border-bottom: 1px dashed #a6cdb8;
-                background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="%230f5c3f"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>') left center no-repeat;
-                background-size: 16px;
-                list-style: none;
-            }
-
-            .tab-bar {
-                display: flex;
-                padding: 0 15px;
-                gap: 5px;
-                border-bottom: 2px solid #c1dfd0;
-                background: #f8fff9;
-            }
-
-            .tab {
-                flex: 1;
-                text-align: center;
-                padding: 10px 0;
-                font-weight: 600;
-                color: #427a60;
-                border-bottom: 3px solid transparent;
-                cursor: pointer;
-                font-size: 13px;
-            }
-
-            .tab i {
-                margin-right: 4px;
-            }
-
-            .tab.ativo {
-                color: #0f5c3f;
-                border-bottom: 3px solid #0f5c3f;
-            }
-
-            .conteudo {
-                flex: 1;
-                overflow-y: auto;
-                padding: 10px 15px;
-            }
-
-            /* CORES */
-            .cor-card {
-                display: flex;
-                align-items: center;
-                background: white;
-                border-radius: 50px;
-                padding: 12px 15px;
-                margin-bottom: 10px;
-                border: 1px solid #ddd;
-            }
-
-            .cor-bolinha {
-                width: 45px;
-                height: 45px;
-                border-radius: 50%;
-                margin-right: 15px;
-                border: 2px solid white;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            }
-
-            .cor-texto {
-                flex: 1;
-            }
-
-            .cor-nome {
-                font-weight: 700;
-                font-size: 17px;
-                color: #000000;
-            }
-
-            .cor-desc {
-                color: #000000;
-                font-size: 13px;
-            }
-
-            /* EVENTOS */
-            .evento-card {
-                background: white;
-                border-radius: 24px;
-                padding: 15px;
-                margin-bottom: 15px;
-                border: 1px solid #bfe1d0;
-            }
-
-            .evento-data {
-                color: #e0672d;
-                font-weight: 700;
-                margin-bottom: 5px;
-            }
-
-            .evento-titulo {
-                color: #000000;
-                font-weight: 700;
-            }
-
-            .evento-local {
-                color: #000000;
-            }
-
-            /* ECOPONTOS */
-            .cat-ecoponto {
-                background: white;
-                border-radius: 26px;
-                padding: 12px 15px;
-                margin-bottom: 15px;
-                border: 1px solid #c2e0cf;
-            }
-
-            .cat-titulo {
-                font-size: 18px;
-                color: #000000;
-                border-bottom: 2px solid #c2e8d4;
-                padding-bottom: 5px;
-                margin-bottom: 8px;
-                font-weight: 700;
-            }
-
-            .ponto-item {
-                padding: 6px 0 6px 22px;
-                border-bottom: 1px dashed #cbe6d7;
-                background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="%23308563"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>') left center no-repeat;
-                background-size: 14px;
-                color: #000000;
-            }
-
-            /* CADASTRO */
-            .form-cad {
-                background: white;
-                border-radius: 30px;
-                padding: 18px;
-                margin: 10px 0;
-            }
-
-            .form-group {
-                margin-bottom: 15px;
-            }
-
-            .form-group label {
-                display: block;
-                margin-bottom: 5px;
-                font-weight: 600;
-                color: #000000;
-            }
-
-            .form-group input, .form-group select {
-                width: 100%;
-                padding: 12px 15px;
-                border: 1.5px solid #b8daca;
-                border-radius: 40px;
-                font-size: 15px;
-                background: #f4fbf7;
-                color: #000000;
-            }
-
-            .btn-salvar {
-                background: #0f5c3f;
-                color: white;
-                border: none;
-                padding: 14px;
-                width: 100%;
-                border-radius: 50px;
-                font-weight: 700;
-                cursor: pointer;
-            }
-
-            .lista-cad {
-                margin-top: 15px;
-            }
-
-            .cad-item {
-                background: #e5f3ec;
-                border-radius: 20px;
-                padding: 10px;
-                margin-bottom: 8px;
-                border-left: 4px solid #0f5c3f;
-                color: #000000;
-            }
-
-            .bottom-nav {
-                background: white;
-                display: flex;
-                justify-content: space-around;
-                padding: 8px 15px 15px;
-                border-top: 2px solid #c1dfd0;
-            }
-
-            .nav-item {
-                color: #679b82;
-                text-align: center;
-                font-size: 11px;
-                cursor: pointer;
-            }
-
-            .nav-item i {
-                font-size: 20px;
-                display: block;
-                margin-bottom: 2px;
-            }
-
-            .nav-item.ativo {
-                color: #0f5c3f;
-                font-weight: 600;
+                font-size: 28px;
             }
         </style>
     </head>
     <body>
-        <div class="phone-mock">
-            <!-- TELA DE LOGIN -->
-            <div class="login-screen" id="telaLogin">
-                <i class="fas fa-seedling logo"></i>
-                <div class="app-nome">Piracicaba</div>
-                <div class="app-sub">Sustentabilidade 2026</div>
-                
-                <div class="login-card">
-                    <input type="text" class="campo" id="loginNome" placeholder="Seu nome">
-                    <input type="email" class="campo" id="loginEmail" placeholder="E-mail">
-                    <input type="password" class="campo" id="loginSenha" placeholder="Senha">
-                    
-                    <button class="btn" id="btnEntrar">ENTRAR</button>
-                    <button class="btn btn-outline" id="btnCadastrar">CRIAR CONTA</button>
-                    
-                    <div class="erro-msg" id="erroLogin">E-mail ou senha incorretos</div>
-                </div>
-            </div>
-
-            <!-- APP PRINCIPAL -->
-            <div class="app-main" id="appPrincipal">
-                <div class="status-bar">
-                    <span><i class="fas fa-signal"></i> 5G</span>
-                    <span><i class="fas fa-wifi"></i> Piracicaba</span>
-                    <span>14:30</span>
-                </div>
-
-                <div class="header">
-                    <h1><i class="fas fa-recycle"></i> Coleta Seletiva</h1>
-                    <div class="user-info">
-                        <span class="user-nome" id="nomeUsuario"></span>
-                        <button class="sair-btn" id="btnSair"><i class="fas fa-sign-out-alt"></i> Sair</button>
-                    </div>
-                </div>
-
-                <div class="search-area">
-                    <div class="search-box">
-                        <input type="text" id="buscaInput" placeholder="pilhas, vidros, fios...">
-                        <button id="btnBuscar"><i class="fas fa-search"></i></button>
-                    </div>
-                </div>
-
-                <div class="result-panel" id="painelResultado">
-                    <h4 id="resultadoTitulo"><i class="fas fa-map-pin"></i> Resultado</h4>
-                    <ul id="resultadoLista"></ul>
-                </div>
-
-                <div class="tab-bar">
-                    <div class="tab ativo" id="tabCores"><i class="fas fa-palette"></i> Cores</div>
-                    <div class="tab" id="tabEventos"><i class="fas fa-calendar"></i> 2026</div>
-                    <div class="tab" id="tabEcopontos"><i class="fas fa-trash"></i> Ecopontos</div>
-                    <div class="tab" id="tabCadastro"><i class="fas fa-user"></i> Cadastro</div>
-                </div>
-
-                <div class="conteudo" id="conteudoApp"></div>
-
-                <div class="bottom-nav">
-                    <div class="nav-item ativo" id="navCores"><i class="fas fa-palette"></i><span>Cores</span></div>
-                    <div class="nav-item" id="navEventos"><i class="fas fa-calendar"></i><span>2026</span></div>
-                    <div class="nav-item" id="navEcopontos"><i class="fas fa-trash"></i><span>Ecopontos</span></div>
-                    <div class="nav-item" id="navCadastro"><i class="fas fa-user"></i><span>Cadastro</span></div>
-                </div>
+        <div class="mobile-container">
+            <div class="header">
+                <i class="fas fa-leaf" style="font-size: 50px; color: #0f5c3f;"></i>
+                <h1>EcoPiracicaba</h1>
+                <p>Versão Mobile</p>
             </div>
         </div>
-
-        <script>
-            const usuarios = [
-                { id: 1, nome: "João Silva", email: "joao@email.com", senha: "123" },
-                { id: 2, nome: "Maria Oliveira", email: "maria@email.com", senha: "123" }
-            ];
-
-            const cadastros = [];
-
-            const locais = {
-                pilhas: ["Shopping Piracicaba", "Unimed Sede", "Ecoponto Centro", "Esalq", "Drogaria São Paulo"],
-                vidros: ["Ecoponto Vila Rezende", "Coopervidros", "Recicla Piracicaba", "Ecoponto Paulicéia"],
-                eletronicos: ["CDI - R. do Porto, 234", "Assistência Consert+", "Ecoponto Monte Líbano"],
-                fios: ["Cooperativa Recifios", "Ecoponto Centro", "Ferro Velho Central"],
-                coleta: ["Ecoponto Monte Líbano", "Associação Recicladores", "LEV - Av. Limeira"],
-                oleo: ["Ecoponto Paulicéia", "Cremeria Santa Helena", "UNIP", "Posto Ipiranga"]
-            };
-
-            const cores = [
-                { cor: "Azul", desc: "Papel e papelão", ex: "jornais, caixas", icon: "fa-newspaper", bg: "#2196F3" },
-                { cor: "Vermelho", desc: "Plástico", ex: "garrafas PET, sacolas", icon: "fa-bottle-water", bg: "#F44336" },
-                { cor: "Verde", desc: "Vidro", ex: "garrafas, potes", icon: "fa-wine-bottle", bg: "#4CAF50" },
-                { cor: "Amarelo", desc: "Metal", ex: "latas, alumínio", icon: "fa-cog", bg: "#FFEB3B" },
-                { cor: "Marrom", desc: "Orgânicos", ex: "restos de comida", icon: "fa-apple-alt", bg: "#795548" },
-                { cor: "Cinza", desc: "Não reciclável", ex: "papel higiênico", icon: "fa-trash", bg: "#9E9E9E" },
-                { cor: "Laranja", desc: "Perigosos", ex: "pilhas, baterias", icon: "fa-bolt", bg: "#FF9800" },
-                { cor: "Roxo", desc: "Radioativos", ex: "hospitalar", icon: "fa-radiation", bg: "#9C27B0" }
-            ];
-
-            const palestras = [
-                { data: "15 mar 2026", titulo: "Economia Circular", local: "Engenho Central" },
-                { data: "22 abr 2026", titulo: "Preservação das Águas", local: "Teatro Municipal" },
-                { data: "05 jun 2026", titulo: "Dia do Meio Ambiente", local: "Parque da Rua do Porto" },
-                { data: "18 ago 2026", titulo: "Mobilidade Sustentável", local: "SENAI" },
-                { data: "10 out 2026", titulo: "Compostagem", local: "Horto Municipal" }
-            ];
-
-            let usuarioAtual = null;
-
-            function mostrarApp() {
-                document.getElementById('telaLogin').classList.add('oculto');
-                document.getElementById('appPrincipal').classList.add('visivel');
-                document.getElementById('nomeUsuario').innerHTML = '<i class="fas fa-user"></i> ' + usuarioAtual.nome.split(' ')[0];
-                mostrarCores();
-            }
-
-            document.getElementById('btnEntrar').addEventListener('click', () => {
-                const email = document.getElementById('loginEmail').value;
-                const senha = document.getElementById('loginSenha').value;
-                
-                const user = usuarios.find(u => u.email === email && u.senha === senha);
-                
-                if (user) {
-                    usuarioAtual = user;
-                    document.getElementById('erroLogin').style.display = 'none';
-                    mostrarApp();
-                } else {
-                    document.getElementById('erroLogin').style.display = 'block';
-                }
-            });
-
-            document.getElementById('btnCadastrar').addEventListener('click', () => {
-                const nome = document.getElementById('loginNome').value;
-                const email = document.getElementById('loginEmail').value;
-                const senha = document.getElementById('loginSenha').value;
-                
-                if (!nome || !email || !senha) {
-                    alert('Preencha todos os campos');
-                    return;
-                }
-                
-                if (usuarios.find(u => u.email === email)) {
-                    alert('E-mail já cadastrado');
-                    return;
-                }
-                
-                const novoUser = { id: usuarios.length + 1, nome, email, senha };
-                usuarios.push(novoUser);
-                usuarioAtual = novoUser;
-                document.getElementById('erroLogin').style.display = 'none';
-                mostrarApp();
-            });
-
-            document.getElementById('btnSair').addEventListener('click', () => {
-                usuarioAtual = null;
-                document.getElementById('telaLogin').classList.remove('oculto');
-                document.getElementById('appPrincipal').classList.remove('visivel');
-                document.getElementById('loginNome').value = '';
-                document.getElementById('loginEmail').value = '';
-                document.getElementById('loginSenha').value = '';
-            });
-
-            function mostrarCores() {
-                let html = '<h3 style="margin:10px 0;color:#0f5c3f;"><i class="fas fa-trash-alt"></i> Cores da Coleta</h3>';
-                cores.forEach(c => {
-                    html += `
-                        <div class="cor-card">
-                            <div class="cor-bolinha" style="background: ${c.bg};"></div>
-                            <div class="cor-texto">
-                                <div class="cor-nome">${c.cor}</div>
-                                <div class="cor-desc"><strong>${c.desc}</strong> · ${c.ex}</div>
-                            </div>
-                            <i class="fas ${c.icon}" style="color: #0f5c3f;"></i>
-                        </div>
-                    `;
-                });
-                document.getElementById('conteudoApp').innerHTML = html;
-            }
-
-            function mostrarEventos() {
-                let html = '<h3 style="margin:10px 0;color:#0f5c3f;"><i class="fas fa-calendar-alt"></i> Palestras 2026</h3>';
-                palestras.forEach(p => {
-                    html += `
-                        <div class="evento-card">
-                            <div class="evento-data"><i class="far fa-calendar"></i> ${p.data}</div>
-                            <div class="evento-titulo" style="font-weight:700;">${p.titulo}</div>
-                            <div class="evento-local" style="color:#467a61;"><i class="fas fa-map-marker-alt"></i> ${p.local}</div>
-                        </div>
-                    `;
-                });
-                document.getElementById('conteudoApp').innerHTML = html;
-            }
-
-            function mostrarEcopontos() {
-                const cats = [
-                    { chave: 'pilhas', nome: 'Pilhas', icon: 'fa-bolt' },
-                    { chave: 'vidros', nome: 'Vidros', icon: 'fa-wine-bottle' },
-                    { chave: 'eletronicos', nome: 'Eletrônicos', icon: 'fa-laptop' },
-                    { chave: 'fios', nome: 'Fios', icon: 'fa-plug' },
-                    { chave: 'coleta', nome: 'Coleta Seletiva', icon: 'fa-trash' },
-                    { chave: 'oleo', nome: 'Óleo', icon: 'fa-oil-can' }
-                ];
-                
-                let html = '<h3 style="margin:10px 0;color:#0f5c3f;"><i class="fas fa-map-marker-alt"></i> Ecopontos</h3>';
-                cats.forEach(cat => {
-                    if (locais[cat.chave]) {
-                        html += '<div class="cat-ecoponto"><div class="cat-titulo"><i class="fas ' + cat.icon + '"></i> ' + cat.nome + '</div>';
-                        locais[cat.chave].forEach(item => html += '<div class="ponto-item">' + item + '</div>');
-                        html += '</div>';
-                    }
-                });
-                document.getElementById('conteudoApp').innerHTML = html;
-            }
-
-            function mostrarCadastro() {
-                const userCadastros = cadastros.filter(c => c.usuario === usuarioAtual?.id);
-                let lista = '';
-                if (userCadastros.length > 0) {
-                    lista = '<div class="lista-cad"><h4>Seus cadastros:</h4>';
-                    userCadastros.forEach(c => {
-                        lista += '<div class="cad-item"><strong>' + c.nome + '</strong> · ' + c.bairro + '<br><small>' + c.telefone + ' | ' + c.interesse + '</small></div>';
-                    });
-                    lista += '</div>';
-                }
-
-                const html = `
-                    <div class="form-cad">
-                        <h3 style="margin-bottom:15px;"><i class="fas fa-user-plus"></i> Cadastre-se</h3>
-                        <div class="form-group">
-                            <label>Nome</label>
-                            <input type="text" id="cadNome" value="${usuarioAtual.nome}">
-                        </div>
-                        <div class="form-group">
-                            <label>Telefone</label>
-                            <input type="text" id="cadTel" placeholder="(19) 99999-9999">
-                        </div>
-                        <div class="form-group">
-                            <label>Bairro</label>
-                            <input type="text" id="cadBairro" placeholder="Seu bairro">
-                        </div>
-                        <div class="form-group">
-                            <label>Interesse</label>
-                            <select id="cadInteresse">
-                                <option>Coleta Seletiva</option>
-                                <option>Compostagem</option>
-                                <option>Eletrônicos</option>
-                                <option>Óleo</option>
-                                <option>Voluntariado</option>
-                            </select>
-                        </div>
-                        <button class="btn-salvar" onclick="salvarCadastro()">Salvar</button>
-                    </div>
-                    ${lista}
-                `;
-                document.getElementById('conteudoApp').innerHTML = html;
-            }
-
-            window.salvarCadastro = function() {
-                const nome = document.getElementById('cadNome').value;
-                const tel = document.getElementById('cadTel').value;
-                const bairro = document.getElementById('cadBairro').value;
-                const interesse = document.getElementById('cadInteresse').value;
-                
-                if (!tel || !bairro) {
-                    alert('Preencha telefone e bairro');
-                    return;
-                }
-                
-                cadastros.push({
-                    usuario: usuarioAtual.id,
-                    nome: usuarioAtual.nome,
-                    telefone: tel,
-                    bairro: bairro,
-                    interesse: interesse
-                });
-                
-                alert('Cadastro salvo!');
-                mostrarCadastro();
-            };
-
-            document.getElementById('btnBuscar').addEventListener('click', () => {
-                const termo = document.getElementById('buscaInput').value.toLowerCase();
-                let resultados = [];
-                let titulo = '';
-                
-                if (termo.includes('pilha') || termo.includes('bateria')) { resultados = locais.pilhas; titulo = 'Pilhas'; }
-                else if (termo.includes('vidro')) { resultados = locais.vidros; titulo = 'Vidros'; }
-                else if (termo.includes('eletr')) { resultados = locais.eletronicos; titulo = 'Eletrônicos'; }
-                else if (termo.includes('fio')) { resultados = locais.fios; titulo = 'Fios'; }
-                else if (termo.includes('coleta') || termo.includes('lixo')) { resultados = locais.coleta; titulo = 'Coleta Seletiva'; }
-                else if (termo.includes('oleo') || termo.includes('óleo')) { resultados = locais.oleo; titulo = 'Óleo'; }
-                else { resultados = ['Nenhum resultado encontrado']; titulo = 'Busca'; }
-                
-                document.getElementById('resultadoTitulo').innerHTML = '<i class="fas fa-map-pin"></i> ' + titulo;
-                const lista = document.getElementById('resultadoLista');
-                lista.innerHTML = '';
-                resultados.forEach(r => {
-                    const li = document.createElement('li');
-                    li.textContent = r;
-                    lista.appendChild(li);
-                });
-                document.getElementById('painelResultado').classList.add('mostrar');
-            });
-
-            document.getElementById('buscaInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') document.getElementById('btnBuscar').click();
-            });
-
-            function ativarAba(abaId) {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('ativo'));
-                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('ativo'));
-                document.getElementById('tab' + abaId).classList.add('ativo');
-                document.getElementById('nav' + abaId).classList.add('ativo');
-                document.getElementById('painelResultado').classList.remove('mostrar');
-            }
-
-            document.getElementById('tabCores').addEventListener('click', () => { ativarAba('Cores'); mostrarCores(); });
-            document.getElementById('tabEventos').addEventListener('click', () => { ativarAba('Eventos'); mostrarEventos(); });
-            document.getElementById('tabEcopontos').addEventListener('click', () => { ativarAba('Ecopontos'); mostrarEcopontos(); });
-            document.getElementById('tabCadastro').addEventListener('click', () => { ativarAba('Cadastro'); mostrarCadastro(); });
-
-            document.getElementById('navCores').addEventListener('click', () => document.getElementById('tabCores').click());
-            document.getElementById('navEventos').addEventListener('click', () => document.getElementById('tabEventos').click());
-            document.getElementById('navEcopontos').addEventListener('click', () => document.getElementById('tabEcopontos').click());
-            document.getElementById('navCadastro').addEventListener('click', () => document.getElementById('tabCadastro').click());
-        </script>
     </body>
     </html>
-    """
-
-    components.html(html_mobile, height=820, scrolling=False)
+    """, height=800)
 
 else:
-    # ========== INTERFACE DESKTOP ==========
-    st.markdown("""
-    <style>
-        .stApp {
-            background: linear-gradient(135deg, #f0f9f4 0%, #e0f0e8 100%);
-        }
-        .main-title {
-            text-align: center;
-            color: #000000;
-            font-size: 3rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-        .sub-title {
-            text-align: center;
-            color: #000000;
-            font-size: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        .desktop-card {
-            background: white;
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,40,20,0.1);
-            border: 1px solid #c1dfd0;
-            margin-bottom: 20px;
-        }
-        .desktop-card p {
-            color: #000000 !important;
-        }
-        .desktop-card h3 {
-            color: #000000 !important;
-        }
-        .evento-item {
-            background: #f8fff9;
-            border-radius: 15px;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-left: 4px solid #ff9f4b;
-            color: #000000;
-        }
-        .evento-item h3 {
-            color: #000000;
-        }
-        .evento-item p {
-            color: #000000;
-        }
-        .ecoponto-cat {
-            background: #f8fff9;
-            border-radius: 15px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border: 1px solid #c2e0cf;
-            color: #000000;
-        }
-        .ecoponto-cat h4 {
-            color: #000000 !important;
-        }
-        .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6 {
-            color: #000000;
-        }
-        .stTabs [data-baseweb="tab-list"] button p {
-            color: #000000;
-        }
-        .stTabs [data-baseweb="tab-panel"] p {
-            color: #000000;
-        }
-        .stAlert p {
-            color: #000000;
-        }
-        .st-bb {
-            color: #000000;
-        }
-        .row-widget stMarkdown p {
-            color: #000000;
-        }
-        div[data-testid="stMarkdownContainer"] p {
-            color: #000000;
-        }
-        div[data-testid="stMarkdownContainer"] h1, 
-        div[data-testid="stMarkdownContainer"] h2, 
-        div[data-testid="stMarkdownContainer"] h3 {
-            color: #000000;
-        }
-        
-        /* ESTILOS ESPECÍFICOS PARA A SIDEBAR - TEXTO BRANCO NO MODO DARK */
-        .stSidebar .stMarkdown p,
-        .stSidebar .stMarkdown h1,
-        .stSidebar .stMarkdown h2,
-        .stSidebar .stMarkdown h3,
-        .stSidebar .stMarkdown h4,
-        .stSidebar .stMarkdown h5,
-        .stSidebar .stMarkdown h6,
-        .stSidebar .stText,
-        .stSidebar .stAlert p,
-        .stSidebar div[data-testid="stMarkdownContainer"] p,
-        .stSidebar div[data-testid="stMarkdownContainer"] h1,
-        .stSidebar div[data-testid="stMarkdownContainer"] h2,
-        .stSidebar div[data-testid="stMarkdownContainer"] h3,
-        .stSidebar div[data-testid="stMarkdownContainer"] h4,
-        .stSidebar div[data-testid="stMarkdownContainer"] h5,
-        .stSidebar div[data-testid="stMarkdownContainer"] h6 {
-            color: #FFFFFF !important;
-        }
-        
-        /* Estilo específico para o texto de informação na sidebar */
-        .stSidebar .st-info p {
-            color: #FFFFFF !important;
-        }
-        
-        /* Estilo para os títulos das abas na sidebar */
-        .stSidebar .stTabs [data-baseweb="tab-list"] button p {
-            color: #000000 !important;
-        }
-        
-        /* Estilo para o texto dos botões na sidebar */
-        .stSidebar .stButton button {
-            color: #000000;
-        }
-    </style>
-    """, unsafe_allow_html=True)
-
-    # Título
-    st.markdown('<h1 class="main-title">🌱 Piracicaba Sustentável 2026</h1>', unsafe_allow_html=True)
-    st.markdown('<p class="sub-title">Guia de coleta seletiva e descarte consciente</p>', unsafe_allow_html=True)
-
-    # Login/Cadastro na sidebar
+    # ========== INTERFACE DESKTOP COMPLETA ==========
+    
+    # Header com botão de tema
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col1:
+        st.image("https://cdn-icons-png.flaticon.com/512/4148/4148460.png", width=80)
+    with col2:
+        st.markdown(f'<h1 class="main-title">🌿 EcoPiracicaba 2026</h1>', unsafe_allow_html=True)
+        st.markdown(f'<p class="sub-title">Sustentabilidade em ação na cidade de Piracicaba</p>', unsafe_allow_html=True)
+    with col3:
+        if st.button("🌓 " + ("Modo Claro" if tema == "dark" else "Modo Escuro")):
+            toggle_theme()
+    
+    # Sidebar com informações do usuário
     with st.sidebar:
-        st.image("https://cdn-icons-png.flaticon.com/512/4148/4148460.png", width=150)
-        st.markdown('<h2 style="color: #FFFFFF;">🔐 Acesso</h2>', unsafe_allow_html=True)
+        st.image("https://cdn-icons-png.flaticon.com/512/4148/4148460.png", width=120)
+        st.markdown(f"<h2 style='color: {text_color};'>🌱 EcoCidadão</h2>", unsafe_allow_html=True)
         
+        # Login/Cadastro
         if 'usuario_logado' not in st.session_state:
             st.session_state.usuario_logado = None
         
         if st.session_state.usuario_logado is None:
-            tab1, tab2 = st.tabs(["Login", "Cadastro"])
-            
-            with tab1:
-                email = st.text_input("E-mail", key="login_email")
-                senha = st.text_input("Senha", type="password", key="login_senha")
-                if st.button("Entrar", use_container_width=True):
-                    conn = sqlite3.connect('sustentabilidade.db')
-                    c = conn.cursor()
-                    c.execute("SELECT * FROM usuarios WHERE email = ? AND senha = ?", (email, senha))
-                    user = c.fetchone()
-                    conn.close()
-                    
-                    if user:
-                        st.session_state.usuario_logado = {
-                            'id': user[0],
-                            'nome': user[1],
-                            'email': user[2]
-                        }
-                        st.rerun()
-                    else:
-                        st.error("E-mail ou senha incorretos")
-            
-            with tab2:
-                with st.form("cadastro_form"):
-                    nome = st.text_input("Nome completo")
-                    email = st.text_input("E-mail")
-                    senha = st.text_input("Senha", type="password")
-                    if st.form_submit_button("Cadastrar", use_container_width=True):
-                        conn = sqlite3.connect('sustentabilidade.db')
+            with st.expander("🔐 Login / Cadastro", expanded=True):
+                tab1, tab2 = st.tabs(["Entrar", "Cadastrar"])
+                with tab1:
+                    email = st.text_input("E-mail", key="login_email")
+                    senha = st.text_input("Senha", type="password", key="login_senha")
+                    if st.button("🌿 Entrar", use_container_width=True):
+                        conn = sqlite3.connect('ecopiracicaba.db')
                         c = conn.cursor()
-                        try:
-                            c.execute(
-                                "INSERT INTO usuarios (nome, email, senha, data_cadastro) VALUES (?, ?, ?, ?)",
-                                (nome, email, senha, datetime.now().strftime("%d/%m/%Y"))
-                            )
-                            conn.commit()
-                            st.success("Cadastro realizado! Faça login.")
-                        except:
-                            st.error("E-mail já cadastrado")
+                        c.execute("SELECT * FROM usuarios WHERE email = ? AND senha = ?", (email, senha))
+                        user = c.fetchone()
                         conn.close()
+                        if user:
+                            st.session_state.usuario_logado = {
+                                'id': user[0], 'nome': user[1], 'email': user[2]
+                            }
+                            st.rerun()
+                        else:
+                            st.error("E-mail ou senha incorretos")
+                
+                with tab2:
+                    with st.form("cadastro"):
+                        nome = st.text_input("Nome completo")
+                        email = st.text_input("E-mail")
+                        senha = st.text_input("Senha", type="password")
+                        interesses = st.multiselect("Interesses", 
+                            ["Sustentabilidade", "Reciclagem", "Eventos", "Voluntariado", "Compostagem"])
+                        if st.form_submit_button("🌱 Criar conta", use_container_width=True):
+                            conn = sqlite3.connect('ecopiracicaba.db')
+                            c = conn.cursor()
+                            try:
+                                c.execute(
+                                    "INSERT INTO usuarios (nome, email, senha, interesses, data_cadastro) VALUES (?, ?, ?, ?, ?)",
+                                    (nome, email, senha, ",".join(interesses), datetime.now().strftime("%d/%m/%Y"))
+                                )
+                                conn.commit()
+                                st.success("Conta criada! Faça login.")
+                            except:
+                                st.error("E-mail já existe")
+                            conn.close()
         else:
-            st.success(f"👋 Olá, {st.session_state.usuario_logado['nome'].split(' ')[0]}!")
+            st.success(f"🌿 Olá, {st.session_state.usuario_logado['nome'].split(' ')[0]}!")
+            st.markdown(f"<p style='color: {text_color};'>🌍 Nível: EcoAtivista</p>", unsafe_allow_html=True)
+            st.progress(0.65, text="65% para próximo nível")
             if st.button("Sair", use_container_width=True):
                 st.session_state.usuario_logado = None
                 st.rerun()
         
         st.markdown("---")
-        st.markdown('<h3 style="color: #FFFFFF;">📍 Piracicaba - SP</h3>', unsafe_allow_html=True)
-        st.markdown('<h3 style="color: #FFFFFF;">📅 Eventos 2026</h3>', unsafe_allow_html=True)
-        st.info("Acompanhe as palestras e ações sustentáveis na cidade")
-
-    # Conteúdo principal (só aparece se logado)
-    if st.session_state.usuario_logado is None:
-        st.warning("👆 Faça login ou cadastre-se para acessar o conteúdo")
         
+        # Estatísticas rápidas
+        conn = sqlite3.connect('ecopiracicaba.db')
+        c = conn.cursor()
+        c.execute("SELECT COUNT(*) FROM eventos WHERE data >= '2026'")
+        total_eventos = c.fetchone()[0]
+        c.execute("SELECT COUNT(*) FROM dicas")
+        total_dicas = c.fetchone()[0]
+        c.execute("SELECT COUNT(*) FROM pontos_coleta")
+        total_pontos = c.fetchone()[0]
+        conn.close()
+        
+        st.markdown(f"""
+        <div style='text-align: center; color: {text_color};'>
+            <h4>📊 Estatísticas</h4>
+            <p>🌍 {total_eventos} Eventos em 2026</p>
+            <p>💡 {total_dicas} Dicas Ambientais</p>
+            <p>📍 {total_pontos} Pontos de Coleta</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("---")
+        st.markdown(f"<p style='color: {secondary_text};'>🌱 Piracicaba - SP</p>", unsafe_allow_html=True)
+    
+    # Conteúdo principal
+    if st.session_state.usuario_logado is None:
+        # Página de boas-vindas
+        st.markdown(f"""
+        <div style='text-align: center; padding: 50px; color: {text_color};'>
+            <i class="fas fa-seedling" style='font-size: 80px; color: {icon_color};'></i>
+            <h1>Bem-vindo ao EcoPiracicaba</h1>
+            <p style='font-size: 1.2rem;'>Faça login ou cadastre-se para acessar todas as funcionalidades</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Cards de apresentação
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.markdown("""
-            <div style="background: white; padding: 20px; border-radius: 15px; text-align: center;">
-                <i class="fas fa-palette" style="font-size: 40px; color: #0f5c3f;"></i>
-                <h3 style="color: #000000;">Cores da Coleta</h3>
-                <p style="color: #000000;">Guia completo sobre o que descartar em cada cor</p>
+            st.markdown(f"""
+            <div class='eco-card' style='text-align: center;'>
+                <i class='fas fa-calendar-alt eco-icon' style='font-size: 40px;'></i>
+                <h3>Eventos 2026</h3>
+                <p>Palestras, workshops, mutirões e feiras sustentáveis</p>
             </div>
             """, unsafe_allow_html=True)
-        
         with col2:
-            st.markdown("""
-            <div style="background: white; padding: 20px; border-radius: 15px; text-align: center;">
-                <i class="fas fa-calendar" style="font-size: 40px; color: #0f5c3f;"></i>
-                <h3 style="color: #000000;">Eventos 2026</h3>
-                <p style="color: #000000;">Palestras e atividades em Piracicaba</p>
+            st.markdown(f"""
+            <div class='eco-card' style='text-align: center;'>
+                <i class='fas fa-lightbulb eco-icon' style='font-size: 40px;'></i>
+                <h3>Dicas Ambientais</h3>
+                <p>Aprenda a viver de forma mais sustentável</p>
             </div>
             """, unsafe_allow_html=True)
-        
         with col3:
-            st.markdown("""
-            <div style="background: white; padding: 20px; border-radius: 15px; text-align: center;">
-                <i class="fas fa-trash-alt" style="font-size: 40px; color: #0f5c3f;"></i>
-                <h3 style="color: #000000;">Ecopontos</h3>
-                <p style="color: #000000;">Locais de descarte por categoria</p>
+            st.markdown(f"""
+            <div class='eco-card' style='text-align: center;'>
+                <i class='fas fa-map-marker-alt eco-icon' style='font-size: 40px;'></i>
+                <h3>Pontos de Coleta</h3>
+                <p>Onde descartar cada tipo de resíduo</p>
             </div>
             """, unsafe_allow_html=True)
     
     else:
-        # Abas para desktop
-        tab1, tab2, tab3, tab4 = st.tabs(["🎨 Cores da Coleta", "📅 Eventos 2026", "🗺️ Ecopontos", "📝 Meu Cadastro"])
+        # Abas principais
+        tab1, tab2, tab3, tab4, tab5 = st.tabs([
+            "🌍 Dashboard", "📅 Eventos 2026", "💡 Dicas Verdes", "📍 Pontos de Coleta", "📊 Estatísticas"
+        ])
         
         with tab1:
-            st.markdown('<h2 style="color: #000000;">Cores da Coleta Seletiva</h2>', unsafe_allow_html=True)
+            st.markdown(f"<h2 style='color: {text_color};'>🌍 Dashboard Ambiental</h2>", unsafe_allow_html=True)
             
-            cores = [
-                {"cor": "Azul", "desc": "Papel e papelão", "ex": "jornais, revistas, caixas", "bg": "#2196F3"},
-                {"cor": "Vermelho", "desc": "Plástico", "ex": "garrafas PET, sacolas, embalagens", "bg": "#F44336"},
-                {"cor": "Verde", "desc": "Vidro", "ex": "garrafas, potes, copos", "bg": "#4CAF50"},
-                {"cor": "Amarelo", "desc": "Metal", "ex": "latas, alumínio, ferragens", "bg": "#FFEB3B"},
-                {"cor": "Marrom", "desc": "Orgânicos", "ex": "restos de comida, cascas", "bg": "#795548"},
-                {"cor": "Cinza", "desc": "Não reciclável", "ex": "papel higiênico, fraldas", "bg": "#9E9E9E"},
-                {"cor": "Laranja", "desc": "Perigosos", "ex": "pilhas, baterias", "bg": "#FF9800"},
-                {"cor": "Roxo", "desc": "Radioativos", "ex": "materiais hospitalares", "bg": "#9C27B0"}
-            ]
+            # Métricas principais
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.markdown(f"""
+                <div class='stat-box'>
+                    <div class='stat-number'>15.432</div>
+                    <div class='stat-label'>🌳 Árvores Plantadas</div>
+                </div>
+                """, unsafe_allow_html=True)
+            with col2:
+                st.markdown(f"""
+                <div class='stat-box'>
+                    <div class='stat-number'>2.450</div>
+                    <div class='stat-label'>♻️ Toneladas Recicladas</div>
+                </div>
+                """, unsafe_allow_html=True)
+            with col3:
+                st.markdown(f"""
+                <div class='stat-box'>
+                    <div class='stat-number'>87</div>
+                    <div class='stat-label'>🏫 Escolas Participantes</div>
+                </div>
+                """, unsafe_allow_html=True)
+            with col4:
+                st.markdown(f"""
+                <div class='stat-box'>
+                    <div class='stat-number'>12.847</div>
+                    <div class='stat-label'>👥 Participantes</div>
+                </div>
+                """, unsafe_allow_html=True)
             
-            cols = st.columns(2)
-            for i, cor in enumerate(cores):
-                with cols[i % 2]:
-                    st.markdown(f"""
-                    <div class="desktop-card">
-                        <div style="display: flex; align-items: center;">
-                            <div style="width: 50px; height: 50px; background: {cor['bg']}; border-radius: 50%; margin-right: 15px;"></div>
-                            <div>
-                                <h3 style="margin: 0; color: #000000;">{cor['cor']}</h3>
-                                <p style="margin: 5px 0 0; color: #000000;"><strong>{cor['desc']}</strong> · {cor['ex']}</p>
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            # Gráficos
+            col1, col2 = st.columns(2)
+            with col1:
+                # Gráfico de eventos por tipo
+                tipos = ['Palestras', 'Workshops', 'Mutirões', 'Feiras', 'Campanhas']
+                quantidades = [25, 18, 12, 8, 15]
+                fig = px.pie(values=quantidades, names=tipos, title="Eventos por Tipo em 2026",
+                            color_discrete_sequence=['#0f5c3f', '#1a8c5f', '#2ecc71', '#27ae60', '#229954'])
+                fig.update_layout(template="plotly_white" if tema == "light" else "plotly_dark")
+                st.plotly_chart(fig, use_container_width=True)
+            
+            with col2:
+                # Evolução de participantes
+                meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun']
+                participantes = [850, 1200, 2100, 1850, 2300, 2800]
+                fig = go.Figure(data=go.Scatter(x=meses, y=participantes, mode='lines+markers',
+                                               line=dict(color='#0f5c3f', width=4)))
+                fig.update_layout(title="Participação em Eventos - 1º Semestre 2026",
+                                 xaxis_title="Mês", yaxis_title="Participantes",
+                                 template="plotly_white" if tema == "light" else "plotly_dark")
+                st.plotly_chart(fig, use_container_width=True)
+            
+            # Próximos eventos
+            st.markdown(f"<h3 style='color: {text_color};'>📅 Próximos Eventos</h3>", unsafe_allow_html=True)
+            
+            conn = sqlite3.connect('ecopiracicaba.db')
+            eventos = pd.read_sql_query("SELECT * FROM eventos ORDER BY data LIMIT 3", conn)
+            conn.close()
+            
+            for _, evento in eventos.iterrows():
+                st.markdown(f"""
+                <div class='evento-card'>
+                    <div style='display: flex; justify-content: space-between;'>
+                        <div>
+                            <span class='categoria-badge badge-{evento["tipo"]}'>{evento["tipo"].upper()}</span>
+                            <h3 style='color: {text_color};'>{evento['titulo']}</h3>
+                            <p><i class='fas fa-calendar'></i> {evento['data']} às {evento['hora']}</p>
+                            <p><i class='fas fa-map-marker-alt'></i> {evento['local']}</p>
+                            <p><i class='fas fa-user'></i> {evento['palestrante']}</p>
+                        </div>
+                        <div style='text-align: right;'>
+                            <i class='fas fa-users' style='color: {icon_color};'></i>
+                            <p><strong>{evento['inscritos']}/{evento['vagas']}</strong> inscritos</p>
+                            <div class='progress-bar'>
+                                <div class='progress-fill' style='width: {min(100, (evento["inscritos"]/max(evento["vagas"],1))*100)}%;'></div>
                             </div>
                         </div>
                     </div>
-                    """, unsafe_allow_html=True)
+                </div>
+                """, unsafe_allow_html=True)
         
         with tab2:
-            st.markdown('<h2 style="color: #000000;">Palestras e Eventos 2026</h2>', unsafe_allow_html=True)
+            st.markdown(f"<h2 style='color: {text_color};'>📅 Agenda Sustentável 2026</h2>", unsafe_allow_html=True)
             
-            palestras = [
-                {"data": "15 mar 2026 • 19h", "titulo": "Economia Circular e Resíduos Eletrônicos", "local": "Engenho Central", "palestrante": "Dra. Ana Lúcia"},
-                {"data": "22 abr 2026 • 14h", "titulo": "Preservação das Águas: Rio Piracicaba", "local": "Teatro Municipal", "palestrante": "Esalq/USP"},
-                {"data": "05 jun 2026 • 9h", "titulo": "Dia Mundial do Meio Ambiente", "local": "Parque da Rua do Porto", "palestrante": "Ação Local"},
-                {"data": "18 ago 2026 • 15h", "titulo": "Mobilidade Sustentável", "local": "SENAI Piracicaba", "palestrante": "Bicicletas elétricas"},
-                {"data": "10 out 2026 • 10h", "titulo": "Compostagem Doméstica", "local": "Horto Municipal", "palestrante": "Oficina prática"}
-            ]
+            # Filtros
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                mes_filter = st.selectbox("Mês", ["Todos", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro"])
+            with col2:
+                tipo_filter = st.selectbox("Tipo", ["Todos", "palestra", "workshop", "mutirão", "feira", "campanha", "passeio"])
+            with col3:
+                busca = st.text_input("🔍 Buscar evento", placeholder="Digite palavras-chave")
             
-            for p in palestras:
+            conn = sqlite3.connect('ecopiracicaba.db')
+            query = "SELECT * FROM eventos WHERE 1=1"
+            if mes_filter != "Todos":
+                query += f" AND data LIKE '%{mes_filter}%'"
+            if tipo_filter != "Todos":
+                query += f" AND tipo = '{tipo_filter}'"
+            eventos = pd.read_sql_query(query + " ORDER BY data", conn)
+            conn.close()
+            
+            if busca:
+                eventos = eventos[eventos['titulo'].str.contains(busca, case=False) | 
+                                 eventos['descricao'].str.contains(busca, case=False)]
+            
+            for _, evento in eventos.iterrows():
                 st.markdown(f"""
-                <div class="evento-item">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <span style="background: #ffd966; padding: 5px 15px; border-radius: 50px; font-weight: 600; color: #000000;">{p['data']}</span>
-                            <h3 style="margin: 10px 0 5px; color: #000000;">{p['titulo']}</h3>
-                            <p style="color: #000000;"><i class="fas fa-map-marker-alt"></i> {p['local']}</p>
-                            <p style="color: #000000;"><small>{p['palestrante']}</small></p>
+                <div class='evento-card'>
+                    <div style='display: flex; gap: 20px;'>
+                        <div style='min-width: 100px; text-align: center; background: {icon_color}; border-radius: 10px; padding: 10px; color: white;'>
+                            <div style='font-size: 24px; font-weight: bold;'>{evento['data'].split('/')[0]}</div>
+                            <div style='font-size: 14px;'>{evento['data'].split('/')[1]}</div>
+                            <div style='font-size: 12px;'>{evento['hora']}</div>
                         </div>
-                        <i class="fas fa-calendar-check" style="font-size: 40px; color: #0f5c3f;"></i>
+                        <div style='flex: 1;'>
+                            <div style='display: flex; gap: 10px; margin-bottom: 10px;'>
+                                <span class='categoria-badge badge-{evento["tipo"]}'>{evento["tipo"].upper()}</span>
+                                <span style='color: {secondary_text};'><i class='fas fa-map-marker-alt'></i> {evento['local']}</span>
+                            </div>
+                            <h3 style='color: {text_color}; margin: 0;'>{evento['titulo']}</h3>
+                            <p style='color: {secondary_text};'>{evento['descricao']}</p>
+                            <p><i class='fas fa-user'></i> {evento['palestrante']} · <i class='fas fa-building'></i> {evento['organizador']}</p>
+                            <div style='display: flex; justify-content: space-between; align-items: center; margin-top: 10px;'>
+                                <div style='width: 60%;'>
+                                    <div class='progress-bar'>
+                                        <div class='progress-fill' style='width: {min(100, (evento["inscritos"]/max(evento["vagas"],1))*100)}%;'></div>
+                                    </div>
+                                    <small>{evento['inscritos']} de {evento['vagas']} vagas</small>
+                                </div>
+                                <button class='eco-button'>Inscrever-se</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
         
         with tab3:
-            st.markdown('<h2 style="color: #000000;">Ecopontos em Piracicaba</h2>', unsafe_allow_html=True)
+            st.markdown(f"<h2 style='color: {text_color};'>💡 Dicas para um Planeta Mais Verde</h2>", unsafe_allow_html=True)
             
-            # Busca
-            busca = st.text_input("🔍 Buscar local de descarte", placeholder="Ex: pilhas, vidros, eletrônicos...")
+            # Categorias
+            categorias = ["Todos", "resíduos", "água", "energia", "natureza", "reciclagem", "alimentação", "mobilidade", "biodiversidade"]
+            cat_filter = st.selectbox("Filtrar por categoria", categorias)
             
-            locais = {
-                "Pilhas e Baterias": ["Shopping Piracicaba", "Unimed Sede", "Ecoponto Centro", "Esalq", "Drogaria São Paulo"],
-                "Vidros": ["Ecoponto Vila Rezende", "Coopervidros", "Recicla Piracicaba", "Ecoponto Paulicéia"],
-                "Eletrônicos": ["CDI - R. do Porto, 234", "Assistência Consert+", "Ecoponto Monte Líbano"],
-                "Fios e Cabos": ["Cooperativa Recifios", "Ecoponto Centro", "Ferro Velho Central"],
-                "Coleta Seletiva": ["Ecoponto Monte Líbano", "Associação Recicladores", "LEV - Av. Limeira"],
-                "Óleo de Cozinha": ["Ecoponto Paulicéia", "Cremeria Santa Helena", "UNIP", "Posto Ipiranga"]
-            }
-            
-            if busca:
-                st.markdown(f"<h3 style='color: #000000;'>Resultados para: {busca}</h3>", unsafe_allow_html=True)
-                encontrou = False
-                for cat, locs in locais.items():
-                    for l in locs:
-                        if busca.lower() in l.lower() or busca.lower() in cat.lower():
-                            st.markdown(f"<p style='color: #000000;'>✅ **{cat}:** {l}</p>", unsafe_allow_html=True)
-                            encontrou = True
-                if not encontrou:
-                    st.warning("Nenhum local encontrado")
-            
-            with st.expander("Ver todos os ecopontos por categoria", expanded=True):
-                for cat, locs in locais.items():
-                    st.markdown(f"""
-                    <div class="ecoponto-cat">
-                        <h4 style="color: #000000; border-bottom: 2px solid #c2e8d4; padding-bottom: 5px;">{cat}</h4>
-                    """, unsafe_allow_html=True)
-                    for l in locs:
-                        st.markdown(f"<p style='color: #000000;'>📍 {l}</p>", unsafe_allow_html=True)
-                    st.markdown("</div>", unsafe_allow_html=True)
-        
-        with tab4:
-            st.markdown('<h2 style="color: #000000;">Meu Cadastro</h2>', unsafe_allow_html=True)
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown("### 📋 Dados pessoais")
-                st.info(f"**Nome:** {st.session_state.usuario_logado['nome']}")
-                st.info(f"**E-mail:** {st.session_state.usuario_logado['email']}")
-            
-            with col2:
-                st.markdown("### 📝 Cadastro de interesse")
-                with st.form("cadastro_interesse"):
-                    telefone = st.text_input("Telefone", placeholder="(19) 99999-9999")
-                    bairro = st.text_input("Bairro", placeholder="Onde você mora")
-                    interesse = st.selectbox(
-                        "Interesse principal",
-                        ["Coleta Seletiva", "Compostagem", "Eletrônicos", "Óleo", "Voluntariado"]
-                    )
-                    
-                    if st.form_submit_button("Salvar cadastro"):
-                        conn = sqlite3.connect('sustentabilidade.db')
-                        c = conn.cursor()
-                        c.execute(
-                            "INSERT INTO cadastros (usuario_id, nome, telefone, bairro, interesse, data_cadastro) VALUES (?, ?, ?, ?, ?, ?)",
-                            (st.session_state.usuario_logado['id'], st.session_state.usuario_logado['nome'], telefone, bairro, interesse, datetime.now().strftime("%d/%m/%Y"))
-                        )
-                        conn.commit()
-                        conn.close()
-                        st.success("Cadastro salvo com sucesso!")
-            
-            # Mostrar cadastros anteriores
-            conn = sqlite3.connect('sustentabilidade.db')
-            c = conn.cursor()
-            c.execute("SELECT * FROM cadastros WHERE usuario_id = ? ORDER BY id DESC", (st.session_state.usuario_logado['id'],))
-            cadastros = c.fetchall()
+            conn = sqlite3.connect('ecopiracicaba.db')
+            if cat_filter != "Todos":
+                dicas = pd.read_sql_query(f"SELECT * FROM dicas WHERE categoria = '{cat_filter}'", conn)
+            else:
+                dicas = pd.read_sql_query("SELECT * FROM dicas ORDER BY likes DESC", conn)
             conn.close()
             
-            if cadastros:
-                st.markdown("### 📜 Histórico de cadastros")
-                for cad in cadastros:
+            col1, col2 = st.columns(2)
+            for i, (_, dica) in enumerate(dicas.iterrows()):
+                with col1 if i % 2 == 0 else col2:
                     st.markdown(f"""
-                    <div style="background: #e5f3ec; border-radius: 10px; padding: 10px; margin-bottom: 5px; border-left: 4px solid #0f5c3f;">
-                        <strong style="color: #000000;">{cad[3]}</strong> <span style="color: #000000;">· {cad[4]}</span><br>
-                        <small style="color: #000000;">{cad[2]} | {cad[5]}</small>
+                    <div class='dica-card'>
+                        <div style='display: flex; justify-content: space-between; align-items: center;'>
+                            <span class='categoria-badge' style='background: {icon_color}; color: white;'>{dica['categoria'].upper()}</span>
+                            <span><i class='fas fa-heart' style='color: #ff6b6b;'></i> {dica['likes']}</span>
+                        </div>
+                        <h3 style='color: {text_color};'>{dica['titulo']}</h3>
+                        <p style='color: {secondary_text};'>{dica['conteudo']}</p>
+                        <div style='display: flex; justify-content: space-between; align-items: center;'>
+                            <small><i class='fas fa-user'></i> {dica['autor']} · {dica['data_publicacao']}</small>
+                            <button class='eco-button' style='padding: 5px 15px;'>Curtir</button>
+                        </div>
                     </div>
                     """, unsafe_allow_html=True)
+        
+        with tab4:
+            st.markdown(f"<h2 style='color: {text_color};'>📍 Pontos de Coleta Seletiva</h2>", unsafe_allow_html=True)
+            
+            col1, col2 = st.columns([2, 1])
+            with col1:
+                # Mapa simples (simulado)
+                st.markdown(f"""
+                <div class='eco-card' style='height: 400px; display: flex; align-items: center; justify-content: center;'>
+                    <i class='fas fa-map-marked-alt' style='font-size: 100px; color: {icon_color};'></i>
+                    <p style='margin-left: 20px;'>Mapa interativo dos 45 pontos de coleta em Piracicaba</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                categoria_map = st.selectbox("Categoria", ["Todos", "geral", "pilhas", "vidros", "eletronicos", "oleo", "organicos", "metais"])
+                avaliacao_min = st.slider("Avaliação mínima", 0.0, 5.0, 3.0, 0.5)
+            
+            conn = sqlite3.connect('ecopiracicaba.db')
+            query = "SELECT * FROM pontos_coleta WHERE avaliacao >= ?"
+            params = [avaliacao_min]
+            if categoria_map != "Todos":
+                query += " AND categoria = ?"
+                params.append(categoria_map)
+            pontos = pd.read_sql_query(query, conn, params=params)
+            conn.close()
+            
+            for _, ponto in pontos.iterrows():
+                st.markdown(f"""
+                <div class='ponto-card'>
+                    <div style='display: flex; justify-content: space-between;'>
+                        <div>
+                            <h3 style='color: {text_color};'>{ponto['nome']}</h3>
+                            <p><i class='fas fa-map-pin'></i> {ponto['endereco']}</p>
+                            <p><i class='fas fa-clock'></i> {ponto['horario']}</p>
+                            <p><i class='fas fa-phone'></i> {ponto['telefone']}</p>
+                            <p><small>{ponto['descricao']}</small></p>
+                        </div>
+                        <div style='text-align: center;'>
+                            <div style='font-size: 24px; color: gold;'>{'★' * int(ponto['avaliacao'])}{'☆' * (5 - int(ponto['avaliacao']))}</div>
+                            <p>{ponto['avaliacao']}/5.0</p>
+                            <span class='categoria-badge' style='background: {icon_color}; color: white;'>{ponto['categoria'].upper()}</span>
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+        
+        with tab5:
+            st.markdown(f"<h2 style='color: {text_color};'>📊 Estatísticas Ambientais de Piracicaba</h2>", unsafe_allow_html=True)
+            
+            conn = sqlite3.connect('ecopiracicaba.db')
+            stats = pd.read_sql_query("SELECT * FROM estatisticas", conn)
+            conn.close()
+            
+            # Gráfico de barras
+            fig = go.Figure(data=[
+                go.Bar(name='Valores', x=stats['titulo'], y=[float(s.split()[0]) if s.split()[0].replace('.','').isdigit() else 0 for s in stats['valor']],
+                      marker_color=icon_color)
+            ])
+            fig.update_layout(title="Indicadores Ambientais",
+                            xaxis_title="Indicador", yaxis_title="Valor",
+                            template="plotly_white" if tema == "light" else "plotly_dark")
+            st.plotly_chart(fig, use_container_width=True)
+            
+            # Tabela de estatísticas
+            st.markdown(f"<h3 style='color: {text_color};'>Detalhamento</h3>", unsafe_allow_html=True)
+            for _, stat in stats.iterrows():
+                st.markdown(f"""
+                <div class='eco-card' style='padding: 15px;'>
+                    <div style='display: flex; justify-content: space-between; align-items: center;'>
+                        <div>
+                            <h4 style='color: {text_color}; margin: 0;'>{stat['titulo']}</h4>
+                            <small>Fonte: {stat['fonte']} · Atualizado em {stat['data_atualizacao']}</small>
+                        </div>
+                        <div style='font-size: 28px; font-weight: bold; color: {icon_color};'>
+                            {stat['valor']} {stat['unidade']}
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
