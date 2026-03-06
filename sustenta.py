@@ -59,151 +59,68 @@ def validar_email(email):
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(pattern, email) is not None
 
-# ========== SISTEMA DE DESAFIOS SEMANAIS ==========
+# ========== SISTEMA DE GAMIFICAÇÃO ==========
 
-# Lista completa de desafios
+# Níveis e pontuação
+NIVEIS = {
+    "🌱 EcoIniciante": 0,
+    "🌿 EcoAmigo": 100,
+    "🍃 EcoGuardião": 500,
+    "🌳 EcoMestre": 1000,
+    "🏆 EcoHerói": 5000
+}
+
+# Tipos de conquistas
+CONQUISTAS = {
+    "primeiro_login": {"nome": "Primeiro Passo", "pontos": 10, "icone": "👋"},
+    "primeiro_evento": {"nome": "Evento Estreia", "pontos": 50, "icone": "📅"},
+    "cinco_eventos": {"nome": "Participante Ativo", "pontos": 100, "icone": "🎫"},
+    "dez_eventos": {"nome": "Veterano Verde", "pontos": 200, "icone": "🏅"},
+    "primeira_dica": {"nome": "Aprendiz", "pontos": 5, "icone": "💡"},
+    "cinco_dicas": {"nome": "Curioso", "pontos": 25, "icone": "🔍"},
+    "dez_dicas": {"nome": "Sábio Ambiental", "pontos": 50, "icone": "📚"},
+    "primeiro_ponto": {"nome": "Explorador", "pontos": 15, "icone": "🗺️"},
+    "cinco_pontos": {"nome": "Colecionador", "pontos": 75, "icone": "🎯"},
+    "convidar_amigo": {"nome": "Multiplicador", "pontos": 100, "icone": "👥"},
+    "reciclar_10kg": {"nome": "Reciclador Bronze", "pontos": 50, "icone": "♻️"},
+    "reciclar_50kg": {"nome": "Reciclador Prata", "pontos": 200, "icone": "🥈"},
+    "reciclar_100kg": {"nome": "Reciclador Ouro", "pontos": 500, "icone": "🥇"},
+    "plantar_arvore": {"nome": "Guardião da Floresta", "pontos": 100, "icone": "🌳"},
+}
+
+# Desafios semanais - AGORA COMO LISTA DE DICIONÁRIOS PARA INSERIR NO BANCO
 DESAFIOS_LISTA = [
     {
         "id": 1,
-        "titulo": "♻️ Reciclar 10kg",
-        "descricao": "Recicle 10kg de materiais recicláveis esta semana",
-        "objetivo": 10,
-        "unidade": "kg",
-        "pontos": 200,
-        "icone": "♻️",
-        "tipo": "reciclagem",
-        "badge": "♻️ Mestre da Reciclagem"
+        "titulo": "🌱 Coletor de Pilhas",
+        "descricao": "Descarte 5 pilhas ou baterias em pontos de coleta",
+        "pontos": 100,
+        "icone": "🔋",
+        "tipo": "pilhas"
     },
     {
         "id": 2,
-        "titulo": "📅 Participar de 2 Eventos",
-        "descricao": "Participe de 2 eventos ambientais esta semana",
-        "objetivo": 2,
-        "unidade": "eventos",
-        "pontos": 300,
-        "icone": "📅",
-        "tipo": "eventos",
-        "badge": "🎉 Participante Ativo"
+        "titulo": "♻️ Mestre da Reciclagem",
+        "descricao": "Separe corretamente 10kg de recicláveis",
+        "pontos": 150,
+        "icone": "🔄",
+        "tipo": "reciclagem"
     },
     {
         "id": 3,
-        "titulo": "🌳 Plantar uma Árvore",
-        "descricao": "Plante 1 árvore nativa esta semana",
-        "objetivo": 1,
-        "unidade": "árvore",
-        "pontos": 500,
-        "icone": "🌳",
-        "tipo": "plantio",
-        "badge": "🌲 Guardião da Floresta"
+        "titulo": "📅 Participante de Eventos",
+        "descricao": "Participe de 2 eventos ambientais",
+        "pontos": 200,
+        "icone": "🎉",
+        "tipo": "eventos"
     },
     {
         "id": 4,
-        "titulo": "🔋 Descartar Pilhas",
-        "descricao": "Descarte 5 pilhas ou baterias em pontos de coleta",
-        "objetivo": 5,
-        "unidade": "pilhas",
-        "pontos": 150,
-        "icone": "🔋",
-        "tipo": "pilhas",
-        "badge": "🔋 Coletor de Pilhas"
-    },
-    {
-        "id": 5,
-        "titulo": "💧 Economizar Água",
-        "descricao": "Reduza seu consumo de água em 20% esta semana",
-        "objetivo": 20,
-        "unidade": "%",
-        "pontos": 250,
-        "icone": "💧",
-        "tipo": "agua",
-        "badge": "💧 Amigo da Água"
-    },
-    {
-        "id": 6,
-        "titulo": "🚲 Usar Bike 3x",
-        "descricao": "Use bicicleta em vez de carro 3 vezes esta semana",
-        "objetivo": 3,
-        "unidade": "vezes",
-        "pontos": 180,
-        "icone": "🚲",
-        "tipo": "mobilidade",
-        "badge": "🚲 Ciclista Verde"
-    },
-    {
-        "id": 7,
-        "titulo": "🥕 Comprar Orgânicos",
-        "descricao": "Compre produtos orgânicos 3 vezes esta semana",
-        "objetivo": 3,
-        "unidade": "vezes",
-        "pontos": 120,
-        "icone": "🥕",
-        "tipo": "alimentacao",
-        "badge": "🥕 Consumidor Consciente"
-    },
-    {
-        "id": 8,
-        "titulo": "📚 Ler 5 Dicas",
-        "descricao": "Leia 5 dicas ambientais no app",
-        "objetivo": 5,
-        "unidade": "dicas",
-        "pontos": 80,
-        "icone": "📚",
-        "tipo": "dicas",
-        "badge": "📚 Sábio Ambiental"
-    },
-    {
-        "id": 9,
-        "titulo": "👥 Convidar 2 Amigos",
-        "descricao": "Convide 2 amigos para o app",
-        "objetivo": 2,
-        "unidade": "amigos",
-        "pontos": 400,
-        "icone": "👥",
-        "tipo": "convite",
-        "badge": "👥 Multiplicador Verde"
-    },
-    {
-        "id": 10,
-        "titulo": "📍 Visitar 3 Ecopontos",
-        "descricao": "Visite 3 pontos de coleta diferentes",
-        "objetivo": 3,
-        "unidade": "pontos",
-        "pontos": 200,
-        "icone": "📍",
-        "tipo": "visitas",
-        "badge": "📍 Explorador Ambiental"
-    }
-]
-
-# Prêmios especiais por completar múltiplos desafios
-PREMIOS = [
-    {
-        "nome": "🥉 Bronze Ambiental",
-        "descricao": "Complete 3 desafios na semana",
-        "icone": "🥉",
-        "pontos_bonus": 100,
-        "min_desafios": 3
-    },
-    {
-        "nome": "🥈 Prata Ambiental",
-        "descricao": "Complete 5 desafios na semana",
-        "icone": "🥈",
-        "pontos_bonus": 250,
-        "min_desafios": 5
-    },
-    {
-        "nome": "🥇 Ouro Ambiental",
-        "descricao": "Complete 7 desafios na semana",
-        "icone": "🥇",
-        "pontos_bonus": 500,
-        "min_desafios": 7
-    },
-    {
-        "nome": "🏆 Campeão da Sustentabilidade",
-        "descricao": "Complete todos os 10 desafios na semana",
-        "icone": "🏆",
-        "pontos_bonus": 1000,
-        "min_desafios": 10
+        "titulo": "🌳 Plantador de Árvores",
+        "descricao": "Plante 1 árvore nativa",
+        "pontos": 300,
+        "icone": "🌲",
+        "tipo": "plantio"
     }
 ]
 
@@ -239,91 +156,52 @@ def init_database():
             pontos INTEGER NOT NULL,
             data TEXT NOT NULL,
             descricao TEXT,
-            icone TEXT,
             FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
         )
     ''')
     
-    # Verificar se a tabela progresso existe e quais colunas ela tem
-    c.execute("PRAGMA table_info(progresso)")
-    colunas_progresso = [col[1] for col in c.fetchall()]
+    # Tabela de progresso do usuário
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS progresso (
+            usuario_id INTEGER PRIMARY KEY,
+            total_pontos INTEGER DEFAULT 0,
+            nivel TEXT DEFAULT '🌱 EcoIniciante',
+            eventos_participados INTEGER DEFAULT 0,
+            dicas_vistas INTEGER DEFAULT 0,
+            pontos_visitados INTEGER DEFAULT 0,
+            kg_reciclados REAL DEFAULT 0,
+            arvores_plantadas INTEGER DEFAULT 0,
+            amigos_convidados INTEGER DEFAULT 0,
+            streak_dias INTEGER DEFAULT 0,
+            ultima_atividade TEXT,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
+        )
+    ''')
     
-    # Se a tabela não existe, criar com todas as colunas
-    if not colunas_progresso:
-        c.execute('''
-            CREATE TABLE progresso (
-                usuario_id INTEGER PRIMARY KEY,
-                total_pontos INTEGER DEFAULT 0,
-                nivel TEXT DEFAULT '🌱 EcoIniciante',
-                eventos_participados INTEGER DEFAULT 0,
-                dicas_vistas INTEGER DEFAULT 0,
-                pontos_visitados INTEGER DEFAULT 0,
-                kg_reciclados REAL DEFAULT 0,
-                arvores_plantadas INTEGER DEFAULT 0,
-                amigos_convidados INTEGER DEFAULT 0,
-                streak_dias INTEGER DEFAULT 0,
-                ultima_atividade TEXT,
-                desafios_completados_semana INTEGER DEFAULT 0,
-                melhor_semana INTEGER DEFAULT 0,
-                total_desafios_completados INTEGER DEFAULT 0,
-                FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
-            )
-        ''')
-    else:
-        # Se a tabela existe mas falta alguma coluna, adicionar
-        colunas_necessarias = [
-            'desafios_completados_semana', 'melhor_semana', 'total_desafios_completados'
-        ]
-        
-        for coluna in colunas_necessarias:
-            if coluna not in colunas_progresso:
-                try:
-                    c.execute(f"ALTER TABLE progresso ADD COLUMN {coluna} INTEGER DEFAULT 0")
-                except:
-                    pass  # Coluna já existe
-    
-    # Tabela de desafios (catálogo)
+    # NOVA TABELA: desafios (catálogo de desafios)
     c.execute('''
         CREATE TABLE IF NOT EXISTS desafios (
             id INTEGER PRIMARY KEY,
             titulo TEXT NOT NULL,
             descricao TEXT,
-            objetivo INTEGER,
-            unidade TEXT,
             pontos INTEGER,
             icone TEXT,
-            tipo TEXT,
-            badge TEXT
+            tipo TEXT
         )
     ''')
     
-    # Tabela de desafios ativos do usuário (semana atual)
+    # Tabela de desafios ativos do usuário
     c.execute('''
         CREATE TABLE IF NOT EXISTS desafios_ativos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             usuario_id INTEGER,
             desafio_id INTEGER,
-            progresso REAL DEFAULT 0,
+            progresso INTEGER DEFAULT 0,
             concluido INTEGER DEFAULT 0,
             data_inicio TEXT,
             data_conclusao TEXT,
-            premio_recebido INTEGER DEFAULT 0,
             FOREIGN KEY (usuario_id) REFERENCES usuarios (id),
             FOREIGN KEY (desafio_id) REFERENCES desafios (id)
-        )
-    ''')
-    
-    # Tabela de histórico semanal
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS historico_semanal (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            usuario_id INTEGER,
-            semana TEXT,
-            desafios_completados INTEGER,
-            pontos_ganhos INTEGER,
-            premio_especial TEXT,
-            data_registro TEXT,
-            FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
         )
     ''')
     
@@ -359,20 +237,6 @@ def init_database():
         )
     ''')
     
-    # Tabela de inscrições em eventos
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS inscricoes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            usuario_id INTEGER,
-            evento_id INTEGER,
-            data_inscricao TEXT,
-            participou INTEGER DEFAULT 0,
-            UNIQUE(usuario_id, evento_id),
-            FOREIGN KEY (usuario_id) REFERENCES usuarios (id),
-            FOREIGN KEY (evento_id) REFERENCES eventos (id)
-        )
-    ''')
-    
     # Tabela de dicas ambientais
     c.execute('''
         CREATE TABLE IF NOT EXISTS dicas (
@@ -383,19 +247,6 @@ def init_database():
             data_publicacao TEXT,
             likes INTEGER DEFAULT 0,
             autor TEXT
-        )
-    ''')
-    
-    # Tabela de visualizações de dicas
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS dicas_vistas (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            usuario_id INTEGER,
-            dica_id INTEGER,
-            data_vista TEXT,
-            UNIQUE(usuario_id, dica_id),
-            FOREIGN KEY (usuario_id) REFERENCES usuarios (id),
-            FOREIGN KEY (dica_id) REFERENCES dicas (id)
         )
     ''')
     
@@ -412,20 +263,6 @@ def init_database():
             longitude REAL,
             avaliacao REAL DEFAULT 0,
             descricao TEXT
-        )
-    ''')
-    
-    # Tabela de visitas a pontos
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS visitas_pontos (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            usuario_id INTEGER,
-            ponto_id INTEGER,
-            data_visita TEXT,
-            quantidade REAL DEFAULT 0,
-            UNIQUE(usuario_id, ponto_id, data_visita),
-            FOREIGN KEY (usuario_id) REFERENCES usuarios (id),
-            FOREIGN KEY (ponto_id) REFERENCES pontos_coleta (id)
         )
     ''')
     
@@ -449,12 +286,8 @@ def init_database():
     if c.fetchone()[0] == 0:
         for desafio in DESAFIOS_LISTA:
             c.execute(
-                """INSERT INTO desafios 
-                   (id, titulo, descricao, objetivo, unidade, pontos, icone, tipo, badge) 
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (desafio["id"], desafio["titulo"], desafio["descricao"], 
-                 desafio["objetivo"], desafio["unidade"], desafio["pontos"], 
-                 desafio["icone"], desafio["tipo"], desafio["badge"])
+                "INSERT INTO desafios (id, titulo, descricao, pontos, icone, tipo) VALUES (?, ?, ?, ?, ?, ?)",
+                (desafio["id"], desafio["titulo"], desafio["descricao"], desafio["pontos"], desafio["icone"], desafio["tipo"])
             )
     
     # Inserir usuário admin
@@ -559,23 +392,23 @@ def inicializar_progresso(usuario_id):
     if not c.fetchone():
         c.execute(
             """INSERT INTO progresso 
-               (usuario_id, total_pontos, nivel, ultima_atividade, desafios_completados_semana, total_desafios_completados) 
-               VALUES (?, ?, ?, ?, ?, ?)""",
-            (usuario_id, 0, "🌱 EcoIniciante", datetime.now().strftime("%d/%m/%Y %H:%M"), 0, 0)
+               (usuario_id, total_pontos, nivel, ultima_atividade) 
+               VALUES (?, ?, ?, ?)""",
+            (usuario_id, 0, "🌱 EcoIniciante", datetime.now().strftime("%d/%m/%Y %H:%M"))
         )
     
     conn.commit()
     conn.close()
 
-def adicionar_pontos(usuario_id, tipo, pontos_extra, descricao="", icone="✨"):
-    """Adiciona pontos ao usuário e registra conquista"""
+def adicionar_pontos(usuario_id, tipo, pontos_extra, descricao=""):
+    """Adiciona pontos ao usuário"""
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     
     data_atual = datetime.now().strftime("%d/%m/%Y %H:%M")
     c.execute(
-        "INSERT INTO conquistas (usuario_id, tipo, pontos, data, descricao, icone) VALUES (?, ?, ?, ?, ?, ?)",
-        (usuario_id, tipo, pontos_extra, data_atual, descricao, icone)
+        "INSERT INTO conquistas (usuario_id, tipo, pontos, data, descricao) VALUES (?, ?, ?, ?, ?)",
+        (usuario_id, tipo, pontos_extra, data_atual, descricao)
     )
     
     c.execute("SELECT total_pontos FROM progresso WHERE usuario_id = ?", (usuario_id,))
@@ -596,23 +429,6 @@ def adicionar_pontos(usuario_id, tipo, pontos_extra, descricao="", icone="✨"):
     
     return pontos_extra
 
-def adicionar_badge(usuario_id, badge_nome, badge_icone):
-    """Adiciona um badge ao usuário"""
-    conn = sqlite3.connect('ecopiracicaba.db')
-    c = conn.cursor()
-    
-    try:
-        c.execute(
-            "INSERT INTO badges (usuario_id, badge_nome, badge_icone, data_obtencao) VALUES (?, ?, ?, ?)",
-            (usuario_id, badge_nome, badge_icone, datetime.now().strftime("%d/%m/%Y %H:%M"))
-        )
-        conn.commit()
-    except sqlite3.IntegrityError:
-        # Badge já existe
-        pass
-    
-    conn.close()
-
 def registrar_atividade(usuario_id, tipo, valor=1):
     """Registra atividades do usuário"""
     conn = sqlite3.connect('ecopiracicaba.db')
@@ -632,10 +448,6 @@ def registrar_atividade(usuario_id, tipo, valor=1):
         c.execute("UPDATE progresso SET amigos_convidados = amigos_convidados + ? WHERE usuario_id = ?", (valor, usuario_id))
     
     conn.commit()
-    
-    # Atualizar progresso dos desafios
-    atualizar_progresso_desafios(usuario_id, tipo, valor)
-    
     conn.close()
 
 def gerar_codigo_convite(usuario_id):
@@ -653,300 +465,40 @@ def gerar_codigo_convite(usuario_id):
     
     return codigo
 
-# ========== FUNÇÕES DE DESAFIOS ==========
-
 def iniciar_desafios_semanais(usuario_id):
     """Inicia desafios semanais para o usuário"""
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     
-    # Verifica se já tem desafios ativos desta semana
-    c.execute("""
-        SELECT * FROM desafios_ativos 
-        WHERE usuario_id = ? AND concluido = 0 
-        AND date(data_inicio) >= date('now', '-7 days')
-    """, (usuario_id,))
-    
+    # Verifica se já tem desafios ativos
+    c.execute("SELECT * FROM desafios_ativos WHERE usuario_id = ? AND concluido = 0", (usuario_id,))
     if not c.fetchone():
-        # Remove desafios antigos
-        c.execute("DELETE FROM desafios_ativos WHERE usuario_id = ?", (usuario_id,))
-        
-        # Seleciona 5 desafios aleatórios
+        # Busca todos os desafios disponíveis
         c.execute("SELECT id FROM desafios")
         todos_desafios = [row[0] for row in c.fetchall()]
         
-        if len(todos_desafios) >= 5:
-            desafios_selecionados = random.sample(todos_desafios, 5)
+        # Seleciona 3 desafios aleatórios
+        if len(todos_desafios) >= 3:
+            desafios_selecionados = random.sample(todos_desafios, 3)
             for desafio_id in desafios_selecionados:
                 c.execute(
-                    """INSERT INTO desafios_ativos 
-                       (usuario_id, desafio_id, progresso, data_inicio) 
-                       VALUES (?, ?, ?, ?)""",
-                    (usuario_id, desafio_id, 0, datetime.now().strftime("%Y-%m-%d"))
+                    "INSERT INTO desafios_ativos (usuario_id, desafio_id, progresso, data_inicio) VALUES (?, ?, ?, ?)",
+                    (usuario_id, desafio_id, 0, datetime.now().strftime("%d/%m/%Y"))
                 )
-    
-    conn.commit()
-    conn.close()
-
-def atualizar_progresso_desafios(usuario_id, tipo, valor):
-    """Atualiza o progresso dos desafios baseado nas atividades"""
-    conn = sqlite3.connect('ecopiracicaba.db')
-    c = conn.cursor()
-    
-    # Busca desafios ativos do tipo correspondente
-    c.execute("""
-        SELECT da.id, d.id, d.objetivo, d.pontos, d.badge, d.titulo, da.progresso
-        FROM desafios_ativos da
-        JOIN desafios d ON da.desafio_id = d.id
-        WHERE da.usuario_id = ? AND d.tipo = ? AND da.concluido = 0
-    """, (usuario_id, tipo))
-    
-    desafios = c.fetchall()
-    
-    for desafio in desafios:
-        novo_progresso = desafio[6] + valor
-        if novo_progresso >= desafio[2]:
-            # Desafio completado
-            c.execute(
-                "UPDATE desafios_ativos SET progresso = ?, concluido = 1, data_conclusao = ? WHERE id = ?",
-                (desafio[2], datetime.now().strftime("%Y-%m-%d %H:%M:%S"), desafio[0])
-            )
-            
-            # Dar pontos
-            adicionar_pontos(usuario_id, f"desafio_{desafio[1]}", desafio[3], 
-                           f"Completou o desafio: {desafio[5]}", desafio[4])
-            
-            # Dar badge
-            adicionar_badge(usuario_id, desafio[4], desafio[4])
-            
-            # Atualizar contador de desafios da semana
-            c.execute("""
-                UPDATE progresso SET 
-                    desafios_completados_semana = desafios_completados_semana + 1,
-                    total_desafios_completados = total_desafios_completados + 1
-                WHERE usuario_id = ?
-            """, (usuario_id,))
-        else:
-            # Atualizar progresso
-            c.execute(
-                "UPDATE desafios_ativos SET progresso = ? WHERE id = ?",
-                (novo_progresso, desafio[0])
-            )
-    
-    conn.commit()
-    
-    # Verificar prêmios especiais
-    verificar_premios_especiais(usuario_id)
-    
-    conn.close()
-
-def verificar_premios_especiais(usuario_id):
-    """Verifica se o usuário ganhou prêmios por completar múltiplos desafios"""
-    conn = sqlite3.connect('ecopiracicaba.db')
-    c = conn.cursor()
-    
-    # Quantos desafios completou esta semana
-    c.execute("""
-        SELECT COUNT(*) FROM desafios_ativos 
-        WHERE usuario_id = ? AND concluido = 1
-    """, (usuario_id,))
-    completados = c.fetchone()[0]
-    
-    # Buscar melhor semana atual
-    c.execute("SELECT melhor_semana FROM progresso WHERE usuario_id = ?", (usuario_id,))
-    melhor_semana = c.fetchone()
-    if melhor_semana:
-        if completados > melhor_semana[0]:
-            c.execute("UPDATE progresso SET melhor_semana = ? WHERE usuario_id = ?", (completados, usuario_id))
-    
-    # Verificar prêmios não recebidos ainda
-    for premio in PREMIOS:
-        if completados >= premio["min_desafios"]:
-            # Verificar se já recebeu esse prêmio esta semana
-            c.execute("""
-                SELECT * FROM historico_semanal 
-                WHERE usuario_id = ? AND premio_especial = ? 
-                ORDER BY id DESC LIMIT 1
-            """, (usuario_id, premio["nome"]))
-            
-            if not c.fetchone():
-                # Dar prêmio
-                adicionar_pontos(usuario_id, f"premio_semana", premio["pontos_bonus"], 
-                               f"Ganhou: {premio['nome']}", premio["icone"])
-                adicionar_badge(usuario_id, premio["nome"], premio["icone"])
-                
-                # Registrar no histórico
-                c.execute("""
-                    INSERT INTO historico_semanal 
-                    (usuario_id, semana, desafios_completados, pontos_ganhos, premio_especial, data_registro)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """, (usuario_id, datetime.now().strftime("%Y-%m-%d"), completados, 
-                      premio["pontos_bonus"], premio["nome"], datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
     
     conn.commit()
     conn.close()
 
 # ========== COMPONENTES DE INTERFACE ==========
 
-def mostrar_pagina_desafios(usuario_id, text_color, card_bg, icon_color, border_color):
-    """Mostra página dedicada aos desafios"""
-    st.markdown(f"<h2 style='color: {text_color};'>🎯 Desafios Semanais</h2>", unsafe_allow_html=True)
-    
-    # Iniciar desafios se não existirem
-    iniciar_desafios_semanais(usuario_id)
-    
-    conn = sqlite3.connect('ecopiracicaba.db')
-    c = conn.cursor()
-    
-    # Buscar progresso - CORRIGIDO: verificar se a coluna existe
-    try:
-        c.execute("SELECT desafios_completados_semana, total_pontos FROM progresso WHERE usuario_id = ?", (usuario_id,))
-        prog = c.fetchone()
-        completados = prog[0] if prog else 0
-        pontos = prog[1] if prog else 0
-    except:
-        # Se a coluna não existir, usar valor padrão
-        c.execute("SELECT total_pontos FROM progresso WHERE usuario_id = ?", (usuario_id,))
-        prog = c.fetchone()
-        completados = 0
-        pontos = prog[0] if prog else 0
-    
-    # Buscar desafios ativos - CORRIGIDO: verificar se existem
-    c.execute("""
-        SELECT d.id, d.titulo, d.descricao, d.objetivo, d.unidade, d.pontos, d.icone, 
-               COALESCE(da.progresso, 0) as progresso, COALESCE(da.concluido, 0) as concluido, 
-               COALESCE(da.data_inicio, '') as data_inicio
-        FROM desafios d
-        LEFT JOIN desafios_ativos da ON d.id = da.desafio_id AND da.usuario_id = ?
-        WHERE da.usuario_id = ? OR da.usuario_id IS NULL
-        ORDER BY da.concluido, d.id
-        LIMIT 5
-    """, (usuario_id, usuario_id))
-    
-    desafios = c.fetchall()
-    
-    conn.close()
-    
-    # Mostrar progresso semanal
-    st.markdown(f"""
-    <div style='background: {card_bg}; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid {border_color}; text-align: center;'>
-        <h3 style='color: {text_color};'>📊 Progresso Semanal</h3>
-        <div style='display: flex; justify-content: space-around; margin: 20px 0;'>
-            <div>
-                <span style='font-size: 36px; color: {icon_color};'>{completados}</span>
-                <p style='color: {text_color};'>Desafios Completados</p>
-            </div>
-            <div>
-                <span style='font-size: 36px; color: gold;'>🏆</span>
-                <p style='color: {text_color};'>{pontos} Pontos</p>
-            </div>
-        </div>
-        <div style='height: 10px; background: {border_color}; border-radius: 5px;'>
-            <div style='height: 100%; width: {min(100, (completados/5)*100)}%; background: {icon_color}; border-radius: 5px;'></div>
-        </div>
-        <p style='color: {text_color}; margin-top: 10px;'>Complete 5 desafios para ganhar prêmios especiais!</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Mostrar prêmios disponíveis
-    st.markdown(f"<h3 style='color: {text_color};'>🎁 Prêmios da Semana</h3>", unsafe_allow_html=True)
-    
-    cols = st.columns(4)
-    for i, premio in enumerate(PREMIOS):
-        with cols[i]:
-            cor = "#cd7f32" if i == 0 else "#c0c0c0" if i == 1 else "#ffd700" if i == 2 else "#ff6b6b"
-            disponivel = completados >= premio["min_desafios"]
-            
-            st.markdown(f"""
-            <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 2px solid {cor if disponivel else border_color}; opacity: {1 if disponivel else 0.5};'>
-                <span style='font-size: 36px;'>{premio['icone']}</span>
-                <h4 style='color: {text_color};'>{premio['nome']}</h4>
-                <p style='color: {text_color};'>{premio['descricao']}</p>
-                <p style='color: {icon_color};'>+{premio['pontos_bonus']} pts</p>
-                {'' if disponivel else '<p style="color: #f44336;">🔒 Bloqueado</p>'}
-            </div>
-            """, unsafe_allow_html=True)
-    
-    # Mostrar desafios
-    if desafios:
-        st.markdown(f"<h3 style='color: {text_color};'>📋 Seus Desafios</h3>", unsafe_allow_html=True)
-        
-        for desafio in desafios:
-            if desafio[7] is not None:  # Se tem progresso
-                progresso_percent = (desafio[7] / desafio[3]) * 100 if desafio[3] > 0 else 0
-                status = "✅ Concluído" if desafio[8] == 1 else f"Progresso: {desafio[7]:.0f}/{desafio[3]} {desafio[4]}"
-                cor_status = icon_color if desafio[8] == 1 else text_color
-                
-                st.markdown(f"""
-                <div style='background: {card_bg}; padding: 20px; border-radius: 15px; margin-bottom: 15px; border-left: 6px solid {icon_color if desafio[8]==0 else '#4caf50'}; border: 1px solid {border_color};'>
-                    <div style='display: flex; align-items: center; gap: 15px;'>
-                        <span style='font-size: 40px;'>{desafio[6]}</span>
-                        <div style='flex: 1;'>
-                            <div style='display: flex; justify-content: space-between;'>
-                                <h4 style='color: {text_color}; margin: 0;'>{desafio[1]}</h4>
-                                <span style='color: {icon_color};'>+{desafio[5]} pts</span>
-                            </div>
-                            <p style='color: {text_color}; margin: 5px 0;'>{desafio[2]}</p>
-                            <div style='display: flex; align-items: center; gap: 10px;'>
-                                <div style='flex: 1; height: 10px; background: {border_color}; border-radius: 5px;'>
-                                    <div style='height: 100%; width: {progresso_percent}%; background: {icon_color if desafio[8]==0 else '#4caf50'}; border-radius: 5px;'></div>
-                                </div>
-                                <span style='color: {cor_status}; min-width: 120px;'>{status}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-    else:
-        st.info("Carregando desafios...")
-    
-    # Badges conquistados
-    conn = sqlite3.connect('ecopiracicaba.db')
-    c = conn.cursor()
-    c.execute("SELECT badge_nome, badge_icone, data_obtencao FROM badges WHERE usuario_id = ? ORDER BY data_obtencao DESC LIMIT 8", (usuario_id,))
-    badges = c.fetchall()
-    conn.close()
-    
-    if badges:
-        st.markdown(f"<h3 style='color: {text_color};'>🏅 Suas Conquistas</h3>", unsafe_allow_html=True)
-        
-        cols = st.columns(4)
-        for i, badge in enumerate(badges):
-            with cols[i % 4]:
-                st.markdown(f"""
-                <div style='background: {card_bg}; padding: 10px; border-radius: 10px; text-align: center; margin-bottom: 10px; border: 1px solid gold;'>
-                    <span style='font-size: 30px;'>{badge[1]}</span>
-                    <p style='color: {text_color}; font-weight: bold;'>{badge[0]}</p>
-                    <p style='color: {text_color}; font-size: 10px;'>{badge[2][:10] if badge[2] else ''}</p>
-                </div>
-                """, unsafe_allow_html=True)
-
 def mostrar_perfil(usuario_id, nome, text_color, card_bg, icon_color, border_color):
     """Mostra o perfil do usuário com estatísticas e conquistas"""
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     
-    # Buscar progresso - CORRIGIDO: verificar colunas existentes
+    # Buscar progresso
     c.execute("SELECT * FROM progresso WHERE usuario_id = ?", (usuario_id,))
     progresso = c.fetchone()
-    
-    if progresso:
-        # Mapear valores baseado no número de colunas
-        pontos = progresso[1] if len(progresso) > 1 else 0
-        nivel = progresso[2] if len(progresso) > 2 else "🌱 EcoIniciante"
-        eventos = progresso[3] if len(progresso) > 3 else 0
-        dicas = progresso[4] if len(progresso) > 4 else 0
-        visitas = progresso[5] if len(progresso) > 5 else 0
-        kg = progresso[6] if len(progresso) > 6 else 0
-        arvores = progresso[7] if len(progresso) > 7 else 0
-        amigos = progresso[8] if len(progresso) > 8 else 0
-        streak = progresso[9] if len(progresso) > 9 else 0
-        desafios_semana = progresso[11] if len(progresso) > 11 else 0
-        total_desafios = progresso[12] if len(progresso) > 12 else 0
-    else:
-        pontos = 0
-        nivel = "🌱 EcoIniciante"
-        eventos = dicas = visitas = kg = arvores = amigos = streak = desafios_semana = total_desafios = 0
     
     # Buscar conquistas recentes
     c.execute("SELECT * FROM conquistas WHERE usuario_id = ? ORDER BY data DESC LIMIT 5", (usuario_id,))
@@ -956,7 +508,33 @@ def mostrar_perfil(usuario_id, nome, text_color, card_bg, icon_color, border_col
     c.execute("SELECT * FROM badges WHERE usuario_id = ?", (usuario_id,))
     badges = c.fetchall()
     
+    # Buscar desafios ativos - CORRIGIDO: agora usa JOIN com a tabela desafios
+    c.execute("""
+        SELECT d.id, d.titulo, d.descricao, d.pontos, d.icone, da.progresso, da.data_inicio 
+        FROM desafios_ativos da
+        JOIN desafios d ON da.desafio_id = d.id
+        WHERE da.usuario_id = ? AND da.concluido = 0
+    """, (usuario_id,))
+    desafios = c.fetchall()
+    
     conn.close()
+    
+    if progresso:
+        pontos = progresso[1]  # total_pontos
+        nivel = progresso[2]    # nivel
+        streak = progresso[9] if len(progresso) > 9 else 0  # streak_dias
+        eventos = progresso[3] if len(progresso) > 3 else 0
+        dicas = progresso[4] if len(progresso) > 4 else 0
+        visitas = progresso[5] if len(progresso) > 5 else 0
+        kg = progresso[6] if len(progresso) > 6 else 0
+    else:
+        pontos = 0
+        nivel = "🌱 EcoIniciante"
+        streak = 0
+        eventos = 0
+        dicas = 0
+        visitas = 0
+        kg = 0
     
     proximo = get_proximo_nivel(pontos)
     
@@ -1031,39 +609,29 @@ def mostrar_perfil(usuario_id, nome, text_color, card_bg, icon_color, border_col
         </div>
         """, unsafe_allow_html=True)
     
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.markdown(f"""
-        <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
-            <h4 style='color: {text_color};'>🌳 Árvores</h4>
-            <h2 style='color: {icon_color};'>{arvores}</h2>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown(f"""
-        <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
-            <h4 style='color: {text_color};'>👥 Amigos</h4>
-            <h2 style='color: {icon_color};'>{amigos}</h2>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col3:
-        st.markdown(f"""
-        <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
-            <h4 style='color: {text_color};'>🎯 Desafios</h4>
-            <h2 style='color: {icon_color};'>{desafios_semana}</h2>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col4:
-        st.markdown(f"""
-        <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
-            <h4 style='color: {text_color};'>🏅 Total</h4>
-            <h2 style='color: {icon_color};'>{total_desafios}</h2>
-        </div>
-        """, unsafe_allow_html=True)
+    # Desafios ativos
+    if desafios:
+        st.markdown(f"<h3 style='color: {text_color};'>🎯 Desafios da Semana</h3>", unsafe_allow_html=True)
+        
+        for desafio in desafios:
+            st.markdown(f"""
+            <div style='background: {card_bg}; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 6px solid {icon_color}; border: 1px solid {border_color};'>
+                <div style='display: flex; justify-content: space-between; align-items: center;'>
+                    <div>
+                        <span style='font-size: 24px;'>{desafio[4]}</span>
+                        <strong style='color: {text_color};'>{desafio[1]}</strong>
+                        <p style='color: {text_color}; font-size: 12px;'>{desafio[2]}</p>
+                    </div>
+                    <div style='text-align: right;'>
+                        <span style='color: {icon_color};'>+{desafio[3]} pts</span>
+                        <div style='height: 8px; width: 100px; background: {border_color}; border-radius: 4px; margin: 5px 0;'>
+                            <div style='height: 100%; width: {desafio[5]}%; background: {icon_color}; border-radius: 4px;'></div>
+                        </div>
+                        <small style='color: {text_color};'>{desafio[5]}%</small>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
     
     # Conquistas recentes
     if conquistas:
@@ -1074,9 +642,9 @@ def mostrar_perfil(usuario_id, nome, text_color, card_bg, icon_color, border_col
             with cols[i]:
                 st.markdown(f"""
                 <div style='background: {card_bg}; padding: 10px; border-radius: 10px; text-align: center; margin-bottom: 10px; border: 1px solid {border_color};'>
-                    <span style='font-size: 30px;'>{conquista[6] if len(conquista) > 6 else '✨'}</span>
+                    <span style='font-size: 30px;'>✨</span>
                     <h4 style='color: {text_color};'>{conquista[5]}</h4>
-                    <p style='color: {text_color};'><small>{conquista[4][:10] if conquista[4] else ''}</small></p>
+                    <p style='color: {text_color};'><small>{conquista[4][:10]}</small></p>
                     <span style='color: {icon_color};'>+{conquista[3]} pts</span>
                 </div>
                 """, unsafe_allow_html=True)
@@ -1087,8 +655,7 @@ def mostrar_ranking(text_color, card_bg, icon_color, border_color):
     c = conn.cursor()
     
     c.execute("""
-        SELECT u.nome, p.total_pontos, p.nivel, 
-               COALESCE(p.desafios_completados_semana, 0) as desafios
+        SELECT u.nome, p.total_pontos, p.nivel 
         FROM usuarios u
         JOIN progresso p ON u.id = p.usuario_id
         ORDER BY p.total_pontos DESC
@@ -1107,14 +674,9 @@ def mostrar_ranking(text_color, card_bg, icon_color, border_color):
         medalha = "🥇" if i == 0 else "🥈" if i == 1 else "🥉" if i == 2 else f"{i+1}º"
         st.markdown(f"""
         <div style='background: {card_bg}; padding: 10px; border-radius: 10px; margin-bottom: 5px; border: 1px solid {border_color};'>
-            <div style='display: flex; justify-content: space-between; align-items: center;'>
-                <div>
-                    <span style='color: {text_color};'><strong>{medalha} {usuario[0]}</strong> - {usuario[2]}</span>
-                </div>
-                <div>
-                    <span style='color: {icon_color}; margin-right: 15px;'><strong>{usuario[1]} pts</strong></span>
-                    <span style='color: #ff9800;'>🎯 {usuario[3]}</span>
-                </div>
+            <div style='display: flex; justify-content: space-between;'>
+                <span style='color: {text_color};'><strong>{medalha} {usuario[0]}</strong> - {usuario[2]}</span>
+                <span style='color: {icon_color};'><strong>{usuario[1]} pts</strong></span>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1138,7 +700,7 @@ def mostrar_convite(usuario_id, text_color, card_bg, icon_color, border_color):
         <ul style='color: {text_color};'>
             <li>Você ganha <strong style='color: {icon_color};'>100 pontos</strong> por cada amigo</li>
             <li>Seu amigo ganha <strong style='color: {icon_color};'>50 pontos</strong> de boas-vindas</li>
-            <li>Complete o desafio "👥 Convidar 2 Amigos" para ganhar <strong style='color: {icon_color};'>400 pontos extras</strong> e badge especial!</li>
+            <li>Desbloqueia badge de "Multiplicador"</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -1164,7 +726,7 @@ def mostrar_dicas(usuario_id, text_color, card_bg, icon_color, border_color):
             </div>
             """, unsafe_allow_html=True)
         with col2:
-            if st.button(f"❤️ {dica[5]}", key=f"like_{dica[0]}_{random.randint(1,1000)}"):
+            if st.button(f"❤️ {dica[5]}", key=f"like_{dica[0]}"):
                 conn = sqlite3.connect('ecopiracicaba.db')
                 c = conn.cursor()
                 c.execute("UPDATE dicas SET likes = likes + 1 WHERE id = ?", (dica[0],))
@@ -1298,17 +860,6 @@ st.markdown(f"""
         background-color: {icon_color} !important;
         color: white !important;
     }}
-    
-    /* Animações */
-    @keyframes pulse {{
-        0% {{ transform: scale(1); }}
-        50% {{ transform: scale(1.05); }}
-        100% {{ transform: scale(1); }}
-    }}
-    
-    .premio-disponivel {{
-        animation: pulse 2s infinite;
-    }}
 </style>
 
 <!-- Font Awesome para ícones -->
@@ -1377,15 +928,17 @@ if dispositivo == "mobile":
                     st.error("Preencha todos os campos corretamente")
     else:
         # Menu mobile
-        opcao = st.radio("Menu", ["🏠 Início", "🎯 Desafios", "👤 Perfil", "🏆 Ranking", "👥 Convidar", "📍 Pontos"])
+        opcao = st.radio("Menu", ["🏠 Início", "👤 Perfil", "🏆 Ranking", "🎯 Desafios", "👥 Convidar", "📍 Pontos"])
         
-        if opcao == "🎯 Desafios":
-            mostrar_pagina_desafios(st.session_state.usuario_logado['id'], text_color, card_bg, icon_color, border_color)
-        elif opcao == "👤 Perfil":
+        if opcao == "👤 Perfil":
             mostrar_perfil(st.session_state.usuario_logado['id'], st.session_state.usuario_logado['nome'], 
                           text_color, card_bg, icon_color, border_color)
         elif opcao == "🏆 Ranking":
             mostrar_ranking(text_color, card_bg, icon_color, border_color)
+        elif opcao == "🎯 Desafios":
+            iniciar_desafios_semanais(st.session_state.usuario_logado['id'])
+            mostrar_perfil(st.session_state.usuario_logado['id'], st.session_state.usuario_logado['nome'], 
+                          text_color, card_bg, icon_color, border_color)
         elif opcao == "👥 Convidar":
             mostrar_convite(st.session_state.usuario_logado['id'], text_color, card_bg, icon_color, border_color)
         elif opcao == "📍 Pontos":
@@ -1465,7 +1018,7 @@ else:
         <div style='text-align: center; padding: 50px; color: {text_color};'>
             <i class="fas fa-seedling" style='font-size: 80px; color: {icon_color};'></i>
             <h1>Bem-vindo ao EcoPiracicaba</h1>
-            <p style='font-size: 1.2rem;'>Faça login para começar a ganhar pontos, completar desafios e subir no ranking!</p>
+            <p style='font-size: 1.2rem;'>Faça login para começar a ganhar pontos e subir no ranking!</p>
         </div>
         """, unsafe_allow_html=True)
         
@@ -1483,14 +1036,10 @@ else:
             c = conn.cursor()
             c.execute("SELECT * FROM progresso WHERE usuario_id = ?", (st.session_state.usuario_logado['id'],))
             progresso = c.fetchone()
-            
-            # Buscar desafios completados na semana
-            c.execute("SELECT COUNT(*) FROM desafios_ativos WHERE usuario_id = ? AND concluido = 1", (st.session_state.usuario_logado['id'],))
-            completados = c.fetchone()[0]
             conn.close()
             
-            pontos = progresso[1] if progresso and len(progresso) > 1 else 0
-            nivel = progresso[2] if progresso and len(progresso) > 2 else "🌱 EcoIniciante"
+            pontos = progresso[1] if progresso else 0
+            nivel = progresso[2] if progresso else "🌱 EcoIniciante"
             
             st.markdown(f"""
             <div style='text-align: center; padding: 10px; background: {card_bg}; border-radius: 10px; border: 1px solid {border_color};'>
@@ -1500,7 +1049,6 @@ else:
                 <div style='height: 8px; background: {border_color}; border-radius: 4px; margin: 10px 0;'>
                     <div style='height: 100%; width: {min(100, (pontos/5000)*100)}%; background: {icon_color}; border-radius: 4px;'></div>
                 </div>
-                <p style='color: {text_color};'>🎯 Desafios: {completados}/5</p>
             </div>
             """, unsafe_allow_html=True)
             
@@ -1511,7 +1059,7 @@ else:
                 st.rerun()
         
         # Tabs principais
-        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["🏠 Início", "🎯 Desafios", "👤 Perfil", "🏆 Ranking", "👥 Convidar", "📍 Pontos"])
+        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["🏠 Início", "👤 Perfil", "🏆 Ranking", "🎯 Desafios", "👥 Convidar", "📍 Pontos"])
         
         with tab1:
             st.markdown(f"<h2 style='color: {text_color};'>Olá, {st.session_state.usuario_logado['nome']}!</h2>", unsafe_allow_html=True)
@@ -1523,14 +1071,16 @@ else:
                 mostrar_eventos(st.session_state.usuario_logado['id'], text_color, card_bg, icon_color, border_color)
         
         with tab2:
-            mostrar_pagina_desafios(st.session_state.usuario_logado['id'], text_color, card_bg, icon_color, border_color)
-        
-        with tab3:
             mostrar_perfil(st.session_state.usuario_logado['id'], st.session_state.usuario_logado['nome'], 
                           text_color, card_bg, icon_color, border_color)
         
-        with tab4:
+        with tab3:
             mostrar_ranking(text_color, card_bg, icon_color, border_color)
+        
+        with tab4:
+            iniciar_desafios_semanais(st.session_state.usuario_logado['id'])
+            mostrar_perfil(st.session_state.usuario_logado['id'], st.session_state.usuario_logado['nome'], 
+                          text_color, card_bg, icon_color, border_color)
         
         with tab5:
             mostrar_convite(st.session_state.usuario_logado['id'], text_color, card_bg, icon_color, border_color)
