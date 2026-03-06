@@ -7,6 +7,11 @@ import random
 import string
 import re
 import json
+import urllib.parse
+import hashlib
+import hmac
+import base64
+import time
 
 # Configuração da página
 st.set_page_config(
@@ -59,6 +64,14 @@ def validar_email(email):
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(pattern, email) is not None
 
+# Gerar senha aleatória para login social
+def gerar_senha_aleatoria():
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+
+# Gerar token para OAuth
+def gerar_token_oauth():
+    return hashlib.sha256(f"{time.time()}{random.random()}".encode()).hexdigest()
+
 # Inicializar banco de dados
 def init_database():
     conn = sqlite3.connect('ecopiracicaba.db')
@@ -75,6 +88,7 @@ def init_database():
             cidade TEXT DEFAULT 'Piracicaba',
             interesses TEXT,
             login_provider TEXT DEFAULT 'email',
+            provider_id TEXT,
             biometria_habilitada BOOLEAN DEFAULT 0,
             biometria_token TEXT,
             data_cadastro TEXT,
@@ -91,6 +105,19 @@ def init_database():
             dispositivo TEXT,
             data_cadastro TEXT,
             FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
+        )
+    ''')
+    
+    # Tabela de tokens OAuth
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS oauth_tokens (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            token TEXT UNIQUE NOT NULL,
+            provider TEXT NOT NULL,
+            email TEXT,
+            nome TEXT,
+            expira INTEGER,
+            usado BOOLEAN DEFAULT 0
         )
     ''')
     
@@ -276,6 +303,41 @@ st.markdown(f"""
         font-size: 1.5rem;
         margin-bottom: 2rem;
         font-style: italic;
+    }}
+    
+    /* Botões de login social */
+    .social-login-btn {{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        padding: 12px;
+        margin: 8px 0;
+        border: none;
+        border-radius: 50px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        color: white;
+        gap: 10px;
+    }}
+    
+    .social-login-btn i {{
+        font-size: 20px;
+    }}
+    
+    .social-login-btn:hover {{
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }}
+    
+    .google-btn {{
+        background: {google_btn_bg};
+    }}
+    
+    .apple-btn {{
+        background: {apple_btn_bg};
     }}
     
     /* Botão biométrico */
@@ -499,6 +561,85 @@ st.markdown(f"""
 <script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@7.0.0/dist/bundle/index.umd.min.js"></script>
 """, unsafe_allow_html=True)
 
+# Funções de login social
+def login_com_google():
+    """Simula login com Google (em produção, usar OAuth real)"""
+    # Simula dados do Google
+    nomes_google = ["Ana Silva", "João Pereira", "Maria Santos", "Pedro Oliveira", "Carla Souza"]
+    nome = random.choice(nomes_google)
+    email = f"{nome.lower().replace(' ', '.')}{random.randint(1,999)}@gmail.com"
+    senha = gerar_senha_aleatoria()
+    
+    conn = sqlite3.connect('ecopiracicaba.db')
+    c = conn.cursor()
+    
+    # Verifica se já existe
+    c.execute("SELECT * FROM usuarios WHERE email = ?", (email,))
+    user = c.fetchone()
+    
+    if user:
+        st.session_state.usuario_logado = {
+            'id': user[0], 'nome': user[1], 'email': user[2]
+        }
+        st.success(f"Bem-vindo de volta, {user[1]}!")
+    else:
+        # Cria novo usuário
+        c.execute(
+            """INSERT INTO usuarios (nome, email, senha, login_provider, data_cadastro) 
+               VALUES (?, ?, ?, ?, ?)""",
+            (nome, email, senha, 'google', datetime.now().strftime("%d/%m/%Y"))
+        )
+        conn.commit()
+        
+        c.execute("SELECT * FROM usuarios WHERE email = ?", (email,))
+        user = c.fetchone()
+        st.session_state.usuario_logado = {
+            'id': user[0], 'nome': user[1], 'email': user[2]
+        }
+        st.success(f"Conta Google criada com sucesso! Bem-vindo, {nome}!")
+    
+    conn.close()
+    st.rerun()
+
+def login_com_apple():
+    """Simula login com Apple (em produção, usar Sign in with Apple)"""
+    # Simula dados da Apple
+    nomes_apple = ["Michael Chen", "Sophie Dubois", "James Wilson", "Emma Thompson", "David Kim"]
+    nome = random.choice(nomes_apple)
+    email = f"{nome.lower().replace(' ', '.')}{random.randint(1,999)}@icloud.com"
+    senha = gerar_senha_aleatoria()
+    
+    conn = sqlite3.connect('ecopiracicaba.db')
+    c = conn.cursor()
+    
+    # Verifica se já existe
+    c.execute("SELECT * FROM usuarios WHERE email = ?", (email,))
+    user = c.fetchone()
+    
+    if user:
+        st.session_state.usuario_logado = {
+            'id': user[0], 'nome': user[1], 'email': user[2]
+        }
+        st.success(f"Bem-vindo de volta, {user[1]}!")
+    else:
+        # Cria novo usuário
+        c.execute(
+            """INSERT INTO usuarios (nome, email, senha, login_provider, data_cadastro) 
+               VALUES (?, ?, ?, ?, ?)""",
+            (nome, email, senha, 'apple', datetime.now().strftime("%d/%m/%Y"))
+        )
+        conn.commit()
+        
+        c.execute("SELECT * FROM usuarios WHERE email = ?", (email,))
+        user = c.fetchone()
+        st.session_state.usuario_logado = {
+            'id': user[0], 'nome': user[1], 'email': user[2]
+        }
+        st.success(f"Conta Apple criada com sucesso! Bem-vindo, {nome}!")
+    
+    conn.close()
+    st.rerun()
+
 # Funções de biometria
 def gerar_token_biometria():
     return ''.join(random.choices(string.ascii_letters + string.digits, k=32))
@@ -544,14 +685,12 @@ biometria_html = """
 async function iniciarBiometria() {
     const statusDiv = document.getElementById('biometric-status');
     
-    // Verifica suporte a WebAuthn
     if (!window.PublicKeyCredential) {
         statusDiv.innerHTML = '<p style="color: red;">❌ Biometria não suportada neste navegador</p>';
         return false;
     }
     
     try {
-        // Simula registro biométrico
         const credential = await navigator.credentials.create({
             publicKey: {
                 challenge: new Uint8Array(32),
@@ -642,8 +781,21 @@ else:
             st.session_state.usuario_logado = None
         
         if st.session_state.usuario_logado is None:
-            # Login com Biometria
-            st.markdown(f"<h3 style='color: {text_color};'>Acesso Biométrico</h3>", unsafe_allow_html=True)
+            # ===== LOGIN SOCIAL =====
+            st.markdown(f"<h3 style='color: {text_color};'>🔐 Acesso Rápido</h3>", unsafe_allow_html=True)
+            
+            # Botão Google
+            if st.button("🌐 Continuar com Google", key="google_btn", use_container_width=True):
+                login_com_google()
+            
+            # Botão Apple
+            if st.button("🍎 Continuar com Apple", key="apple_btn", use_container_width=True):
+                login_com_apple()
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            # ===== LOGIN BIOMÉTRICO =====
+            st.markdown(f"<h3 style='color: {text_color};'>🔐 Acesso Biométrico</h3>", unsafe_allow_html=True)
             
             # Botão de biometria
             components.html(biometria_html, height=100)
@@ -670,7 +822,7 @@ else:
             # Divisor
             st.markdown(f'<div class="divider">ou</div>', unsafe_allow_html=True)
             
-            # Login tradicional com validação de e-mail
+            # ===== LOGIN TRADICIONAL =====
             with st.expander("📧 Login com E-mail", expanded=True):
                 tab1, tab2 = st.tabs(["Entrar", "Cadastrar"])
                 
@@ -747,9 +899,18 @@ else:
             # Usuário logado
             st.success(f"🌿 Olá, {st.session_state.usuario_logado['nome'].split(' ')[0]}!")
             
-            # Verifica se já tem biometria
+            # Mostra provider do login
             conn = sqlite3.connect('ecopiracicaba.db')
             c = conn.cursor()
+            c.execute("SELECT login_provider FROM usuarios WHERE id = ?", (st.session_state.usuario_logado['id'],))
+            provider = c.fetchone()
+            
+            if provider and provider[0] == 'google':
+                st.markdown("<p style='color: #4285F4;'><i class='fab fa-google'></i> Conectado com Google</p>", unsafe_allow_html=True)
+            elif provider and provider[0] == 'apple':
+                st.markdown("<p style='color: #000000;'><i class='fab fa-apple'></i> Conectado com Apple</p>", unsafe_allow_html=True)
+            
+            # Verifica se já tem biometria
             c.execute("SELECT biometria_habilitada FROM usuarios WHERE id = ?", (st.session_state.usuario_logado['id'],))
             biometria = c.fetchone()
             conn.close()
@@ -803,7 +964,7 @@ else:
         <div style='text-align: center; padding: 50px; color: {text_color};'>
             <i class="fas fa-seedling" style='font-size: 80px; color: {icon_color};'></i>
             <h1>Bem-vindo ao EcoPiracicaba</h1>
-            <p style='font-size: 1.2rem;'>Use sua digital ou face ID para acessar rapidamente, ou cadastre-se com e-mail</p>
+            <p style='font-size: 1.2rem;'>Use sua conta Google, Apple, biometria ou e-mail para acessar</p>
         </div>
         """, unsafe_allow_html=True)
         
