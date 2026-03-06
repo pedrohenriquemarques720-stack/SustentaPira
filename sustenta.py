@@ -5,6 +5,8 @@ import sqlite3
 from datetime import datetime
 import random
 import string
+import re
+import json
 
 # Configuração da página
 st.set_page_config(
@@ -52,9 +54,10 @@ def detectar_dispositivo():
     except:
         return "desktop"
 
-# Gerar senha aleatória para login social
-def gerar_senha_aleatoria():
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+# Validar e-mail
+def validar_email(email):
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(pattern, email) is not None
 
 # Inicializar banco de dados
 def init_database():
@@ -72,8 +75,22 @@ def init_database():
             cidade TEXT DEFAULT 'Piracicaba',
             interesses TEXT,
             login_provider TEXT DEFAULT 'email',
+            biometria_habilitada BOOLEAN DEFAULT 0,
+            biometria_token TEXT,
             data_cadastro TEXT,
             ultimo_acesso TEXT
+        )
+    ''')
+    
+    # Tabela de tokens biométricos
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS biometria_tokens (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER UNIQUE,
+            token TEXT NOT NULL,
+            dispositivo TEXT,
+            data_cadastro TEXT,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
         )
     ''')
     
@@ -171,16 +188,10 @@ def init_database():
     c.execute("SELECT * FROM dicas")
     if not c.fetchone():
         dicas = [
-            ("🌱 Compostagem Doméstica", "Você sabia que 50% do lixo doméstico pode ser compostado? Aprenda a fazer sua própria composteira com baldes e minhocas californianas. Em 3 meses você terá adubo de alta qualidade.", "resíduos", datetime.now().strftime("%d/%m/%Y"), 0, "Equipe EcoPiracicaba"),
-            ("💧 Economia de Água", "Um banho de 15 minutos gasta 135 litros de água. Reduza para 5 minutos e economize 90 litros por banho! Isso representa 2.700 litros por mês.", "água", datetime.now().strftime("%d/%m/%Y"), 0, "Sabesp"),
-            ("🔋 Pilhas e Baterias", "Nunca descarte pilhas no lixo comum. Leve a pontos de coleta específicos. Uma pilha pode contaminar 20 mil litros de água por até 50 anos.", "resíduos", datetime.now().strftime("%d/%m/%Y"), 0, "Greenpeace"),
-            ("🌳 Plante uma Árvore", "Uma árvore adulta absorve até 150kg de CO2 por ano. Plante árvores nativas da região de Piracicaba como ipê, jatobá e pitanga.", "natureza", datetime.now().strftime("%d/%m/%Y"), 0, "SOS Mata Atlântica"),
-            ("🛍️ Sacolas Retornáveis", "Uma sacola plástica leva 400 anos para se decompor. Use sempre sacolas retornáveis nas compras.", "plástico", datetime.now().strftime("%d/%m/%Y"), 0, "WWF"),
-            ("🚗 Carona Solidária", "Compartilhe carro com colegas de trabalho. Reduz emissões, congestionamento e você ainda economiza até 40% com combustível.", "mobilidade", datetime.now().strftime("%d/%m/%Y"), 0, "Instituto Clima"),
-            ("🥗 Alimentação Orgânica", "Alimentos orgânicos são mais saudáveis e não contaminam o solo com agrotóxicos. Em Piracicaba, feiras orgânicas acontecem aos sábados.", "alimentação", datetime.now().strftime("%d/%m/%Y"), 0, "Feira Orgânica"),
-            ("♻️ Separação do Lixo", "Separe sempre recicláveis: papel limpo, plástico, vidro e metal. Lave as embalagens antes de descartar.", "reciclagem", datetime.now().strftime("%d/%m/%Y"), 0, "Cooperativa Recicladores"),
-            ("☀️ Energia Solar", "A energia solar já é a fonte mais barata do Brasil. Uma placa solar de 330W evita a emissão de 4,5 toneladas de CO2 em 25 anos.", "energia", datetime.now().strftime("%d/%m/%Y"), 0, "ABSOLAR"),
-            ("🐝 Proteja as Abelhas", "As abelhas são responsáveis por 80% da polinização das plantas. Evite inseticidas e plante flores nativas.", "biodiversidade", datetime.now().strftime("%d/%m/%Y"), 0, "Bee Or not to be")
+            ("🌱 Compostagem Doméstica", "Você sabia que 50% do lixo doméstico pode ser compostado? Aprenda a fazer sua própria composteira com baldes e minhocas californianas.", "resíduos", datetime.now().strftime("%d/%m/%Y"), 0, "Equipe EcoPiracicaba"),
+            ("💧 Economia de Água", "Um banho de 15 minutos gasta 135 litros de água. Reduza para 5 minutos e economize 90 litros por banho!", "água", datetime.now().strftime("%d/%m/%Y"), 0, "Sabesp"),
+            ("🔋 Pilhas e Baterias", "Nunca descarte pilhas no lixo comum. Leve a pontos de coleta específicos. Uma pilha pode contaminar 20 mil litros de água.", "resíduos", datetime.now().strftime("%d/%m/%Y"), 0, "Greenpeace"),
+            ("🌳 Plante uma Árvore", "Uma árvore adulta absorve até 150kg de CO2 por ano. Plante árvores nativas da região de Piracicaba.", "natureza", datetime.now().strftime("%d/%m/%Y"), 0, "SOS Mata Atlântica")
         ]
         for d in dicas:
             c.execute(
@@ -194,14 +205,7 @@ def init_database():
         pontos = [
             ("Ecoponto Centro", "Av. Rui Barbosa, 800 - Centro", "geral", "Seg-Sex 8h-17h, Sáb 8h-12h", "(19) 3403-1100", -22.724, -47.648, 4.5, "Recebe todos os tipos de recicláveis, eletrônicos e óleo de cozinha"),
             ("Shopping Piracicaba", "Av. Limeira, 700 - Areão", "pilhas", "Seg-Sáb 10h-22h, Dom 14h-20h", "(19) 3432-4545", -22.718, -47.642, 4.8, "Ponto de coleta de pilhas e baterias no piso G1"),
-            ("Coopervidros", "R. Treze de Maio, 300 - Centro", "vidros", "Seg-Sex 8h-17h", "(19) 3421-1234", -22.731, -47.651, 4.2, "Cooperativa especializada em reciclagem de vidros"),
-            ("CDI Eletrônicos", "R. do Porto, 234 - Centro", "eletronicos", "Seg-Sex 9h-18h, Sáb 9h-12h", "(19) 3433-5678", -22.722, -47.646, 4.7, "Centro de Descarte de Eletrônicos - computadores, celulares e pilhas"),
-            ("Ecoponto Paulicéia", "R. Javari, 150 - Paulicéia", "geral", "Ter-Sáb 8h-16h", "(19) 3403-2200", -22.710, -47.670, 4.3, "Ecoponto completo com coleta de óleo e recicláveis"),
-            ("Drogaria São Paulo", "Av. Limeira, 900 - Centro", "medicamentos", "24 horas", "(19) 3432-7800", -22.720, -47.640, 4.0, "Descarte de medicamentos vencidos e pilhas"),
-            ("Unimed Sede", "R. Voluntários, 450 - Centro", "pilhas", "Seg-Sex 7h-19h", "(19) 3432-9000", -22.725, -47.649, 4.6, "Coleta de pilhas e baterias na recepção"),
-            ("Esalq/USP", "Av. Pádua Dias, 11 - Agronomia", "eletronicos", "Seg-Sex 8h-17h", "(19) 3447-8500", -22.710, -47.630, 4.9, "Campus da ESALQ com pontos de coleta de eletrônicos"),
-            ("Supermercado Pague Menos", "R. Campos Salles, 500 - Centro", "oleo", "Seg-Sáb 8h-21h", "(19) 3434-1234", -22.728, -47.652, 4.4, "Coleta de óleo de cozinha usado"),
-            ("Horto Municipal", "Av. Maurílio Biagi, 1500 - Santa Cecília", "organicos", "Seg-Sex 8h-16h", "(19) 3434-5678", -22.730, -47.655, 4.3, "Recebimento de podas e resíduos orgânicos")
+            ("Coopervidros", "R. Treze de Maio, 300 - Centro", "vidros", "Seg-Sex 8h-17h", "(19) 3421-1234", -22.731, -47.651, 4.2, "Cooperativa especializada em reciclagem de vidros")
         ]
         for p in pontos:
             c.execute(
@@ -274,39 +278,33 @@ st.markdown(f"""
         font-style: italic;
     }}
     
-    /* Botões de login social */
-    .social-login-btn {{
+    /* Botão biométrico */
+    .biometric-btn {{
+        background: {icon_color};
+        color: white;
+        border: none;
+        padding: 15px;
+        border-radius: 50px;
+        font-size: 18px;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+        margin: 10px 0;
+        transition: all 0.3s;
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 100%;
-        padding: 12px;
-        margin: 8px 0;
-        border: none;
-        border-radius: 50px;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s;
-        color: white;
         gap: 10px;
     }}
     
-    .social-login-btn i {{
-        font-size: 20px;
-    }}
-    
-    .social-login-btn:hover {{
+    .biometric-btn:hover {{
         transform: translateY(-2px);
         box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        background: #1a8c5f;
     }}
     
-    .google-btn {{
-        background: {google_btn_bg};
-    }}
-    
-    .apple-btn {{
-        background: {apple_btn_bg};
+    .biometric-btn i {{
+        font-size: 24px;
     }}
     
     .divider {{
@@ -492,96 +490,112 @@ st.markdown(f"""
         border-radius: 4px;
         transition: width 0.3s;
     }}
-    
-    /* Grid de cards */
-    .card-grid {{
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 20px;
-        margin: 20px 0;
-    }}
-    
-    /* Animações */
-    @keyframes fadeIn {{
-        from {{ opacity: 0; transform: translateY(20px); }}
-        to {{ opacity: 1; transform: translateY(0); }}
-    }}
-    
-    .fade-in {{
-        animation: fadeIn 0.5s ease-out;
-    }}
 </style>
 
-<!-- Font Awesome para ícones sociais -->
+<!-- Font Awesome para ícones -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+<!-- WebAuthn para biometria -->
+<script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@7.0.0/dist/bundle/index.umd.min.js"></script>
 """, unsafe_allow_html=True)
 
-# Funções de login social
-def login_com_google():
-    """Simula login com Google"""
-    nome = f"Usuário Google {random.randint(100, 999)}"
-    email = f"usuario.google{random.randint(1000, 9999)}@gmail.com"
-    senha = gerar_senha_aleatoria()
-    
-    conn = sqlite3.connect('ecopiracicaba.db')
-    c = conn.cursor()
-    
-    c.execute("SELECT * FROM usuarios WHERE email = ?", (email,))
-    user = c.fetchone()
-    
-    if user:
-        st.session_state.usuario_logado = {
-            'id': user[0], 'nome': user[1], 'email': user[2]
-        }
-    else:
-        c.execute(
-            """INSERT INTO usuarios (nome, email, senha, login_provider, data_cadastro) 
-               VALUES (?, ?, ?, ?, ?)""",
-            (nome, email, senha, 'google', datetime.now().strftime("%d/%m/%Y"))
-        )
-        conn.commit()
-        
-        c.execute("SELECT * FROM usuarios WHERE email = ?", (email,))
-        user = c.fetchone()
-        st.session_state.usuario_logado = {
-            'id': user[0], 'nome': user[1], 'email': user[2]
-        }
-    
-    conn.close()
-    st.rerun()
+# Funções de biometria
+def gerar_token_biometria():
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=32))
 
-def login_com_apple():
-    """Simula login com Apple"""
-    nome = f"Usuário Apple {random.randint(100, 999)}"
-    email = f"usuario.apple{random.randint(1000, 9999)}@icloud.com"
-    senha = gerar_senha_aleatoria()
-    
+def habilitar_biometria(usuario_id):
+    """Habilita biometria para o usuário"""
+    token = gerar_token_biometria()
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     
-    c.execute("SELECT * FROM usuarios WHERE email = ?", (email,))
-    user = c.fetchone()
+    # Remove token anterior se existir
+    c.execute("DELETE FROM biometria_tokens WHERE usuario_id = ?", (usuario_id,))
     
-    if user:
-        st.session_state.usuario_logado = {
-            'id': user[0], 'nome': user[1], 'email': user[2]
-        }
-    else:
-        c.execute(
-            """INSERT INTO usuarios (nome, email, senha, login_provider, data_cadastro) 
-               VALUES (?, ?, ?, ?, ?)""",
-            (nome, email, senha, 'apple', datetime.now().strftime("%d/%m/%Y"))
-        )
-        conn.commit()
-        
-        c.execute("SELECT * FROM usuarios WHERE email = ?", (email,))
-        user = c.fetchone()
-        st.session_state.usuario_logado = {
-            'id': user[0], 'nome': user[1], 'email': user[2]
-        }
+    # Insere novo token
+    c.execute(
+        "INSERT INTO biometria_tokens (usuario_id, token, dispositivo, data_cadastro) VALUES (?, ?, ?, ?)",
+        (usuario_id, token, dispositivo, datetime.now().strftime("%d/%m/%Y %H:%M"))
+    )
     
+    # Atualiza usuário
+    c.execute(
+        "UPDATE usuarios SET biometria_habilitada = 1, biometria_token = ? WHERE id = ?",
+        (token, usuario_id)
+    )
+    
+    conn.commit()
     conn.close()
-    st.rerun()
+    return token
+
+def verificar_biometria(token):
+    """Verifica se o token biométrico é válido"""
+    conn = sqlite3.connect('ecopiracicaba.db')
+    c = conn.cursor()
+    c.execute("SELECT usuario_id FROM biometria_tokens WHERE token = ?", (token,))
+    result = c.fetchone()
+    conn.close()
+    return result[0] if result else None
+
+# HTML/JS para biometria
+biometria_html = """
+<div id="biometric-status"></div>
+<script>
+async function iniciarBiometria() {
+    const statusDiv = document.getElementById('biometric-status');
+    
+    // Verifica suporte a WebAuthn
+    if (!window.PublicKeyCredential) {
+        statusDiv.innerHTML = '<p style="color: red;">❌ Biometria não suportada neste navegador</p>';
+        return false;
+    }
+    
+    try {
+        // Simula registro biométrico
+        const credential = await navigator.credentials.create({
+            publicKey: {
+                challenge: new Uint8Array(32),
+                rp: { name: "EcoPiracicaba" },
+                user: {
+                    id: new Uint8Array(16),
+                    name: "usuario@email.com",
+                    displayName: "Usuário"
+                },
+                pubKeyCredParams: [{ alg: -7, type: "public-key" }]
+            }
+        });
+        
+        statusDiv.innerHTML = '<p style="color: green;">✅ Biometria registrada com sucesso!</p>';
+        return true;
+    } catch (error) {
+        statusDiv.innerHTML = '<p style="color: red;">❌ Erro: ' + error.message + '</p>';
+        return false;
+    }
+}
+
+async function autenticarBiometria() {
+    try {
+        const assertion = await navigator.credentials.get({
+            publicKey: {
+                challenge: new Uint8Array(32),
+                allowCredentials: [],
+                userVerification: "required"
+            }
+        });
+        
+        document.getElementById('biometric-result').value = 'success';
+        return true;
+    } catch (error) {
+        document.getElementById('biometric-result').value = 'error: ' + error.message;
+        return false;
+    }
+}
+</script>
+<button onclick="iniciarBiometria()" class="eco-button" style="width: 100%; margin: 10px 0;">
+    <i class="fas fa-fingerprint"></i> Configurar Biometria
+</button>
+<input type="hidden" id="biometric-result" value="">
+"""
 
 # Interface principal
 if dispositivo == "mobile":
@@ -628,21 +642,35 @@ else:
             st.session_state.usuario_logado = None
         
         if st.session_state.usuario_logado is None:
-            # Login com Google e Apple
-            st.markdown(f"<h3 style='color: {text_color};'>Acesso Rápido</h3>", unsafe_allow_html=True)
+            # Login com Biometria
+            st.markdown(f"<h3 style='color: {text_color};'>Acesso Biométrico</h3>", unsafe_allow_html=True)
             
-            # Botão Google
-            if st.button("🌐 Continuar com Google", key="google_btn", use_container_width=True):
-                login_com_google()
+            # Botão de biometria
+            components.html(biometria_html, height=100)
             
-            # Botão Apple
-            if st.button("🍎 Continuar com Apple", key="apple_btn", use_container_width=True):
-                login_com_apple()
+            # Input escondido para resultado da biometria
+            biometric_result = st.text_input("resultado_biometria", key="biometric_result", label_visibility="collapsed")
+            
+            if biometric_result == "success":
+                # Simula login biométrico
+                conn = sqlite3.connect('ecopiracicaba.db')
+                c = conn.cursor()
+                c.execute("SELECT u.* FROM usuarios u JOIN biometria_tokens b ON u.id = b.usuario_id LIMIT 1")
+                user = c.fetchone()
+                conn.close()
+                
+                if user:
+                    st.session_state.usuario_logado = {
+                        'id': user[0], 'nome': user[1], 'email': user[2]
+                    }
+                    st.rerun()
+                else:
+                    st.warning("Nenhum usuário cadastrado com biometria")
             
             # Divisor
             st.markdown(f'<div class="divider">ou</div>', unsafe_allow_html=True)
             
-            # Login tradicional
+            # Login tradicional com validação de e-mail
             with st.expander("📧 Login com E-mail", expanded=True):
                 tab1, tab2 = st.tabs(["Entrar", "Cadastrar"])
                 
@@ -651,59 +679,90 @@ else:
                     senha = st.text_input("Senha", type="password", key="login_senha")
                     
                     if st.button("🌿 Entrar", use_container_width=True):
-                        conn = sqlite3.connect('ecopiracicaba.db')
-                        c = conn.cursor()
-                        c.execute("SELECT * FROM usuarios WHERE email = ? AND senha = ?", (email, senha))
-                        user = c.fetchone()
-                        conn.close()
-                        
-                        if user:
-                            st.session_state.usuario_logado = {
-                                'id': user[0], 'nome': user[1], 'email': user[2]
-                            }
-                            st.rerun()
+                        if not validar_email(email):
+                            st.error("E-mail inválido!")
                         else:
-                            st.error("E-mail ou senha incorretos")
+                            conn = sqlite3.connect('ecopiracicaba.db')
+                            c = conn.cursor()
+                            c.execute("SELECT * FROM usuarios WHERE email = ? AND senha = ?", (email, senha))
+                            user = c.fetchone()
+                            conn.close()
+                            
+                            if user:
+                                st.session_state.usuario_logado = {
+                                    'id': user[0], 'nome': user[1], 'email': user[2]
+                                }
+                                st.rerun()
+                            else:
+                                st.error("E-mail ou senha incorretos")
                 
                 with tab2:
                     with st.form("cadastro_form"):
                         nome = st.text_input("Nome completo")
                         email = st.text_input("E-mail")
                         senha = st.text_input("Senha", type="password")
+                        confirmar_senha = st.text_input("Confirmar senha", type="password")
                         interesses = st.multiselect("Interesses", 
                             ["Sustentabilidade", "Reciclagem", "Eventos", "Voluntariado", "Compostagem"])
                         
+                        # Opção de habilitar biometria
+                        habilitar_biometria_cad = st.checkbox("🔐 Habilitar login biométrico (impressão digital / face ID)")
+                        
                         if st.form_submit_button("🌱 Criar conta", use_container_width=True):
-                            conn = sqlite3.connect('ecopiracicaba.db')
-                            c = conn.cursor()
-                            try:
-                                c.execute(
-                                    """INSERT INTO usuarios 
-                                       (nome, email, senha, interesses, data_cadastro, login_provider) 
-                                       VALUES (?, ?, ?, ?, ?, ?)""",
-                                    (nome, email, senha, ",".join(interesses), 
-                                     datetime.now().strftime("%d/%m/%Y"), "email")
-                                )
-                                conn.commit()
-                                st.success("Conta criada! Faça login.")
-                            except Exception as e:
-                                st.error("E-mail já existe")
-                            conn.close()
+                            # Validações
+                            if not nome:
+                                st.error("Nome é obrigatório!")
+                            elif not validar_email(email):
+                                st.error("E-mail inválido! Use o formato: nome@dominio.com")
+                            elif senha != confirmar_senha:
+                                st.error("As senhas não coincidem!")
+                            elif len(senha) < 6:
+                                st.error("A senha deve ter pelo menos 6 caracteres!")
+                            else:
+                                conn = sqlite3.connect('ecopiracicaba.db')
+                                c = conn.cursor()
+                                try:
+                                    c.execute(
+                                        """INSERT INTO usuarios 
+                                           (nome, email, senha, interesses, data_cadastro, login_provider) 
+                                           VALUES (?, ?, ?, ?, ?, ?)""",
+                                        (nome, email, senha, ",".join(interesses), 
+                                         datetime.now().strftime("%d/%m/%Y"), "email")
+                                    )
+                                    conn.commit()
+                                    
+                                    # Se habilitou biometria, configura
+                                    if habilitar_biometria_cad:
+                                        c.execute("SELECT id FROM usuarios WHERE email = ?", (email,))
+                                        user_id = c.fetchone()[0]
+                                        token = habilitar_biometria(user_id)
+                                        st.success("Conta criada! Biometria configurada. Faça login.")
+                                    else:
+                                        st.success("Conta criada! Faça login.")
+                                    
+                                except sqlite3.IntegrityError:
+                                    st.error("E-mail já existe!")
+                                conn.close()
         else:
             # Usuário logado
             st.success(f"🌿 Olá, {st.session_state.usuario_logado['nome'].split(' ')[0]}!")
             
-            # Busca provider do login
+            # Verifica se já tem biometria
             conn = sqlite3.connect('ecopiracicaba.db')
             c = conn.cursor()
-            c.execute("SELECT login_provider FROM usuarios WHERE id = ?", (st.session_state.usuario_logado['id'],))
-            provider = c.fetchone()
+            c.execute("SELECT biometria_habilitada FROM usuarios WHERE id = ?", (st.session_state.usuario_logado['id'],))
+            biometria = c.fetchone()
             conn.close()
             
-            if provider and provider[0] == 'google':
-                st.markdown("<p style='color: #4285F4;'><i class='fab fa-google'></i> Conectado com Google</p>", unsafe_allow_html=True)
-            elif provider and provider[0] == 'apple':
-                st.markdown("<p style='color: #000000;'><i class='fab fa-apple'></i> Conectado com Apple</p>", unsafe_allow_html=True)
+            if biometria and not biometria[0]:
+                st.markdown("### 🔐 Configurar Biometria")
+                st.markdown("Habilite o login biométrico para acessar mais rápido:")
+                components.html(biometria_html, height=100)
+                
+                if st.button("Ativar Biometria"):
+                    token = habilitar_biometria(st.session_state.usuario_logado['id'])
+                    st.success("Biometria ativada com sucesso!")
+                    st.rerun()
             
             st.markdown(f"<p style='color: {text_color};'>🌍 Nível: EcoAtivista</p>", unsafe_allow_html=True)
             st.progress(0.65, text="65% para próximo nível")
@@ -744,7 +803,7 @@ else:
         <div style='text-align: center; padding: 50px; color: {text_color};'>
             <i class="fas fa-seedling" style='font-size: 80px; color: {icon_color};'></i>
             <h1>Bem-vindo ao EcoPiracicaba</h1>
-            <p style='font-size: 1.2rem;'>Faça login com Google, Apple ou e-mail para acessar todas as funcionalidades</p>
+            <p style='font-size: 1.2rem;'>Use sua digital ou face ID para acessar rapidamente, ou cadastre-se com e-mail</p>
         </div>
         """, unsafe_allow_html=True)
         
@@ -817,48 +876,6 @@ else:
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # Cards de estatísticas adicionais
-            st.markdown(f"<h3 style='color: {text_color};'>📊 Indicadores Ambientais</h3>", unsafe_allow_html=True)
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                st.markdown(f"""
-                <div class='eco-card'>
-                    <h4>Qualidade do Ar</h4>
-                    <div style='font-size: 24px; color: #4caf50;'>Boa ✓</div>
-                    <p>Índice: 32 (MP10)</p>
-                    <div class='progress-bar'><div class='progress-fill' style='width: 75%;'></div></div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                st.markdown(f"""
-                <div class='eco-card'>
-                    <h4>Qualidade da Água - Rio Piracicaba</h4>
-                    <div style='font-size: 24px; color: #ff9800;'>Regular ⚠</div>
-                    <p>Índice: 68 (IQA)</p>
-                    <div class='progress-bar'><div class='progress-fill' style='width: 55%;'></div></div>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with col2:
-                st.markdown(f"""
-                <div class='eco-card'>
-                    <h4>Coleta Seletiva</h4>
-                    <div style='font-size: 24px; color: #2196f3;'>68% da cidade</div>
-                    <p>45 pontos de coleta</p>
-                    <div class='progress-bar'><div class='progress-fill' style='width: 68%;'></div></div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                st.markdown(f"""
-                <div class='eco-card'>
-                    <h4>Energia Renovável</h4>
-                    <div style='font-size: 24px; color: #8bc34a;'>32% da matriz</div>
-                    <p>Meta para 2030: 50%</p>
-                    <div class='progress-bar'><div class='progress-fill' style='width: 64%;'></div></div>
-                </div>
-                """, unsafe_allow_html=True)
-            
             # Próximos eventos
             st.markdown(f"<h3 style='color: {text_color};'>📅 Próximos Eventos</h3>", unsafe_allow_html=True)
             
@@ -879,7 +896,6 @@ else:
                         <div style='text-align: right;'>
                             <i class='fas fa-users' style='color: {icon_color};'></i>
                             <p><strong>{evento['inscritos']}/{evento['vagas'] if evento['vagas'] > 0 else '∞'}</strong> inscritos</p>
-                            {f"<div class='progress-bar'><div class='progress-fill' style='width: {min(100, (evento["inscritos"]/evento["vagas"])*100)}%;'></div></div>" if evento['vagas'] > 0 else ""}
                         </div>
                     </div>
                 </div>
@@ -888,22 +904,8 @@ else:
         with tab2:
             st.markdown(f"<h2 style='color: {text_color};'>📅 Agenda Sustentável 2026</h2>", unsafe_allow_html=True)
             
-            # Filtros
-            col1, col2 = st.columns(2)
-            with col1:
-                mes_filter = st.selectbox("Filtrar por mês", 
-                    ["Todos", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto"])
-            with col2:
-                tipo_filter = st.selectbox("Filtrar por tipo", 
-                    ["Todos", "palestra", "workshop", "mutirão", "feira", "campanha", "passeio"])
-            
             conn = sqlite3.connect('ecopiracicaba.db')
-            query = "SELECT * FROM eventos WHERE 1=1"
-            if mes_filter != "Todos":
-                query += f" AND data LIKE '%{mes_filter}%'"
-            if tipo_filter != "Todos":
-                query += f" AND tipo = '{tipo_filter}'"
-            eventos = pd.read_sql_query(query + " ORDER BY data", conn)
+            eventos = pd.read_sql_query("SELECT * FROM eventos ORDER BY data", conn)
             conn.close()
             
             for _, evento in eventos.iterrows():
@@ -923,7 +925,6 @@ else:
                             <h3 style='color: {text_color}; margin: 0;'>{evento['titulo']}</h3>
                             <p style='color: {secondary_text};'>{evento['descricao']}</p>
                             <p><i class='fas fa-user'></i> {evento['palestrante']} · <i class='fas fa-building'></i> {evento['organizador']}</p>
-                            {f"<p><strong>Vagas: {evento['inscritos']}/{evento['vagas']}</strong></p>" if evento['vagas'] > 0 else ""}
                         </div>
                     </div>
                 </div>
@@ -932,15 +933,8 @@ else:
         with tab3:
             st.markdown(f"<h2 style='color: {text_color};'>💡 Dicas para um Planeta Mais Verde</h2>", unsafe_allow_html=True)
             
-            # Categorias
-            categorias = ["Todas", "resíduos", "água", "energia", "natureza", "reciclagem", "alimentação", "mobilidade", "biodiversidade", "plástico"]
-            cat_filter = st.selectbox("Filtrar por categoria", categorias)
-            
             conn = sqlite3.connect('ecopiracicaba.db')
-            if cat_filter != "Todas":
-                dicas = pd.read_sql_query(f"SELECT * FROM dicas WHERE categoria = '{cat_filter}' ORDER BY likes DESC", conn)
-            else:
-                dicas = pd.read_sql_query("SELECT * FROM dicas ORDER BY likes DESC", conn)
+            dicas = pd.read_sql_query("SELECT * FROM dicas ORDER BY likes DESC", conn)
             conn.close()
             
             col1, col2 = st.columns(2)
@@ -956,7 +950,6 @@ else:
                         <p style='color: {secondary_text};'>{dica['conteudo']}</p>
                         <div style='display: flex; justify-content: space-between; align-items: center;'>
                             <small><i class='fas fa-user'></i> {dica['autor']} · {dica['data_publicacao']}</small>
-                            <button class='eco-button' style='padding: 5px 15px;' onclick="alert('Dica curtida!')">Curtir</button>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
@@ -964,21 +957,8 @@ else:
         with tab4:
             st.markdown(f"<h2 style='color: {text_color};'>📍 Pontos de Coleta Seletiva</h2>", unsafe_allow_html=True)
             
-            # Filtros
-            col1, col2 = st.columns(2)
-            with col1:
-                categoria_map = st.selectbox("Filtrar por categoria", 
-                    ["Todos", "geral", "pilhas", "vidros", "eletronicos", "oleo", "organicos", "medicamentos"])
-            with col2:
-                avaliacao_min = st.slider("Avaliação mínima", 0.0, 5.0, 3.0, 0.5)
-            
             conn = sqlite3.connect('ecopiracicaba.db')
-            query = "SELECT * FROM pontos_coleta WHERE avaliacao >= ?"
-            params = [avaliacao_min]
-            if categoria_map != "Todos":
-                query += " AND categoria = ?"
-                params.append(categoria_map)
-            pontos = pd.read_sql_query(query + " ORDER BY avaliacao DESC", conn, params=params)
+            pontos = pd.read_sql_query("SELECT * FROM pontos_coleta ORDER BY avaliacao DESC", conn)
             conn.close()
             
             for _, ponto in pontos.iterrows():
@@ -992,7 +972,7 @@ else:
                             <p><i class='fas fa-phone'></i> {ponto['telefone']}</p>
                             <p><small>{ponto['descricao']}</small></p>
                         </div>
-                        <div style='text-align: center; min-width: 100px;'>
+                        <div style='text-align: center;'>
                             <div style='font-size: 24px; color: gold;'>{'★' * int(ponto['avaliacao'])}{'☆' * (5 - int(ponto['avaliacao']))}</div>
                             <p>{ponto['avaliacao']}/5.0</p>
                             <span class='categoria-badge' style='background: {icon_color}; color: white;'>{ponto['categoria'].upper()}</span>
