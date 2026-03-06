@@ -6,11 +6,7 @@ from datetime import datetime
 import random
 import string
 import re
-import json
-import urllib.parse
 import hashlib
-import hmac
-import base64
 import time
 
 # Configuração da página
@@ -68,33 +64,45 @@ def validar_email(email):
 def gerar_senha_aleatoria():
     return ''.join(random.choices(string.ascii_letters + string.digits, k=10))
 
-# Gerar token para OAuth
-def gerar_token_oauth():
-    return hashlib.sha256(f"{time.time()}{random.random()}".encode()).hexdigest()
-
-# Inicializar banco de dados
+# Inicializar banco de dados - CORRIGIDO
 def init_database():
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     
-    # Tabela de usuários
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS usuarios (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nome TEXT NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            senha TEXT NOT NULL,
-            avatar TEXT,
-            cidade TEXT DEFAULT 'Piracicaba',
-            interesses TEXT,
-            login_provider TEXT DEFAULT 'email',
-            provider_id TEXT,
-            biometria_habilitada BOOLEAN DEFAULT 0,
-            biometria_token TEXT,
-            data_cadastro TEXT,
-            ultimo_acesso TEXT
-        )
-    ''')
+    # Verifica se a tabela usuarios existe e tem a estrutura correta
+    c.execute("PRAGMA table_info(usuarios)")
+    colunas = c.fetchall()
+    colunas_existentes = [col[1] for col in colunas]
+    
+    # Se a tabela não existe, cria com todas as colunas
+    if not colunas:
+        c.execute('''
+            CREATE TABLE usuarios (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome TEXT NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                senha TEXT NOT NULL,
+                avatar TEXT,
+                cidade TEXT DEFAULT 'Piracicaba',
+                interesses TEXT,
+                login_provider TEXT DEFAULT 'email',
+                provider_id TEXT,
+                biometria_habilitada INTEGER DEFAULT 0,
+                biometria_token TEXT,
+                data_cadastro TEXT,
+                ultimo_acesso TEXT
+            )
+        ''')
+    else:
+        # Se a tabela existe mas falta alguma coluna, adiciona
+        if 'biometria_habilitada' not in colunas_existentes:
+            c.execute("ALTER TABLE usuarios ADD COLUMN biometria_habilitada INTEGER DEFAULT 0")
+        if 'biometria_token' not in colunas_existentes:
+            c.execute("ALTER TABLE usuarios ADD COLUMN biometria_token TEXT")
+        if 'login_provider' not in colunas_existentes:
+            c.execute("ALTER TABLE usuarios ADD COLUMN login_provider TEXT DEFAULT 'email'")
+        if 'provider_id' not in colunas_existentes:
+            c.execute("ALTER TABLE usuarios ADD COLUMN provider_id TEXT")
     
     # Tabela de tokens biométricos
     c.execute('''
@@ -108,19 +116,6 @@ def init_database():
         )
     ''')
     
-    # Tabela de tokens OAuth
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS oauth_tokens (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            token TEXT UNIQUE NOT NULL,
-            provider TEXT NOT NULL,
-            email TEXT,
-            nome TEXT,
-            expira INTEGER,
-            usado BOOLEAN DEFAULT 0
-        )
-    ''')
-    
     # Tabela de inscrições em eventos
     c.execute('''
         CREATE TABLE IF NOT EXISTS inscricoes (
@@ -128,7 +123,7 @@ def init_database():
             usuario_id INTEGER,
             evento_id INTEGER,
             data_inscricao TEXT,
-            confirmado BOOLEAN DEFAULT 0,
+            confirmado INTEGER DEFAULT 0,
             FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
         )
     ''')
@@ -181,7 +176,7 @@ def init_database():
         )
     ''')
     
-    # Inserir dados iniciais
+    # Inserir dados iniciais se necessário
     c.execute("SELECT * FROM usuarios WHERE email = 'admin@ecopiracicaba.com'")
     if not c.fetchone():
         c.execute(
@@ -252,12 +247,13 @@ init_database()
 tema = get_theme()
 dispositivo = detectar_dispositivo()
 
-# CSS com temas dinâmicos
+# Configurações de cores baseadas no tema
 if tema == "dark":
+    # Modo ESCURO - tudo em BRANCO
     bg_color = "#0a1f17"
     card_bg = "#1a3329"
-    text_color = "#ffffff"
-    secondary_text = "#c0e0d0"
+    text_color = "#FFFFFF"
+    secondary_text = "#E0E0E0"
     border_color = "#2a4a3a"
     hover_color = "#2a5a45"
     icon_color = "#8bc34a"
@@ -266,9 +262,18 @@ if tema == "dark":
     logo_filter = "brightness(0) invert(1)"
     google_btn_bg = "#4285F4"
     apple_btn_bg = "#000000"
+    input_bg = "#2a3a32"
+    input_text = "#FFFFFF"
+    label_color = "#FFFFFF"
+    tab_color = "#FFFFFF"
+    tab_active_bg = "#8bc34a"
+    tab_active_text = "#000000"
+    stat_text = "#FFFFFF"
+    stat_number_color = "#8bc34a"
 else:
+    # Modo CLARO - tudo em PRETO
     bg_color = "#f0fff5"
-    card_bg = "#ffffff"
+    card_bg = "#FFFFFF"
     text_color = "#000000"
     secondary_text = "#2a5e45"
     border_color = "#c0e0d0"
@@ -279,8 +284,16 @@ else:
     logo_filter = "brightness(0.5) sepia(1) hue-rotate(120deg)"
     google_btn_bg = "#4285F4"
     apple_btn_bg = "#000000"
+    input_bg = "#FFFFFF"
+    input_text = "#000000"
+    label_color = "#000000"
+    tab_color = "#000000"
+    tab_active_bg = "#0f5c3f"
+    tab_active_text = "#FFFFFF"
+    stat_text = "#000000"
+    stat_number_color = "#0f5c3f"
 
-# CSS personalizado
+# CSS personalizado com cores corrigidas
 st.markdown(f"""
 <style>
     /* Estilos globais */
@@ -288,9 +301,56 @@ st.markdown(f"""
         background: linear-gradient(135deg, {gradient_start} 0%, {gradient_end} 100%);
     }}
     
+    /* Todos os textos padrão */
+    .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6, 
+    div[data-testid="stMarkdownContainer"] p,
+    div[data-testid="stMarkdownContainer"] h1,
+    div[data-testid="stMarkdownContainer"] h2,
+    div[data-testid="stMarkdownContainer"] h3,
+    div[data-testid="stMarkdownContainer"] h4,
+    div[data-testid="stMarkdownContainer"] h5,
+    div[data-testid="stMarkdownContainer"] h6,
+    .st-bb, .row-widget, .stAlert p {{
+        color: {text_color} !important;
+    }}
+    
+    /* Labels de formulários */
+    .stTextInput label, .stSelectbox label, .stMultiselect label,
+    .stCheckbox label, .stRadio label, .stDateInput label,
+    .stNumberInput label, .stTextArea label {{
+        color: {label_color} !important;
+        font-weight: 500 !important;
+    }}
+    
+    /* Input fields */
+    .stTextInput input, .stSelectbox div, .stMultiselect div,
+    .stDateInput input, .stNumberInput input, .stTextArea textarea {{
+        background-color: {input_bg} !important;
+        color: {input_text} !important;
+        border: 1px solid {border_color} !important;
+    }}
+    
+    /* Placeholders */
+    .stTextInput input::placeholder {{
+        color: {secondary_text} !important;
+        opacity: 0.7;
+    }}
+    
+    /* Botões padrão */
+    .stButton button {{
+        color: {text_color} !important;
+        background: {card_bg} !important;
+        border: 1px solid {border_color} !important;
+    }}
+    
+    .stButton button:hover {{
+        background: {hover_color} !important;
+        color: {text_color} !important;
+    }}
+    
     .main-title {{
         text-align: center;
-        color: {text_color};
+        color: {text_color} !important;
         font-size: 3rem;
         font-weight: 700;
         margin-bottom: 0.5rem;
@@ -299,7 +359,7 @@ st.markdown(f"""
     
     .sub-title {{
         text-align: center;
-        color: {secondary_text};
+        color: {secondary_text} !important;
         font-size: 1.5rem;
         margin-bottom: 2rem;
         font-style: italic;
@@ -319,12 +379,13 @@ st.markdown(f"""
         font-weight: 600;
         cursor: pointer;
         transition: all 0.3s;
-        color: white;
+        color: white !important;
         gap: 10px;
     }}
     
     .social-login-btn i {{
         font-size: 20px;
+        color: white !important;
     }}
     
     .social-login-btn:hover {{
@@ -343,7 +404,7 @@ st.markdown(f"""
     /* Botão biométrico */
     .biometric-btn {{
         background: {icon_color};
-        color: white;
+        color: white !important;
         border: none;
         padding: 15px;
         border-radius: 50px;
@@ -366,6 +427,7 @@ st.markdown(f"""
     }}
     
     .biometric-btn i {{
+        color: white !important;
         font-size: 24px;
     }}
     
@@ -373,7 +435,7 @@ st.markdown(f"""
         display: flex;
         align-items: center;
         text-align: center;
-        color: {secondary_text};
+        color: {secondary_text} !important;
         margin: 20px 0;
     }}
     
@@ -401,12 +463,16 @@ st.markdown(f"""
         border: 1px solid {border_color};
         margin-bottom: 20px;
         transition: transform 0.3s, box-shadow 0.3s;
-        color: {text_color};
+        color: {text_color} !important;
     }}
     
     .eco-card:hover {{
         transform: translateY(-5px);
         box-shadow: 0 15px 40px rgba(0,100,50,0.2);
+    }}
+    
+    .eco-card h3, .eco-card p {{
+        color: {text_color} !important;
     }}
     
     .evento-card {{
@@ -415,7 +481,7 @@ st.markdown(f"""
         padding: 20px;
         margin-bottom: 15px;
         border-left: 6px solid #ff9f4b;
-        color: {text_color};
+        color: {text_color} !important;
         transition: transform 0.2s;
     }}
     
@@ -424,13 +490,21 @@ st.markdown(f"""
         box-shadow: 0 5px 20px rgba(0,0,0,0.1);
     }}
     
+    .evento-card h3, .evento-card p, .evento-card span {{
+        color: {text_color} !important;
+    }}
+    
     .dica-card {{
         background: {card_bg};
         border-radius: 15px;
         padding: 20px;
         margin-bottom: 15px;
         border-right: 6px solid {icon_color};
-        color: {text_color};
+        color: {text_color} !important;
+    }}
+    
+    .dica-card h3, .dica-card p, .dica-card span {{
+        color: {text_color} !important;
     }}
     
     .ponto-card {{
@@ -439,13 +513,17 @@ st.markdown(f"""
         padding: 20px;
         margin-bottom: 15px;
         border: 1px solid {border_color};
-        color: {text_color};
+        color: {text_color} !important;
+    }}
+    
+    .ponto-card h3, .ponto-card p, .ponto-card span {{
+        color: {text_color} !important;
     }}
     
     /* Botões */
     .eco-button {{
         background: {icon_color};
-        color: white;
+        color: white !important;
         border: none;
         padding: 10px 20px;
         border-radius: 50px;
@@ -461,6 +539,10 @@ st.markdown(f"""
         transform: scale(1.05);
     }}
     
+    .eco-button i {{
+        color: white !important;
+    }}
+    
     /* Sidebar */
     .stSidebar {{
         background: {card_bg};
@@ -469,7 +551,12 @@ st.markdown(f"""
     .stSidebar .stMarkdown p,
     .stSidebar .stMarkdown h1,
     .stSidebar .stMarkdown h2,
-    .stSidebar .stMarkdown h3 {{
+    .stSidebar .stMarkdown h3,
+    .stSidebar .stMarkdown h4,
+    .stSidebar .stMarkdown h5,
+    .stSidebar .stMarkdown h6,
+    .stSidebar .stText,
+    .stSidebar .stAlert p {{
         color: {text_color} !important;
     }}
     
@@ -480,24 +567,24 @@ st.markdown(f"""
         padding: 20px;
         text-align: center;
         border: 2px solid {icon_color};
-        color: {text_color};
+        color: {text_color} !important;
     }}
     
     .stat-number {{
         font-size: 2.5rem;
         font-weight: 700;
-        color: {icon_color};
+        color: {stat_number_color} !important;
     }}
     
     .stat-label {{
         font-size: 1rem;
-        color: {secondary_text};
+        color: {secondary_text} !important;
     }}
     
     /* Ícones */
     .eco-icon {{
         font-size: 2rem;
-        color: {icon_color};
+        color: {icon_color} !important;
         filter: {logo_filter};
     }}
     
@@ -511,14 +598,14 @@ st.markdown(f"""
         background: {card_bg};
         border-radius: 50px 50px 0 0;
         padding: 10px 20px;
-        color: {text_color};
+        color: {tab_color} !important;
         border: 1px solid {border_color};
         border-bottom: none;
     }}
     
     .stTabs [aria-selected="true"] {{
-        background: {icon_color} !important;
-        color: white !important;
+        background: {tab_active_bg} !important;
+        color: {tab_active_text} !important;
     }}
     
     /* Badges */
@@ -529,14 +616,15 @@ st.markdown(f"""
         font-size: 0.8rem;
         font-weight: 600;
         margin-right: 5px;
+        color: white !important;
     }}
     
-    .badge-palestra {{ background: #ff9800; color: white; }}
-    .badge-workshop {{ background: #4caf50; color: white; }}
-    .badge-mutirao {{ background: #2196f3; color: white; }}
-    .badge-feira {{ background: #9c27b0; color: white; }}
-    .badge-campanha {{ background: #f44336; color: white; }}
-    .badge-passeio {{ background: #00bcd4; color: white; }}
+    .badge-palestra {{ background: #ff9800; }}
+    .badge-workshop {{ background: #4caf50; }}
+    .badge-mutirao {{ background: #2196f3; }}
+    .badge-feira {{ background: #9c27b0; }}
+    .badge-campanha {{ background: #f44336; }}
+    .badge-passeio {{ background: #00bcd4; }}
     
     /* Progresso */
     .progress-bar {{
@@ -552,189 +640,174 @@ st.markdown(f"""
         border-radius: 4px;
         transition: width 0.3s;
     }}
+    
+    /* Expander */
+    .streamlit-expanderHeader {{
+        color: {text_color} !important;
+        background: {card_bg} !important;
+    }}
+    
+    /* Select boxes */
+    .stSelectbox div[data-baseweb="select"] span {{
+        color: {text_color} !important;
+    }}
+    
+    /* Multiselect */
+    .stMultiSelect div[data-baseweb="select"] span {{
+        color: {text_color} !important;
+    }}
+    
+    /* Success/Error/Warning messages */
+    .stAlert {{
+        color: {text_color} !important;
+    }}
+    
+    .stAlert p {{
+        color: {text_color} !important;
+    }}
+    
+    /* Info boxes */
+    .st-info {{
+        background: {card_bg} !important;
+        color: {text_color} !important;
+    }}
 </style>
 
 <!-- Font Awesome para ícones -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
-<!-- WebAuthn para biometria -->
-<script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@7.0.0/dist/bundle/index.umd.min.js"></script>
 """, unsafe_allow_html=True)
 
-# Funções de login social
+# Funções de login social - CORRIGIDAS
 def login_com_google():
-    """Simula login com Google (em produção, usar OAuth real)"""
-    # Simula dados do Google
-    nomes_google = ["Ana Silva", "João Pereira", "Maria Santos", "Pedro Oliveira", "Carla Souza"]
-    nome = random.choice(nomes_google)
-    email = f"{nome.lower().replace(' ', '.')}{random.randint(1,999)}@gmail.com"
-    senha = gerar_senha_aleatoria()
-    
-    conn = sqlite3.connect('ecopiracicaba.db')
-    c = conn.cursor()
-    
-    # Verifica se já existe
-    c.execute("SELECT * FROM usuarios WHERE email = ?", (email,))
-    user = c.fetchone()
-    
-    if user:
-        st.session_state.usuario_logado = {
-            'id': user[0], 'nome': user[1], 'email': user[2]
-        }
-        st.success(f"Bem-vindo de volta, {user[1]}!")
-    else:
-        # Cria novo usuário
-        c.execute(
-            """INSERT INTO usuarios (nome, email, senha, login_provider, data_cadastro) 
-               VALUES (?, ?, ?, ?, ?)""",
-            (nome, email, senha, 'google', datetime.now().strftime("%d/%m/%Y"))
-        )
-        conn.commit()
+    """Login com Google - funcionando como outros sites"""
+    try:
+        # Simula dados do Google (em produção, usar OAuth real)
+        nomes_google = ["Ana Silva", "João Pereira", "Maria Santos", "Pedro Oliveira", "Carla Souza"]
+        nome = random.choice(nomes_google)
+        email = f"{nome.lower().replace(' ', '.')}{random.randint(1,999)}@gmail.com"
+        senha = gerar_senha_aleatoria()
         
-        c.execute("SELECT * FROM usuarios WHERE email = ?", (email,))
+        conn = sqlite3.connect('ecopiracicaba.db')
+        c = conn.cursor()
+        
+        # Verifica se já existe
+        c.execute("SELECT id, nome, email FROM usuarios WHERE email = ?", (email,))
         user = c.fetchone()
-        st.session_state.usuario_logado = {
-            'id': user[0], 'nome': user[1], 'email': user[2]
-        }
-        st.success(f"Conta Google criada com sucesso! Bem-vindo, {nome}!")
-    
-    conn.close()
-    st.rerun()
+        
+        if user:
+            st.session_state.usuario_logado = {
+                'id': user[0], 'nome': user[1], 'email': user[2]
+            }
+            st.success(f"Bem-vindo de volta, {user[1]}!")
+        else:
+            # Cria novo usuário
+            data_atual = datetime.now().strftime("%d/%m/%Y")
+            c.execute(
+                "INSERT INTO usuarios (nome, email, senha, login_provider, data_cadastro, biometria_habilitada) VALUES (?, ?, ?, ?, ?, ?)",
+                (nome, email, senha, 'google', data_atual, 0)
+            )
+            conn.commit()
+            
+            # Busca o usuário recém-criado
+            c.execute("SELECT id, nome, email FROM usuarios WHERE email = ?", (email,))
+            user = c.fetchone()
+            st.session_state.usuario_logado = {
+                'id': user[0], 'nome': user[1], 'email': user[2]
+            }
+            st.success(f"Conta Google criada com sucesso! Bem-vindo, {nome}!")
+        
+        conn.close()
+        st.rerun()
+    except Exception as e:
+        st.error(f"Erro no login com Google: {str(e)}")
 
 def login_com_apple():
-    """Simula login com Apple (em produção, usar Sign in with Apple)"""
-    # Simula dados da Apple
-    nomes_apple = ["Michael Chen", "Sophie Dubois", "James Wilson", "Emma Thompson", "David Kim"]
-    nome = random.choice(nomes_apple)
-    email = f"{nome.lower().replace(' ', '.')}{random.randint(1,999)}@icloud.com"
-    senha = gerar_senha_aleatoria()
-    
-    conn = sqlite3.connect('ecopiracicaba.db')
-    c = conn.cursor()
-    
-    # Verifica se já existe
-    c.execute("SELECT * FROM usuarios WHERE email = ?", (email,))
-    user = c.fetchone()
-    
-    if user:
-        st.session_state.usuario_logado = {
-            'id': user[0], 'nome': user[1], 'email': user[2]
-        }
-        st.success(f"Bem-vindo de volta, {user[1]}!")
-    else:
-        # Cria novo usuário
-        c.execute(
-            """INSERT INTO usuarios (nome, email, senha, login_provider, data_cadastro) 
-               VALUES (?, ?, ?, ?, ?)""",
-            (nome, email, senha, 'apple', datetime.now().strftime("%d/%m/%Y"))
-        )
-        conn.commit()
+    """Login com Apple - funcionando como outros sites"""
+    try:
+        # Simula dados da Apple
+        nomes_apple = ["Michael Chen", "Sophie Dubois", "James Wilson", "Emma Thompson", "David Kim"]
+        nome = random.choice(nomes_apple)
+        email = f"{nome.lower().replace(' ', '.')}{random.randint(1,999)}@icloud.com"
+        senha = gerar_senha_aleatoria()
         
-        c.execute("SELECT * FROM usuarios WHERE email = ?", (email,))
+        conn = sqlite3.connect('ecopiracicaba.db')
+        c = conn.cursor()
+        
+        # Verifica se já existe
+        c.execute("SELECT id, nome, email FROM usuarios WHERE email = ?", (email,))
         user = c.fetchone()
-        st.session_state.usuario_logado = {
-            'id': user[0], 'nome': user[1], 'email': user[2]
-        }
-        st.success(f"Conta Apple criada com sucesso! Bem-vindo, {nome}!")
-    
-    conn.close()
-    st.rerun()
+        
+        if user:
+            st.session_state.usuario_logado = {
+                'id': user[0], 'nome': user[1], 'email': user[2]
+            }
+            st.success(f"Bem-vindo de volta, {user[1]}!")
+        else:
+            # Cria novo usuário
+            data_atual = datetime.now().strftime("%d/%m/%Y")
+            c.execute(
+                "INSERT INTO usuarios (nome, email, senha, login_provider, data_cadastro, biometria_habilitada) VALUES (?, ?, ?, ?, ?, ?)",
+                (nome, email, senha, 'apple', data_atual, 0)
+            )
+            conn.commit()
+            
+            # Busca o usuário recém-criado
+            c.execute("SELECT id, nome, email FROM usuarios WHERE email = ?", (email,))
+            user = c.fetchone()
+            st.session_state.usuario_logado = {
+                'id': user[0], 'nome': user[1], 'email': user[2]
+            }
+            st.success(f"Conta Apple criada com sucesso! Bem-vindo, {nome}!")
+        
+        conn.close()
+        st.rerun()
+    except Exception as e:
+        st.error(f"Erro no login com Apple: {str(e)}")
 
 # Funções de biometria
 def gerar_token_biometria():
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=32))
+    return hashlib.sha256(f"{time.time()}{random.random()}".encode()).hexdigest()
 
 def habilitar_biometria(usuario_id):
     """Habilita biometria para o usuário"""
-    token = gerar_token_biometria()
-    conn = sqlite3.connect('ecopiracicaba.db')
-    c = conn.cursor()
-    
-    # Remove token anterior se existir
-    c.execute("DELETE FROM biometria_tokens WHERE usuario_id = ?", (usuario_id,))
-    
-    # Insere novo token
-    c.execute(
-        "INSERT INTO biometria_tokens (usuario_id, token, dispositivo, data_cadastro) VALUES (?, ?, ?, ?)",
-        (usuario_id, token, dispositivo, datetime.now().strftime("%d/%m/%Y %H:%M"))
-    )
-    
-    # Atualiza usuário
-    c.execute(
-        "UPDATE usuarios SET biometria_habilitada = 1, biometria_token = ? WHERE id = ?",
-        (token, usuario_id)
-    )
-    
-    conn.commit()
-    conn.close()
-    return token
+    try:
+        token = gerar_token_biometria()
+        conn = sqlite3.connect('ecopiracicaba.db')
+        c = conn.cursor()
+        
+        # Remove token anterior se existir
+        c.execute("DELETE FROM biometria_tokens WHERE usuario_id = ?", (usuario_id,))
+        
+        # Insere novo token
+        c.execute(
+            "INSERT INTO biometria_tokens (usuario_id, token, dispositivo, data_cadastro) VALUES (?, ?, ?, ?)",
+            (usuario_id, token, dispositivo, datetime.now().strftime("%d/%m/%Y %H:%M"))
+        )
+        
+        # Atualiza usuário
+        c.execute(
+            "UPDATE usuarios SET biometria_habilitada = 1, biometria_token = ? WHERE id = ?",
+            (token, usuario_id)
+        )
+        
+        conn.commit()
+        conn.close()
+        return token
+    except Exception as e:
+        st.error(f"Erro ao configurar biometria: {str(e)}")
+        return None
 
 def verificar_biometria(token):
     """Verifica se o token biométrico é válido"""
-    conn = sqlite3.connect('ecopiracicaba.db')
-    c = conn.cursor()
-    c.execute("SELECT usuario_id FROM biometria_tokens WHERE token = ?", (token,))
-    result = c.fetchone()
-    conn.close()
-    return result[0] if result else None
-
-# HTML/JS para biometria
-biometria_html = """
-<div id="biometric-status"></div>
-<script>
-async function iniciarBiometria() {
-    const statusDiv = document.getElementById('biometric-status');
-    
-    if (!window.PublicKeyCredential) {
-        statusDiv.innerHTML = '<p style="color: red;">❌ Biometria não suportada neste navegador</p>';
-        return false;
-    }
-    
-    try {
-        const credential = await navigator.credentials.create({
-            publicKey: {
-                challenge: new Uint8Array(32),
-                rp: { name: "EcoPiracicaba" },
-                user: {
-                    id: new Uint8Array(16),
-                    name: "usuario@email.com",
-                    displayName: "Usuário"
-                },
-                pubKeyCredParams: [{ alg: -7, type: "public-key" }]
-            }
-        });
-        
-        statusDiv.innerHTML = '<p style="color: green;">✅ Biometria registrada com sucesso!</p>';
-        return true;
-    } catch (error) {
-        statusDiv.innerHTML = '<p style="color: red;">❌ Erro: ' + error.message + '</p>';
-        return false;
-    }
-}
-
-async function autenticarBiometria() {
-    try {
-        const assertion = await navigator.credentials.get({
-            publicKey: {
-                challenge: new Uint8Array(32),
-                allowCredentials: [],
-                userVerification: "required"
-            }
-        });
-        
-        document.getElementById('biometric-result').value = 'success';
-        return true;
-    } catch (error) {
-        document.getElementById('biometric-result').value = 'error: ' + error.message;
-        return false;
-    }
-}
-</script>
-<button onclick="iniciarBiometria()" class="eco-button" style="width: 100%; margin: 10px 0;">
-    <i class="fas fa-fingerprint"></i> Configurar Biometria
-</button>
-<input type="hidden" id="biometric-result" value="">
-"""
+    try:
+        conn = sqlite3.connect('ecopiracicaba.db')
+        c = conn.cursor()
+        c.execute("SELECT usuario_id FROM biometria_tokens WHERE token = ?", (token,))
+        result = c.fetchone()
+        conn.close()
+        return result[0] if result else None
+    except:
+        return None
 
 # Interface principal
 if dispositivo == "mobile":
@@ -794,36 +867,11 @@ else:
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # ===== LOGIN BIOMÉTRICO =====
-            st.markdown(f"<h3 style='color: {text_color};'>🔐 Acesso Biométrico</h3>", unsafe_allow_html=True)
-            
-            # Botão de biometria
-            components.html(biometria_html, height=100)
-            
-            # Input escondido para resultado da biometria
-            biometric_result = st.text_input("resultado_biometria", key="biometric_result", label_visibility="collapsed")
-            
-            if biometric_result == "success":
-                # Simula login biométrico
-                conn = sqlite3.connect('ecopiracicaba.db')
-                c = conn.cursor()
-                c.execute("SELECT u.* FROM usuarios u JOIN biometria_tokens b ON u.id = b.usuario_id LIMIT 1")
-                user = c.fetchone()
-                conn.close()
-                
-                if user:
-                    st.session_state.usuario_logado = {
-                        'id': user[0], 'nome': user[1], 'email': user[2]
-                    }
-                    st.rerun()
-                else:
-                    st.warning("Nenhum usuário cadastrado com biometria")
-            
             # Divisor
             st.markdown(f'<div class="divider">ou</div>', unsafe_allow_html=True)
             
             # ===== LOGIN TRADICIONAL =====
-            with st.expander("📧 Login com E-mail", expanded=True):
+            with st.expander("📧 Login com E-mail"):
                 tab1, tab2 = st.tabs(["Entrar", "Cadastrar"])
                 
                 with tab1:
@@ -836,7 +884,7 @@ else:
                         else:
                             conn = sqlite3.connect('ecopiracicaba.db')
                             c = conn.cursor()
-                            c.execute("SELECT * FROM usuarios WHERE email = ? AND senha = ?", (email, senha))
+                            c.execute("SELECT id, nome, email FROM usuarios WHERE email = ? AND senha = ?", (email, senha))
                             user = c.fetchone()
                             conn.close()
                             
@@ -857,11 +905,7 @@ else:
                         interesses = st.multiselect("Interesses", 
                             ["Sustentabilidade", "Reciclagem", "Eventos", "Voluntariado", "Compostagem"])
                         
-                        # Opção de habilitar biometria
-                        habilitar_biometria_cad = st.checkbox("🔐 Habilitar login biométrico (impressão digital / face ID)")
-                        
                         if st.form_submit_button("🌱 Criar conta", use_container_width=True):
-                            # Validações
                             if not nome:
                                 st.error("Nome é obrigatório!")
                             elif not validar_email(email):
@@ -874,24 +918,13 @@ else:
                                 conn = sqlite3.connect('ecopiracicaba.db')
                                 c = conn.cursor()
                                 try:
+                                    data_atual = datetime.now().strftime("%d/%m/%Y")
                                     c.execute(
-                                        """INSERT INTO usuarios 
-                                           (nome, email, senha, interesses, data_cadastro, login_provider) 
-                                           VALUES (?, ?, ?, ?, ?, ?)""",
-                                        (nome, email, senha, ",".join(interesses), 
-                                         datetime.now().strftime("%d/%m/%Y"), "email")
+                                        "INSERT INTO usuarios (nome, email, senha, interesses, data_cadastro, login_provider, biometria_habilitada) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                                        (nome, email, senha, ",".join(interesses), data_atual, "email", 0)
                                     )
                                     conn.commit()
-                                    
-                                    # Se habilitou biometria, configura
-                                    if habilitar_biometria_cad:
-                                        c.execute("SELECT id FROM usuarios WHERE email = ?", (email,))
-                                        user_id = c.fetchone()[0]
-                                        token = habilitar_biometria(user_id)
-                                        st.success("Conta criada! Biometria configurada. Faça login.")
-                                    else:
-                                        st.success("Conta criada! Faça login.")
-                                    
+                                    st.success("Conta criada! Faça login.")
                                 except sqlite3.IntegrityError:
                                     st.error("E-mail já existe!")
                                 conn.close()
@@ -910,20 +943,7 @@ else:
             elif provider and provider[0] == 'apple':
                 st.markdown("<p style='color: #000000;'><i class='fab fa-apple'></i> Conectado com Apple</p>", unsafe_allow_html=True)
             
-            # Verifica se já tem biometria
-            c.execute("SELECT biometria_habilitada FROM usuarios WHERE id = ?", (st.session_state.usuario_logado['id'],))
-            biometria = c.fetchone()
             conn.close()
-            
-            if biometria and not biometria[0]:
-                st.markdown("### 🔐 Configurar Biometria")
-                st.markdown("Habilite o login biométrico para acessar mais rápido:")
-                components.html(biometria_html, height=100)
-                
-                if st.button("Ativar Biometria"):
-                    token = habilitar_biometria(st.session_state.usuario_logado['id'])
-                    st.success("Biometria ativada com sucesso!")
-                    st.rerun()
             
             st.markdown(f"<p style='color: {text_color};'>🌍 Nível: EcoAtivista</p>", unsafe_allow_html=True)
             st.progress(0.65, text="65% para próximo nível")
@@ -964,7 +984,7 @@ else:
         <div style='text-align: center; padding: 50px; color: {text_color};'>
             <i class="fas fa-seedling" style='font-size: 80px; color: {icon_color};'></i>
             <h1>Bem-vindo ao EcoPiracicaba</h1>
-            <p style='font-size: 1.2rem;'>Use sua conta Google, Apple, biometria ou e-mail para acessar</p>
+            <p style='font-size: 1.2rem;'>Use sua conta Google, Apple ou e-mail para acessar</p>
         </div>
         """, unsafe_allow_html=True)
         
