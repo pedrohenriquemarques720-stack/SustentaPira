@@ -2,12 +2,15 @@ import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 import random
 import string
 import re
 import hashlib
 import time
+import plotly.express as px
+import plotly.graph_objects as go
+from datetime import date
 
 # Configuração da página
 st.set_page_config(
@@ -19,7 +22,6 @@ st.set_page_config(
 
 # Detectar tema do sistema
 def get_theme():
-    """Detecta se o sistema está em modo dark ou light"""
     try:
         if 'theme' in st.session_state:
             return st.session_state.theme
@@ -60,70 +62,182 @@ def validar_email(email):
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(pattern, email) is not None
 
-# Gerar senha aleatória para login social
-def gerar_senha_aleatoria():
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+# ========== SISTEMA DE GAMIFICAÇÃO ==========
 
-# Inicializar banco de dados
+# Níveis e pontuação
+NIVEIS = {
+    "🌱 EcoIniciante": 0,
+    "🌿 EcoAmigo": 100,
+    "🍃 EcoGuardião": 500,
+    "🌳 EcoMestre": 1000,
+    "🏆 EcoHerói": 5000
+}
+
+# Tipos de conquistas
+CONQUISTAS = {
+    "primeiro_login": {"nome": "Primeiro Passo", "pontos": 10, "icone": "👋"},
+    "primeiro_evento": {"nome": "Evento Estreia", "pontos": 50, "icone": "📅"},
+    "cinco_eventos": {"nome": "Participante Ativo", "pontos": 100, "icone": "🎫"},
+    "dez_eventos": {"nome": "Veterano Verde", "pontos": 200, "icone": "🏅"},
+    "primeira_dica": {"nome": "Aprendiz", "pontos": 5, "icone": "💡"},
+    "cinco_dicas": {"nome": "Curioso", "pontos": 25, "icone": "🔍"},
+    "dez_dicas": {"nome": "Sábio Ambiental", "pontos": 50, "icone": "📚"},
+    "primeiro_ponto": {"nome": "Explorador", "pontos": 15, "icone": "🗺️"},
+    "cinco_pontos": {"nome": "Colecionador", "pontos": 75, "icone": "🎯"},
+    "convidar_amigo": {"nome": "Multiplicador", "pontos": 100, "icone": "👥"},
+    "reciclar_10kg": {"nome": "Reciclador Bronze", "pontos": 50, "icone": "♻️"},
+    "reciclar_50kg": {"nome": "Reciclador Prata", "pontos": 200, "icone": "🥈"},
+    "reciclar_100kg": {"nome": "Reciclador Ouro", "pontos": 500, "icone": "🥇"},
+    "plantar_arvore": {"nome": "Guardião da Floresta", "pontos": 100, "icone": "🌳"},
+    "compartilhar": {"nome": "Influenciador Verde", "pontos": 20, "icone": "📱"},
+    "avaliar_ponto": {"nome": "Crítico Ambiental", "pontos": 10, "icone": "⭐"},
+}
+
+# Desafios semanais
+DESAFIOS = [
+    {
+        "id": 1,
+        "titulo": "🌱 Coletor de Pilhas",
+        "descricao": "Descarte 5 pilhas ou baterias em pontos de coleta",
+        "pontos": 100,
+        "icone": "🔋",
+        "tipo": "pilhas"
+    },
+    {
+        "id": 2,
+        "titulo": "♻️ Mestre da Reciclagem",
+        "descricao": "Separe corretamente 10kg de recicláveis",
+        "pontos": 150,
+        "icone": "🔄",
+        "tipo": "reciclagem"
+    },
+    {
+        "id": 3,
+        "titulo": "📅 Participante de Eventos",
+        "descricao": "Participe de 2 eventos ambientais",
+        "pontos": 200,
+        "icone": "🎉",
+        "tipo": "eventos"
+    },
+    {
+        "id": 4,
+        "titulo": "🌳 Plantador de Árvores",
+        "descricao": "Plante 1 árvore nativa",
+        "pontos": 300,
+        "icone": "🌲",
+        "tipo": "plantio"
+    },
+    {
+        "id": 5,
+        "titulo": "💧 Economizador de Água",
+        "descricao": "Reduza seu consumo em 20%",
+        "pontos": 120,
+        "icone": "💧",
+        "tipo": "agua"
+    },
+    {
+        "id": 6,
+        "titulo": "🚲 Ciclista Verde",
+        "descricao": "Use bike em vez de carro 3 vezes",
+        "pontos": 180,
+        "icone": "🚲",
+        "tipo": "mobilidade"
+    },
+    {
+        "id": 7,
+        "titulo": "🥕 Orgânico é Mais",
+        "descricao": "Compre produtos orgânicos 3 vezes",
+        "pontos": 90,
+        "icone": "🥕",
+        "tipo": "alimentacao"
+    },
+    {
+        "id": 8,
+        "titulo": "📸 Influenciador Ambiental",
+        "descricao": "Compartilhe 3 posts sobre sustentabilidade",
+        "pontos": 80,
+        "icone": "📱",
+        "tipo": "compartilhamento"
+    }
+]
+
+# ========== INICIALIZAÇÃO DO BANCO DE DADOS ==========
+
 def init_database():
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     
-    # Verifica se a tabela usuarios existe e tem a estrutura correta
-    c.execute("PRAGMA table_info(usuarios)")
-    colunas = c.fetchall()
-    colunas_existentes = [col[1] for col in colunas]
-    
-    # Se a tabela não existe, cria com todas as colunas
-    if not colunas:
-        c.execute('''
-            CREATE TABLE usuarios (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                nome TEXT NOT NULL,
-                email TEXT UNIQUE NOT NULL,
-                senha TEXT NOT NULL,
-                avatar TEXT,
-                cidade TEXT DEFAULT 'Piracicaba',
-                interesses TEXT,
-                login_provider TEXT DEFAULT 'email',
-                provider_id TEXT,
-                biometria_habilitada INTEGER DEFAULT 0,
-                biometria_token TEXT,
-                data_cadastro TEXT,
-                ultimo_acesso TEXT
-            )
-        ''')
-    else:
-        # Se a tabela existe mas falta alguma coluna, adiciona
-        if 'biometria_habilitada' not in colunas_existentes:
-            c.execute("ALTER TABLE usuarios ADD COLUMN biometria_habilitada INTEGER DEFAULT 0")
-        if 'biometria_token' not in colunas_existentes:
-            c.execute("ALTER TABLE usuarios ADD COLUMN biometria_token TEXT")
-        if 'login_provider' not in colunas_existentes:
-            c.execute("ALTER TABLE usuarios ADD COLUMN login_provider TEXT DEFAULT 'email'")
-        if 'provider_id' not in colunas_existentes:
-            c.execute("ALTER TABLE usuarios ADD COLUMN provider_id TEXT")
-    
-    # Tabela de tokens biométricos
+    # Tabela de usuários
     c.execute('''
-        CREATE TABLE IF NOT EXISTS biometria_tokens (
+        CREATE TABLE IF NOT EXISTS usuarios (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            usuario_id INTEGER UNIQUE,
-            token TEXT NOT NULL,
-            dispositivo TEXT,
+            nome TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            senha TEXT NOT NULL,
+            avatar TEXT,
+            cidade TEXT DEFAULT 'Piracicaba',
+            interesses TEXT,
+            login_provider TEXT DEFAULT 'email',
+            provider_id TEXT,
             data_cadastro TEXT,
+            ultimo_acesso TEXT
+        )
+    ''')
+    
+    # Tabela de pontos/conquistas
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS conquistas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER,
+            tipo TEXT NOT NULL,
+            pontos INTEGER NOT NULL,
+            data TEXT NOT NULL,
+            descricao TEXT,
             FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
         )
     ''')
     
-    # Tabela de inscrições em eventos
+    # Tabela de progresso do usuário
     c.execute('''
-        CREATE TABLE IF NOT EXISTS inscricoes (
+        CREATE TABLE IF NOT EXISTS progresso (
+            usuario_id INTEGER PRIMARY KEY,
+            total_pontos INTEGER DEFAULT 0,
+            nivel TEXT DEFAULT '🌱 EcoIniciante',
+            eventos_participados INTEGER DEFAULT 0,
+            dicas_vistas INTEGER DEFAULT 0,
+            pontos_visitados INTEGER DEFAULT 0,
+            kg_reciclados REAL DEFAULT 0,
+            arvores_plantadas INTEGER DEFAULT 0,
+            amigos_convidados INTEGER DEFAULT 0,
+            streak_dias INTEGER DEFAULT 0,
+            ultima_atividade TEXT,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
+        )
+    ''')
+    
+    # Tabela de desafios ativos
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS desafios_ativos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             usuario_id INTEGER,
-            evento_id INTEGER,
-            data_inscricao TEXT,
-            confirmado INTEGER DEFAULT 0,
+            desafio_id INTEGER,
+            progresso INTEGER DEFAULT 0,
+            concluido INTEGER DEFAULT 0,
+            data_inicio TEXT,
+            data_conclusao TEXT,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
+        )
+    ''')
+    
+    # Tabela de badges/conquistas especiais
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS badges (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER,
+            badge_nome TEXT,
+            badge_icone TEXT,
+            data_obtencao TEXT,
+            UNIQUE(usuario_id, badge_nome),
             FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
         )
     ''')
@@ -147,6 +261,21 @@ def init_database():
         )
     ''')
     
+    # Tabela de inscrições
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS inscricoes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER,
+            evento_id INTEGER,
+            data_inscricao TEXT,
+            confirmado INTEGER DEFAULT 0,
+            participou INTEGER DEFAULT 0,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios (id),
+            FOREIGN KEY (evento_id) REFERENCES eventos (id),
+            UNIQUE(usuario_id, evento_id)
+        )
+    ''')
+    
     # Tabela de dicas ambientais
     c.execute('''
         CREATE TABLE IF NOT EXISTS dicas (
@@ -157,6 +286,19 @@ def init_database():
             data_publicacao TEXT,
             likes INTEGER DEFAULT 0,
             autor TEXT
+        )
+    ''')
+    
+    # Tabela de visualizações de dicas
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS dicas_vistas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER,
+            dica_id INTEGER,
+            data_vista TEXT,
+            UNIQUE(usuario_id, dica_id),
+            FOREIGN KEY (usuario_id) REFERENCES usuarios (id),
+            FOREIGN KEY (dica_id) REFERENCES dicas (id)
         )
     ''')
     
@@ -173,6 +315,46 @@ def init_database():
             longitude REAL,
             avaliacao REAL DEFAULT 0,
             descricao TEXT
+        )
+    ''')
+    
+    # Tabela de visitas a pontos
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS visitas_pontos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER,
+            ponto_id INTEGER,
+            data_visita TEXT,
+            kg_descartados REAL DEFAULT 0,
+            UNIQUE(usuario_id, ponto_id, data_visita),
+            FOREIGN KEY (usuario_id) REFERENCES usuarios (id),
+            FOREIGN KEY (ponto_id) REFERENCES pontos_coleta (id)
+        )
+    ''')
+    
+    # Tabela de convites
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS convites (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER,
+            codigo TEXT UNIQUE,
+            usado INTEGER DEFAULT 0,
+            usado_por INTEGER,
+            data_criacao TEXT,
+            data_uso TEXT,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios (id),
+            FOREIGN KEY (usado_por) REFERENCES usuarios (id)
+        )
+    ''')
+    
+    # Tabela de compartilhamentos
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS compartilhamentos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER,
+            tipo TEXT,
+            data TEXT,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
         )
     ''')
     
@@ -210,10 +392,16 @@ def init_database():
     c.execute("SELECT * FROM dicas")
     if not c.fetchone():
         dicas = [
-            ("🌱 Compostagem Doméstica", "Você sabia que 50% do lixo doméstico pode ser compostado? Aprenda a fazer sua própria composteira com baldes e minhocas californianas.", "resíduos", datetime.now().strftime("%d/%m/%Y"), 0, "Equipe EcoPiracicaba"),
-            ("💧 Economia de Água", "Um banho de 15 minutos gasta 135 litros de água. Reduza para 5 minutos e economize 90 litros por banho!", "água", datetime.now().strftime("%d/%m/%Y"), 0, "Sabesp"),
-            ("🔋 Pilhas e Baterias", "Nunca descarte pilhas no lixo comum. Leve a pontos de coleta específicos. Uma pilha pode contaminar 20 mil litros de água.", "resíduos", datetime.now().strftime("%d/%m/%Y"), 0, "Greenpeace"),
-            ("🌳 Plante uma Árvore", "Uma árvore adulta absorve até 150kg de CO2 por ano. Plante árvores nativas da região de Piracicaba.", "natureza", datetime.now().strftime("%d/%m/%Y"), 0, "SOS Mata Atlântica")
+            ("🌱 Compostagem Doméstica", "Você sabia que 50% do lixo doméstico pode ser compostado? Aprenda a fazer sua própria composteira com baldes e minhocas californianas. Em 3 meses você terá adubo de alta qualidade.", "resíduos", datetime.now().strftime("%d/%m/%Y"), 0, "Equipe EcoPiracicaba"),
+            ("💧 Economia de Água", "Um banho de 15 minutos gasta 135 litros de água. Reduza para 5 minutos e economize 90 litros por banho! Isso representa 2.700 litros por mês.", "água", datetime.now().strftime("%d/%m/%Y"), 0, "Sabesp"),
+            ("🔋 Pilhas e Baterias", "Nunca descarte pilhas no lixo comum. Leve a pontos de coleta específicos. Uma pilha pode contaminar 20 mil litros de água por até 50 anos.", "resíduos", datetime.now().strftime("%d/%m/%Y"), 0, "Greenpeace"),
+            ("🌳 Plante uma Árvore", "Uma árvore adulta absorve até 150kg de CO2 por ano. Plante árvores nativas da região de Piracicaba como ipê, jatobá e pitanga.", "natureza", datetime.now().strftime("%d/%m/%Y"), 0, "SOS Mata Atlântica"),
+            ("🛍️ Sacolas Retornáveis", "Uma sacola plástica leva 400 anos para se decompor. Use sempre sacolas retornáveis nas compras. O Brasil consome 1,5 milhão de sacolas por hora!", "plástico", datetime.now().strftime("%d/%m/%Y"), 0, "WWF"),
+            ("🚗 Carona Solidária", "Compartilhe carro com colegas de trabalho. Reduz emissões, congestionamento e você ainda economiza até 40% com combustível.", "mobilidade", datetime.now().strftime("%d/%m/%Y"), 0, "Instituto Clima"),
+            ("🥗 Alimentação Orgânica", "Alimentos orgânicos são mais saudáveis e não contaminam o solo com agrotóxicos. Em Piracicaba, feiras orgânicas acontecem aos sábados na ESALQ.", "alimentação", datetime.now().strftime("%d/%m/%Y"), 0, "Feira Orgânica"),
+            ("♻️ Separação do Lixo", "Separe sempre recicláveis: papel limpo, plástico, vidro e metal. Lave as embalagens antes de descartar. A reciclagem de uma tonelada de papel salva 20 árvores.", "reciclagem", datetime.now().strftime("%d/%m/%Y"), 0, "Cooperativa Recicladores"),
+            ("☀️ Energia Solar", "A energia solar já é a fonte mais barata do Brasil. Uma placa solar de 330W evita a emissão de 4,5 toneladas de CO2 em 25 anos.", "energia", datetime.now().strftime("%d/%m/%Y"), 0, "ABSOLAR"),
+            ("🐝 Proteja as Abelhas", "As abelhas são responsáveis por 80% da polinização das plantas. Evite inseticidas e plante flores nativas para ajudar esses insetos essenciais.", "biodiversidade", datetime.now().strftime("%d/%m/%Y"), 0, "Bee Or not to be")
         ]
         for d in dicas:
             c.execute(
@@ -227,7 +415,14 @@ def init_database():
         pontos = [
             ("Ecoponto Centro", "Av. Rui Barbosa, 800 - Centro", "geral", "Seg-Sex 8h-17h, Sáb 8h-12h", "(19) 3403-1100", -22.724, -47.648, 4.5, "Recebe todos os tipos de recicláveis, eletrônicos e óleo de cozinha"),
             ("Shopping Piracicaba", "Av. Limeira, 700 - Areão", "pilhas", "Seg-Sáb 10h-22h, Dom 14h-20h", "(19) 3432-4545", -22.718, -47.642, 4.8, "Ponto de coleta de pilhas e baterias no piso G1"),
-            ("Coopervidros", "R. Treze de Maio, 300 - Centro", "vidros", "Seg-Sex 8h-17h", "(19) 3421-1234", -22.731, -47.651, 4.2, "Cooperativa especializada em reciclagem de vidros")
+            ("Coopervidros", "R. Treze de Maio, 300 - Centro", "vidros", "Seg-Sex 8h-17h", "(19) 3421-1234", -22.731, -47.651, 4.2, "Cooperativa especializada em reciclagem de vidros"),
+            ("CDI Eletrônicos", "R. do Porto, 234 - Centro", "eletronicos", "Seg-Sex 9h-18h, Sáb 9h-12h", "(19) 3433-5678", -22.722, -47.646, 4.7, "Centro de Descarte de Eletrônicos - computadores, celulares e pilhas"),
+            ("Ecoponto Paulicéia", "R. Javari, 150 - Paulicéia", "geral", "Ter-Sáb 8h-16h", "(19) 3403-2200", -22.710, -47.670, 4.3, "Ecoponto completo com coleta de óleo e recicláveis"),
+            ("Drogaria São Paulo", "Av. Limeira, 900 - Centro", "medicamentos", "24 horas", "(19) 3432-7800", -22.720, -47.640, 4.0, "Descarte de medicamentos vencidos e pilhas"),
+            ("Unimed Sede", "R. Voluntários, 450 - Centro", "pilhas", "Seg-Sex 7h-19h", "(19) 3432-9000", -22.725, -47.649, 4.6, "Coleta de pilhas e baterias na recepção"),
+            ("Esalq/USP", "Av. Pádua Dias, 11 - Agronomia", "eletronicos", "Seg-Sex 8h-17h", "(19) 3447-8500", -22.710, -47.630, 4.9, "Campus da ESALQ com pontos de coleta de eletrônicos"),
+            ("Supermercado Pague Menos", "R. Campos Salles, 500 - Centro", "oleo", "Seg-Sáb 8h-21h", "(19) 3434-1234", -22.728, -47.652, 4.4, "Coleta de óleo de cozinha usado"),
+            ("Horto Municipal", "Av. Maurílio Biagi, 1500 - Santa Cecília", "organicos", "Seg-Sex 8h-16h", "(19) 3434-5678", -22.730, -47.655, 4.3, "Recebimento de podas e resíduos orgânicos")
         ]
         for p in pontos:
             c.execute(
@@ -243,358 +438,544 @@ def init_database():
 # Inicializar banco
 init_database()
 
-# Detectar tema e dispositivo
+# ========== FUNÇÕES DE GAMIFICAÇÃO ==========
+
+def get_nivel(pontos):
+    """Retorna o nível baseado nos pontos"""
+    if pontos < 100:
+        return "🌱 EcoIniciante"
+    elif pontos < 500:
+        return "🌿 EcoAmigo"
+    elif pontos < 1000:
+        return "🍃 EcoGuardião"
+    elif pontos < 5000:
+        return "🌳 EcoMestre"
+    else:
+        return "🏆 EcoHerói"
+
+def get_proximo_nivel(pontos):
+    """Retorna pontos necessários para próximo nível"""
+    if pontos < 100:
+        return 100 - pontos
+    elif pontos < 500:
+        return 500 - pontos
+    elif pontos < 1000:
+        return 1000 - pontos
+    elif pontos < 5000:
+        return 5000 - pontos
+    else:
+        return 0
+
+def inicializar_progresso(usuario_id):
+    """Inicializa o progresso de um novo usuário"""
+    conn = sqlite3.connect('ecopiracicaba.db')
+    c = conn.cursor()
+    
+    # Verifica se já existe
+    c.execute("SELECT * FROM progresso WHERE usuario_id = ?", (usuario_id,))
+    if not c.fetchone():
+        c.execute(
+            """INSERT INTO progresso 
+               (usuario_id, total_pontos, nivel, ultima_atividade) 
+               VALUES (?, ?, ?, ?)""",
+            (usuario_id, 0, "🌱 EcoIniciante", datetime.now().strftime("%d/%m/%Y %H:%M"))
+        )
+    
+    conn.commit()
+    conn.close()
+
+def adicionar_pontos(usuario_id, tipo, pontos_extra, descricao=""):
+    """Adiciona pontos ao usuário e verifica conquistas"""
+    conn = sqlite3.connect('ecopiracicaba.db')
+    c = conn.cursor()
+    
+    # Registrar conquista
+    data_atual = datetime.now().strftime("%d/%m/%Y %H:%M")
+    c.execute(
+        "INSERT INTO conquistas (usuario_id, tipo, pontos, data, descricao) VALUES (?, ?, ?, ?, ?)",
+        (usuario_id, tipo, pontos_extra, data_atual, descricao)
+    )
+    
+    # Atualizar total de pontos
+    c.execute("SELECT total_pontos FROM progresso WHERE usuario_id = ?", (usuario_id,))
+    resultado = c.fetchone()
+    
+    if resultado:
+        pontos_atuais = resultado[0]
+        novos_pontos = pontos_atuais + pontos_extra
+        novo_nivel = get_nivel(novos_pontos)
+        
+        c.execute(
+            "UPDATE progresso SET total_pontos = ?, nivel = ?, ultima_atividade = ? WHERE usuario_id = ?",
+            (novos_pontos, novo_nivel, data_atual, usuario_id)
+        )
+    
+    conn.commit()
+    conn.close()
+    
+    return pontos_extra
+
+def registrar_atividade(usuario_id, tipo, valor=1):
+    """Registra atividades do usuário e atualiza streak"""
+    conn = sqlite3.connect('ecopiracicaba.db')
+    c = conn.cursor()
+    
+    data_atual = datetime.now().strftime("%d/%m/%Y")
+    
+    # Atualizar contadores específicos
+    if tipo == "evento":
+        c.execute(
+            "UPDATE progresso SET eventos_participados = eventos_participados + ? WHERE usuario_id = ?",
+            (valor, usuario_id)
+        )
+    elif tipo == "dica":
+        c.execute(
+            "UPDATE progresso SET dicas_vistas = dicas_vistas + ? WHERE usuario_id = ?",
+            (valor, usuario_id)
+        )
+    elif tipo == "ponto":
+        c.execute(
+            "UPDATE progresso SET pontos_visitados = pontos_visitados + ? WHERE usuario_id = ?",
+            (valor, usuario_id)
+        )
+    elif tipo == "reciclagem":
+        c.execute(
+            "UPDATE progresso SET kg_reciclados = kg_reciclados + ? WHERE usuario_id = ?",
+            (valor, usuario_id)
+        )
+    elif tipo == "arvore":
+        c.execute(
+            "UPDATE progresso SET arvores_plantadas = arvores_plantadas + ? WHERE usuario_id = ?",
+            (valor, usuario_id)
+        )
+    elif tipo == "amigo":
+        c.execute(
+            "UPDATE progresso SET amigos_convidados = amigos_convidados + ? WHERE usuario_id = ?",
+            (valor, usuario_id)
+        )
+    
+    # Atualizar streak
+    c.execute("SELECT ultima_atividade FROM progresso WHERE usuario_id = ?", (usuario_id,))
+    resultado = c.fetchone()
+    
+    if resultado and resultado[0]:
+        ultima = datetime.strptime(resultado[0].split()[0], "%d/%m/%Y")
+        hoje = datetime.now()
+        
+        if (hoje - ultima).days == 1:
+            # Streak continua
+            c.execute(
+                "UPDATE progresso SET streak_dias = streak_dias + 1 WHERE usuario_id = ?",
+                (usuario_id,)
+            )
+        elif (hoje - ultima).days > 1:
+            # Streak quebrou
+            c.execute(
+                "UPDATE progresso SET streak_dias = 1 WHERE usuario_id = ?",
+                (usuario_id,)
+            )
+    
+    conn.commit()
+    conn.close()
+
+def verificar_conquistas(usuario_id):
+    """Verifica e concede conquistas baseadas no progresso"""
+    conn = sqlite3.connect('ecopiracicaba.db')
+    c = conn.cursor()
+    
+    # Buscar progresso
+    c.execute("SELECT * FROM progresso WHERE usuario_id = ?", (usuario_id,))
+    progresso = c.fetchone()
+    
+    if not progresso:
+        conn.close()
+        return
+    
+    pontos = c.execute("SELECT SUM(pontos) FROM conquistas WHERE usuario_id = ?", (usuario_id,)).fetchone()[0] or 0
+    
+    # Verificar conquistas por quantidade
+    conquistas_verificar = [
+        ("eventos_participados", 1, "primeiro_evento", "Participou do primeiro evento"),
+        ("eventos_participados", 5, "cinco_eventos", "Participou de 5 eventos"),
+        ("eventos_participados", 10, "dez_eventos", "Participou de 10 eventos"),
+        ("dicas_vistas", 1, "primeira_dica", "Leu a primeira dica"),
+        ("dicas_vistas", 5, "cinco_dicas", "Leu 5 dicas"),
+        ("dicas_vistas", 10, "dez_dicas", "Leu 10 dicas"),
+        ("pontos_visitados", 1, "primeiro_ponto", "Visitou o primeiro ponto de coleta"),
+        ("pontos_visitados", 5, "cinco_pontos", "Visitou 5 pontos de coleta"),
+        ("kg_reciclados", 10, "reciclar_10kg", "Reciclou 10kg"),
+        ("kg_reciclados", 50, "reciclar_50kg", "Reciclou 50kg"),
+        ("kg_reciclados", 100, "reciclar_100kg", "Reciclou 100kg"),
+        ("arvores_plantadas", 1, "plantar_arvore", "Plantou a primeira árvore"),
+        ("amigos_convidados", 1, "convidar_amigo", "Convidou um amigo"),
+    ]
+    
+    for coluna, quantidade, tipo, descricao in conquistas_verificar:
+        valor_atual = progresso[list(progresso.keys()).index(coluna)] if coluna in progresso.keys() else 0
+        if valor_atual >= quantidade:
+            # Verificar se já tem essa conquista
+            c.execute(
+                "SELECT * FROM conquistas WHERE usuario_id = ? AND tipo = ?",
+                (usuario_id, tipo)
+            )
+            if not c.fetchone():
+                # Conceder conquista
+                pontos_conquista = CONQUISTAS[tipo]["pontos"] if tipo in CONQUISTAS else 10
+                adicionar_pontos(usuario_id, tipo, pontos_conquista, descricao)
+    
+    conn.close()
+
+def gerar_codigo_convite(usuario_id):
+    """Gera código único para convidar amigos"""
+    codigo = hashlib.md5(f"{usuario_id}{time.time()}{random.random()}".encode()).hexdigest()[:8].upper()
+    
+    conn = sqlite3.connect('ecopiracicaba.db')
+    c = conn.cursor()
+    
+    c.execute(
+        "INSERT INTO convites (usuario_id, codigo, data_criacao) VALUES (?, ?, ?)",
+        (usuario_id, codigo, datetime.now().strftime("%d/%m/%Y %H:%M"))
+    )
+    
+    conn.commit()
+    conn.close()
+    
+    return codigo
+
+def usar_codigo_convite(codigo, novo_usuario_id):
+    """Usa código de convite e concede pontos"""
+    conn = sqlite3.connect('ecopiracicaba.db')
+    c = conn.cursor()
+    
+    c.execute("SELECT * FROM convites WHERE codigo = ? AND usado = 0", (codigo,))
+    convite = c.fetchone()
+    
+    if convite:
+        # Marcar como usado
+        c.execute(
+            "UPDATE convites SET usado = 1, usado_por = ?, data_uso = ? WHERE id = ?",
+            (novo_usuario_id, datetime.now().strftime("%d/%m/%Y %H:%M"), convite[0])
+        )
+        
+        # Dar pontos para quem convidou
+        adicionar_pontos(convite[1], "convidar_amigo", 100, "Convidou um amigo")
+        registrar_atividade(convite[1], "amigo", 1)
+        
+        conn.commit()
+        conn.close()
+        return True
+    
+    conn.close()
+    return False
+
+def iniciar_desafios_semanais(usuario_id):
+    """Inicia desafios semanais para o usuário"""
+    conn = sqlite3.connect('ecopiracicaba.db')
+    c = conn.cursor()
+    
+    # Selecionar 3 desafios aleatórios
+    desafios_selecionados = random.sample(DESAFIOS, 3)
+    
+    for desafio in desafios_selecionados:
+        c.execute(
+            """INSERT INTO desafios_ativos 
+               (usuario_id, desafio_id, data_inicio) 
+               VALUES (?, ?, ?)""",
+            (usuario_id, desafio['id'], datetime.now().strftime("%d/%m/%Y"))
+        )
+    
+    conn.commit()
+    conn.close()
+
+def atualizar_progresso_desafio(usuario_id, tipo, quantidade=1):
+    """Atualiza progresso em desafios ativos"""
+    conn = sqlite3.connect('ecopiracicaba.db')
+    c = conn.cursor()
+    
+    c.execute(
+        """SELECT da.id, d.titulo, d.pontos, da.progresso 
+           FROM desafios_ativos da
+           JOIN desafios d ON da.desafio_id = d.id
+           WHERE da.usuario_id = ? AND da.concluido = 0 AND d.tipo = ?""",
+        (usuario_id, tipo)
+    )
+    
+    desafios = c.fetchall()
+    
+    for desafio in desafios:
+        novo_progresso = desafio[3] + quantidade
+        c.execute(
+            "UPDATE desafios_ativos SET progresso = ? WHERE id = ?",
+            (novo_progresso, desafio[0])
+        )
+        
+        # Verificar se concluiu (progresso 100)
+        if novo_progresso >= 100:
+            c.execute(
+                "UPDATE desafios_ativos SET concluido = 1, data_conclusao = ? WHERE id = ?",
+                (datetime.now().strftime("%d/%m/%Y %H:%M"), desafio[0])
+            )
+            # Dar pontos
+            adicionar_pontos(usuario_id, f"desafio_{desafio[1]}", desafio[2], f"Completou desafio: {desafio[1]}")
+    
+    conn.commit()
+    conn.close()
+
+# ========== COMPONENTES DE INTERFACE ==========
+
+def mostrar_perfil(usuario_id, nome):
+    """Mostra o perfil do usuário com estatísticas e conquistas"""
+    conn = sqlite3.connect('ecopiracicaba.db')
+    
+    # Buscar progresso
+    progresso = pd.read_sql_query(f"SELECT * FROM progresso WHERE usuario_id = {usuario_id}", conn)
+    
+    # Buscar conquistas recentes
+    conquistas = pd.read_sql_query(
+        f"SELECT * FROM conquistas WHERE usuario_id = {usuario_id} ORDER BY data DESC LIMIT 5",
+        conn
+    )
+    
+    # Buscar badges
+    badges = pd.read_sql_query(f"SELECT * FROM badges WHERE usuario_id = {usuario_id}", conn)
+    
+    # Buscar desafios ativos
+    desafios = pd.read_sql_query(
+        f"""SELECT d.*, da.progresso, da.data_inicio 
+           FROM desafios_ativos da
+           JOIN desafios d ON da.desafio_id = d.id
+           WHERE da.usuario_id = {usuario_id} AND da.concluido = 0""",
+        conn
+    )
+    
+    conn.close()
+    
+    if not progresso.empty:
+        pontos = progresso.iloc[0]['total_pontos'] if 'total_pontos' in progresso.columns else 0
+        nivel = progresso.iloc[0]['nivel'] if 'nivel' in progresso.columns else "🌱 EcoIniciante"
+        streak = progresso.iloc[0]['streak_dias'] if 'streak_dias' in progresso.columns else 0
+    else:
+        pontos = 0
+        nivel = "🌱 EcoIniciante"
+        streak = 0
+    
+    proximo = get_proximo_nivel(pontos)
+    
+    # Cards de perfil
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown(f"""
+        <div style='background: {card_bg}; padding: 20px; border-radius: 15px; text-align: center;'>
+            <h2 style='color: {text_color};'>{nivel}</h2>
+            <h1 style='color: {icon_color}; font-size: 48px;'>{pontos}</h1>
+            <p>pontos totais</p>
+            <div class='progress-bar'>
+                <div class='progress-fill' style='width: {min(100, (pontos/5000)*100)}%;'></div>
+            </div>
+            <p>{proximo} pontos para o próximo nível</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+        <div style='background: {card_bg}; padding: 20px; border-radius: 15px; text-align: center;'>
+            <h3 style='color: {text_color};'>🔥 Streak</h3>
+            <h1 style='color: #ff9800; font-size: 48px;'>{streak}</h1>
+            <p>dias seguidos</p>
+            <p>{'🔥' * min(streak, 10)}</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown(f"""
+        <div style='background: {card_bg}; padding: 20px; border-radius: 15px; text-align: center;'>
+            <h3 style='color: {text_color};'>🏆 Badges</h3>
+            <h1 style='color: gold; font-size: 48px;'>{len(badges)}</h1>
+            <p>conquistas especiais</p>
+            <div style='display: flex; gap: 5px; justify-content: center;'>
+                {''.join([f"<span style='font-size: 24px;'>{b[2]}</span>" for b in badges.itertuples()])}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Estatísticas
+    st.markdown(f"<h3 style='color: {text_color};'>📊 Estatísticas</h3>", unsafe_allow_html=True)
+    
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.markdown(f"""
+        <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center;'>
+            <h4>📅 Eventos</h4>
+            <h2>{progresso.iloc[0]['eventos_participados'] if not progresso.empty else 0}</h2>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+        <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center;'>
+            <h4>💡 Dicas</h4>
+            <h2>{progresso.iloc[0]['dicas_vistas'] if not progresso.empty else 0}</h2>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown(f"""
+        <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center;'>
+            <h4>📍 Visitas</h4>
+            <h2>{progresso.iloc[0]['pontos_visitados'] if not progresso.empty else 0}</h2>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col4:
+        st.markdown(f"""
+        <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center;'>
+            <h4>♻️ Kg Reciclados</h4>
+            <h2>{progresso.iloc[0]['kg_reciclados'] if not progresso.empty else 0}</h2>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Desafios ativos
+    if not desafios.empty:
+        st.markdown(f"<h3 style='color: {text_color};'>🎯 Desafios da Semana</h3>", unsafe_allow_html=True)
+        
+        for _, desafio in desafios.iterrows():
+            st.markdown(f"""
+            <div style='background: {card_bg}; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 6px solid {icon_color};'>
+                <div style='display: flex; justify-content: space-between; align-items: center;'>
+                    <div>
+                        <span style='font-size: 24px;'>{desafio['icone']}</span>
+                        <strong>{desafio['titulo']}</strong>
+                        <p style='font-size: 12px;'>{desafio['descricao']}</p>
+                    </div>
+                    <div style='text-align: right;'>
+                        <span style='color: {icon_color};'>+{desafio['pontos']} pts</span>
+                        <div class='progress-bar' style='width: 100px;'>
+                            <div class='progress-fill' style='width: {desafio['progresso']}%;'></div>
+                        </div>
+                        <small>{desafio['progresso']}%</small>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+    
+    # Conquistas recentes
+    if not conquistas.empty:
+        st.markdown(f"<h3 style='color: {text_color};'>🏅 Conquistas Recentes</h3>", unsafe_allow_html=True)
+        
+        cols = st.columns(3)
+        for i, (_, conquista) in enumerate(conquistas.iterrows()):
+            with cols[i % 3]:
+                st.markdown(f"""
+                <div style='background: {card_bg}; padding: 10px; border-radius: 10px; text-align: center; margin-bottom: 10px;'>
+                    <span style='font-size: 30px;'>✨</span>
+                    <h4>{conquista['descricao']}</h4>
+                    <p><small>{conquista['data']}</small></p>
+                    <span style='color: {icon_color};'>+{conquista['pontos']} pts</span>
+                </div>
+                """, unsafe_allow_html=True)
+
+def mostrar_ranking():
+    """Mostra ranking de usuários"""
+    conn = sqlite3.connect('ecopiracicaba.db')
+    
+    ranking = pd.read_sql_query("""
+        SELECT u.nome, p.total_pontos, p.nivel 
+        FROM usuarios u
+        JOIN progresso p ON u.id = p.usuario_id
+        ORDER BY p.total_pontos DESC
+        LIMIT 10
+    """, conn)
+    
+    conn.close()
+    
+    st.markdown(f"<h3 style='color: {text_color};'>🏆 Ranking EcoCidadãos</h3>", unsafe_allow_html=True)
+    
+    for i, (_, usuario) in enumerate(ranking.iterrows()):
+        medalha = "🥇" if i == 0 else "🥈" if i == 1 else "🥉" if i == 2 else f"{i+1}º"
+        st.markdown(f"""
+        <div style='background: {card_bg}; padding: 10px; border-radius: 10px; margin-bottom: 5px;'>
+            <div style='display: flex; justify-content: space-between;'>
+                <span><strong>{medalha} {usuario['nome']}</strong> - {usuario['nivel']}</span>
+                <span style='color: {icon_color};'><strong>{usuario['total_pontos']} pts</strong></span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+def mostrar_convite(usuario_id):
+    """Mostra sistema de convite"""
+    codigo = gerar_codigo_convite(usuario_id)
+    
+    st.markdown(f"<h3 style='color: {text_color};'>👥 Convidar Amigos</h3>", unsafe_allow_html=True)
+    
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.code(f"ECOPIRA-{codigo}", language="text")
+    with col2:
+        if st.button("📋 Copiar"):
+            st.success("Código copiado!")
+    
+    st.markdown("""
+    <div style='background: #e8f5e9; padding: 15px; border-radius: 10px; margin-top: 10px;'>
+        <h4>🎁 Benefícios</h4>
+        <ul>
+            <li>Você ganha <strong>100 pontos</strong> por cada amigo que se cadastrar</li>
+            <li>Seu amigo ganha <strong>50 pontos</strong> de boas-vindas</li>
+            <li>Desbloqueia badge de "Multiplicador"</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ========== DETECTAR TEMA ==========
 tema = get_theme()
 dispositivo = detectar_dispositivo()
 
-# Configurações de cores baseadas no tema
+# Configurações de cores
 if tema == "dark":
     bg_color = "#0a1f17"
     card_bg = "#1a3329"
     text_color = "#FFFFFF"
     secondary_text = "#E0E0E0"
     border_color = "#2a4a3a"
-    hover_color = "#2a5a45"
     icon_color = "#8bc34a"
     gradient_start = "#0a1f17"
     gradient_end = "#1a4a3a"
-    logo_filter = "brightness(0) invert(1)"
-    google_btn_bg = "#4285F4"
-    apple_btn_bg = "#000000"
-    input_bg = "#2a3a32"
-    input_text = "#FFFFFF"
-    label_color = "#FFFFFF"
-    tab_color = "#FFFFFF"
-    tab_active_bg = "#8bc34a"
-    tab_active_text = "#000000"
-    stat_text = "#FFFFFF"
-    stat_number_color = "#8bc34a"
 else:
     bg_color = "#f0fff5"
     card_bg = "#FFFFFF"
     text_color = "#000000"
     secondary_text = "#2a5e45"
     border_color = "#c0e0d0"
-    hover_color = "#e0f5e9"
     icon_color = "#0f5c3f"
     gradient_start = "#e8f5e9"
     gradient_end = "#c8e6c9"
-    logo_filter = "brightness(0.5) sepia(1) hue-rotate(120deg)"
-    google_btn_bg = "#4285F4"
-    apple_btn_bg = "#000000"
-    input_bg = "#FFFFFF"
-    input_text = "#000000"
-    label_color = "#000000"
-    tab_color = "#000000"
-    tab_active_bg = "#0f5c3f"
-    tab_active_text = "#FFFFFF"
-    stat_text = "#000000"
-    stat_number_color = "#0f5c3f"
 
-# CSS base (compartilhado entre mobile e desktop)
-base_css = f"""
+# CSS
+st.markdown(f"""
 <style>
-    /* Estilos globais */
     .stApp {{
         background: linear-gradient(135deg, {gradient_start} 0%, {gradient_end} 100%);
     }}
     
-    /* Todos os textos padrão */
-    .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6, 
-    div[data-testid="stMarkdownContainer"] p,
-    div[data-testid="stMarkdownContainer"] h1,
-    div[data-testid="stMarkdownContainer"] h2,
-    div[data-testid="stMarkdownContainer"] h3,
-    div[data-testid="stMarkdownContainer"] h4,
-    div[data-testid="stMarkdownContainer"] h5,
-    div[data-testid="stMarkdownContainer"] h6,
-    .st-bb, .row-widget, .stAlert p {{
+    .stMarkdown, p, h1, h2, h3, h4, h5, h6 {{
         color: {text_color} !important;
     }}
     
-    /* Labels de formulários */
-    .stTextInput label, .stSelectbox label, .stMultiselect label,
-    .stCheckbox label, .stRadio label, .stDateInput label,
-    .stNumberInput label, .stTextArea label {{
-        color: {label_color} !important;
-        font-weight: 500 !important;
-    }}
-    
-    /* Input fields */
-    .stTextInput input, .stSelectbox div, .stMultiselect div,
-    .stDateInput input, .stNumberInput input, .stTextArea textarea {{
-        background-color: {input_bg} !important;
-        color: {input_text} !important;
-        border: 1px solid {border_color} !important;
-    }}
-    
-    /* Placeholders */
-    .stTextInput input::placeholder {{
-        color: {secondary_text} !important;
-        opacity: 0.7;
-    }}
-    
-    /* Botões padrão */
     .stButton button {{
-        color: {text_color} !important;
-        background: {card_bg} !important;
-        border: 1px solid {border_color} !important;
+        background: {icon_color};
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 10px 20px;
+        font-weight: 600;
     }}
     
     .stButton button:hover {{
-        background: {hover_color} !important;
-        color: {text_color} !important;
-    }}
-    
-    .main-title {{
-        text-align: center;
-        color: {text_color} !important;
-        font-size: 3rem;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-    }}
-    
-    .sub-title {{
-        text-align: center;
-        color: {secondary_text} !important;
-        font-size: 1.5rem;
-        margin-bottom: 2rem;
-        font-style: italic;
-    }}
-    
-    /* Botões de login social */
-    .social-login-btn {{
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        padding: 12px;
-        margin: 8px 0;
-        border: none;
-        border-radius: 50px;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s;
-        color: white !important;
-        gap: 10px;
-    }}
-    
-    .social-login-btn i {{
-        font-size: 20px;
-        color: white !important;
-    }}
-    
-    .social-login-btn:hover {{
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    }}
-    
-    .google-btn {{
-        background: {google_btn_bg};
-    }}
-    
-    .apple-btn {{
-        background: {apple_btn_bg};
-    }}
-    
-    .divider {{
-        display: flex;
-        align-items: center;
-        text-align: center;
-        color: {secondary_text} !important;
-        margin: 20px 0;
-    }}
-    
-    .divider::before,
-    .divider::after {{
-        content: '';
-        flex: 1;
-        border-bottom: 1px solid {border_color};
-    }}
-    
-    .divider::before {{
-        margin-right: .25em;
-    }}
-    
-    .divider::after {{
-        margin-left: .25em;
-    }}
-    
-    /* Cards */
-    .eco-card {{
-        background: {card_bg};
-        border-radius: 20px;
-        padding: 25px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        border: 1px solid {border_color};
-        margin-bottom: 20px;
-        transition: transform 0.3s, box-shadow 0.3s;
-        color: {text_color} !important;
-    }}
-    
-    .eco-card:hover {{
-        transform: translateY(-5px);
-        box-shadow: 0 15px 40px rgba(0,100,50,0.2);
-    }}
-    
-    .eco-card h3, .eco-card p {{
-        color: {text_color} !important;
-    }}
-    
-    .evento-card {{
-        background: {card_bg};
-        border-radius: 15px;
-        padding: 20px;
-        margin-bottom: 15px;
-        border-left: 6px solid #ff9f4b;
-        color: {text_color} !important;
-        transition: transform 0.2s;
-    }}
-    
-    .evento-card:hover {{
-        transform: scale(1.02);
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-    }}
-    
-    .evento-card h3, .evento-card p, .evento-card span {{
-        color: {text_color} !important;
-    }}
-    
-    .dica-card {{
-        background: {card_bg};
-        border-radius: 15px;
-        padding: 20px;
-        margin-bottom: 15px;
-        border-right: 6px solid {icon_color};
-        color: {text_color} !important;
-    }}
-    
-    .dica-card h3, .dica-card p, .dica-card span {{
-        color: {text_color} !important;
-    }}
-    
-    .ponto-card {{
-        background: {card_bg};
-        border-radius: 15px;
-        padding: 20px;
-        margin-bottom: 15px;
-        border: 1px solid {border_color};
-        color: {text_color} !important;
-    }}
-    
-    .ponto-card h3, .ponto-card p, .ponto-card span {{
-        color: {text_color} !important;
-    }}
-    
-    /* Botões */
-    .eco-button {{
-        background: {icon_color};
-        color: white !important;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 50px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: 0.2s;
-        text-decoration: none;
-        display: inline-block;
-    }}
-    
-    .eco-button:hover {{
         background: #1a8c5f;
         transform: scale(1.05);
     }}
     
-    .eco-button i {{
-        color: white !important;
-    }}
-    
-    /* Sidebar */
-    .stSidebar {{
-        background: {card_bg};
-    }}
-    
-    .stSidebar .stMarkdown p,
-    .stSidebar .stMarkdown h1,
-    .stSidebar .stMarkdown h2,
-    .stSidebar .stMarkdown h3,
-    .stSidebar .stMarkdown h4,
-    .stSidebar .stMarkdown h5,
-    .stSidebar .stMarkdown h6,
-    .stSidebar .stText,
-    .stSidebar .stAlert p {{
-        color: {text_color} !important;
-    }}
-    
-    /* Estatísticas */
-    .stat-box {{
-        background: {card_bg};
-        border-radius: 15px;
-        padding: 20px;
-        text-align: center;
-        border: 2px solid {icon_color};
-        color: {text_color} !important;
-    }}
-    
-    .stat-number {{
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: {stat_number_color} !important;
-    }}
-    
-    .stat-label {{
-        font-size: 1rem;
-        color: {secondary_text} !important;
-    }}
-    
-    /* Ícones */
-    .eco-icon {{
-        font-size: 2rem;
-        color: {icon_color} !important;
-        filter: {logo_filter};
-    }}
-    
-    /* Tabs personalizadas */
-    .stTabs [data-baseweb="tab-list"] {{
-        gap: 10px;
-        background: transparent;
-    }}
-    
-    .stTabs [data-baseweb="tab"] {{
-        background: {card_bg};
-        border-radius: 50px 50px 0 0;
-        padding: 10px 20px;
-        color: {tab_color} !important;
-        border: 1px solid {border_color};
-        border-bottom: none;
-    }}
-    
-    .stTabs [aria-selected="true"] {{
-        background: {tab_active_bg} !important;
-        color: {tab_active_text} !important;
-    }}
-    
-    /* Badges */
-    .categoria-badge {{
-        display: inline-block;
-        padding: 5px 15px;
-        border-radius: 50px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        margin-right: 5px;
-        color: white !important;
-    }}
-    
-    .badge-palestra {{ background: #ff9800; }}
-    .badge-workshop {{ background: #4caf50; }}
-    .badge-mutirao {{ background: #2196f3; }}
-    .badge-feira {{ background: #9c27b0; }}
-    .badge-campanha {{ background: #f44336; }}
-    .badge-passeio {{ background: #00bcd4; }}
-    
-    /* Progresso */
     .progress-bar {{
         height: 8px;
         background: {border_color};
@@ -608,398 +989,81 @@ base_css = f"""
         border-radius: 4px;
         transition: width 0.3s;
     }}
-    
-    /* Expander */
-    .streamlit-expanderHeader {{
-        color: {text_color} !important;
-        background: {card_bg} !important;
-    }}
-    
-    /* Select boxes */
-    .stSelectbox div[data-baseweb="select"] span {{
-        color: {text_color} !important;
-    }}
-    
-    /* Multiselect */
-    .stMultiSelect div[data-baseweb="select"] span {{
-        color: {text_color} !important;
-    }}
-    
-    /* Success/Error/Warning messages */
-    .stAlert {{
-        color: {text_color} !important;
-    }}
-    
-    .stAlert p {{
-        color: {text_color} !important;
-    }}
-    
-    /* Info boxes */
-    .st-info {{
-        background: {card_bg} !important;
-        color: {text_color} !important;
-    }}
 </style>
+""", unsafe_allow_html=True)
 
-<!-- Font Awesome para ícones -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-"""
+# ========== INTERFACE PRINCIPAL ==========
 
-# Aplicar CSS base
-st.markdown(base_css, unsafe_allow_html=True)
-
-# Funções de login social
-def login_com_google():
-    """Login com Google"""
-    try:
-        nomes_google = ["Ana Silva", "João Pereira", "Maria Santos", "Pedro Oliveira", "Carla Souza"]
-        nome = random.choice(nomes_google)
-        email = f"{nome.lower().replace(' ', '.')}{random.randint(1,999)}@gmail.com"
-        senha = gerar_senha_aleatoria()
-        
-        conn = sqlite3.connect('ecopiracicaba.db')
-        c = conn.cursor()
-        
-        c.execute("SELECT id, nome, email FROM usuarios WHERE email = ?", (email,))
-        user = c.fetchone()
-        
-        if user:
-            st.session_state.usuario_logado = {
-                'id': user[0], 'nome': user[1], 'email': user[2]
-            }
-            st.success(f"Bem-vindo de volta, {user[1]}!")
-        else:
-            data_atual = datetime.now().strftime("%d/%m/%Y")
-            c.execute(
-                "INSERT INTO usuarios (nome, email, senha, login_provider, data_cadastro, biometria_habilitada) VALUES (?, ?, ?, ?, ?, ?)",
-                (nome, email, senha, 'google', data_atual, 0)
-            )
-            conn.commit()
-            
-            c.execute("SELECT id, nome, email FROM usuarios WHERE email = ?", (email,))
-            user = c.fetchone()
-            st.session_state.usuario_logado = {
-                'id': user[0], 'nome': user[1], 'email': user[2]
-            }
-            st.success(f"Conta Google criada com sucesso! Bem-vindo, {nome}!")
-        
-        conn.close()
-        st.rerun()
-    except Exception as e:
-        st.error(f"Erro no login com Google: {str(e)}")
-
-def login_com_apple():
-    """Login com Apple"""
-    try:
-        nomes_apple = ["Michael Chen", "Sophie Dubois", "James Wilson", "Emma Thompson", "David Kim"]
-        nome = random.choice(nomes_apple)
-        email = f"{nome.lower().replace(' ', '.')}{random.randint(1,999)}@icloud.com"
-        senha = gerar_senha_aleatoria()
-        
-        conn = sqlite3.connect('ecopiracicaba.db')
-        c = conn.cursor()
-        
-        c.execute("SELECT id, nome, email FROM usuarios WHERE email = ?", (email,))
-        user = c.fetchone()
-        
-        if user:
-            st.session_state.usuario_logado = {
-                'id': user[0], 'nome': user[1], 'email': user[2]
-            }
-            st.success(f"Bem-vindo de volta, {user[1]}!")
-        else:
-            data_atual = datetime.now().strftime("%d/%m/%Y")
-            c.execute(
-                "INSERT INTO usuarios (nome, email, senha, login_provider, data_cadastro, biometria_habilitada) VALUES (?, ?, ?, ?, ?, ?)",
-                (nome, email, senha, 'apple', data_atual, 0)
-            )
-            conn.commit()
-            
-            c.execute("SELECT id, nome, email FROM usuarios WHERE email = ?", (email,))
-            user = c.fetchone()
-            st.session_state.usuario_logado = {
-                'id': user[0], 'nome': user[1], 'email': user[2]
-            }
-            st.success(f"Conta Apple criada com sucesso! Bem-vindo, {nome}!")
-        
-        conn.close()
-        st.rerun()
-    except Exception as e:
-        st.error(f"Erro no login com Apple: {str(e)}")
-
-# Função para mostrar a interface do usuário logado
-def mostrar_conteudo_logado():
-    """Mostra o conteúdo principal quando o usuário está logado"""
-    
-    # Sidebar com informações do usuário
-    with st.sidebar:
-        st.markdown(f"<i class='fas fa-leaf eco-icon' style='font-size: 80px; display: block; text-align: center;'></i>", unsafe_allow_html=True)
-        st.markdown(f"<h2 style='color: {text_color}; text-align: center;'>🌱 {st.session_state.usuario_logado['nome'].split(' ')[0]}</h2>", unsafe_allow_html=True)
-        
-        # Mostra provider do login
-        conn = sqlite3.connect('ecopiracicaba.db')
-        c = conn.cursor()
-        c.execute("SELECT login_provider FROM usuarios WHERE id = ?", (st.session_state.usuario_logado['id'],))
-        provider = c.fetchone()
-        
-        if provider and provider[0] == 'google':
-            st.markdown("<p style='color: #4285F4; text-align: center;'><i class='fab fa-google'></i> Google</p>", unsafe_allow_html=True)
-        elif provider and provider[0] == 'apple':
-            st.markdown("<p style='color: #000000; text-align: center;'><i class='fab fa-apple'></i> Apple</p>", unsafe_allow_html=True)
-        else:
-            st.markdown(f"<p style='color: {text_color}; text-align: center;'><i class='fas fa-envelope'></i> E-mail</p>", unsafe_allow_html=True)
-        
-        conn.close()
-        
-        st.markdown(f"<p style='color: {text_color}; text-align: center;'>🌍 Nível: EcoAtivista</p>", unsafe_allow_html=True)
-        st.progress(0.65, text="65% para próximo nível")
-        
-        if st.button("Sair", use_container_width=True):
-            st.session_state.usuario_logado = None
-            st.rerun()
-        
-        st.markdown("---")
-        
-        # Estatísticas rápidas
-        conn = sqlite3.connect('ecopiracicaba.db')
-        c = conn.cursor()
-        c.execute("SELECT COUNT(*) FROM eventos WHERE data LIKE '%2026%'")
-        total_eventos = c.fetchone()[0]
-        c.execute("SELECT COUNT(*) FROM dicas")
-        total_dicas = c.fetchone()[0]
-        c.execute("SELECT COUNT(*) FROM pontos_coleta")
-        total_pontos = c.fetchone()[0]
-        conn.close()
-        
-        st.markdown(f"""
-        <div style='text-align: center; color: {text_color};'>
-            <h4>📊 Estatísticas</h4>
-            <p>🌍 {total_eventos} Eventos</p>
-            <p>💡 {total_dicas} Dicas</p>
-            <p>📍 {total_pontos} Pontos</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown("---")
-        st.markdown(f"<p style='color: {secondary_text}; text-align: center;'>🌱 Piracicaba - SP</p>", unsafe_allow_html=True)
-    
-    # Abas principais
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "🌍 Dashboard", "📅 Eventos", "💡 Dicas", "📍 Pontos"
-    ])
-    
-    with tab1:
-        st.markdown(f"<h2 style='color: {text_color};'>🌍 Dashboard</h2>", unsafe_allow_html=True)
-        
-        # Métricas principais
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown(f"""
-            <div class='stat-box'>
-                <div class='stat-number'>15.432</div>
-                <div class='stat-label'>🌳 Árvores</div>
-            </div>
-            """, unsafe_allow_html=True)
-        with col2:
-            st.markdown(f"""
-            <div class='stat-box'>
-                <div class='stat-number'>2.450</div>
-                <div class='stat-label'>♻️ Toneladas</div>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown(f"""
-            <div class='stat-box'>
-                <div class='stat-number'>87</div>
-                <div class='stat-label'>🏫 Escolas</div>
-            </div>
-            """, unsafe_allow_html=True)
-        with col2:
-            st.markdown(f"""
-            <div class='stat-box'>
-                <div class='stat-number'>12.8k</div>
-                <div class='stat-label'>👥 Participantes</div>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # Próximos eventos
-        st.markdown(f"<h3 style='color: {text_color};'>📅 Próximos</h3>", unsafe_allow_html=True)
-        
-        conn = sqlite3.connect('ecopiracicaba.db')
-        eventos = pd.read_sql_query("SELECT * FROM eventos ORDER BY data LIMIT 3", conn)
-        conn.close()
-        
-        for _, evento in eventos.iterrows():
-            st.markdown(f"""
-            <div class='evento-card'>
-                <div>
-                    <span class='categoria-badge badge-{evento["tipo"]}'>{evento["tipo"].upper()}</span>
-                    <h4 style='color: {text_color}; margin: 10px 0;'>{evento['titulo']}</h4>
-                    <p><i class='fas fa-calendar'></i> {evento['data']}</p>
-                    <p><i class='fas fa-map-marker-alt'></i> {evento['local']}</p>
-                    <div class='progress-bar'>
-                        <div class='progress-fill' style='width: {min(100, (evento["inscritos"]/max(evento["vagas"],1))*100)}%;'></div>
-                    </div>
-                    <small>{evento['inscritos']}/{evento['vagas'] if evento['vagas'] > 0 else '∞'}</small>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-    
-    with tab2:
-        st.markdown(f"<h2 style='color: {text_color};'>📅 Eventos 2026</h2>", unsafe_allow_html=True)
-        
-        conn = sqlite3.connect('ecopiracicaba.db')
-        eventos = pd.read_sql_query("SELECT * FROM eventos ORDER BY data", conn)
-        conn.close()
-        
-        for _, evento in eventos.iterrows():
-            st.markdown(f"""
-            <div class='evento-card'>
-                <div style='background: {icon_color}; color: white; padding: 5px 10px; border-radius: 10px; margin-bottom: 10px; display: inline-block;'>
-                    {evento['data']}
-                </div>
-                <h4 style='color: {text_color}; margin: 5px 0;'>{evento['titulo']}</h4>
-                <p><i class='fas fa-map-marker-alt'></i> {evento['local']}</p>
-                <p><small>{evento['descricao'][:100]}...</small></p>
-                <span class='categoria-badge badge-{evento["tipo"]}'>{evento["tipo"].upper()}</span>
-            </div>
-            """, unsafe_allow_html=True)
-    
-    with tab3:
-        st.markdown(f"<h2 style='color: {text_color};'>💡 Dicas Verdes</h2>", unsafe_allow_html=True)
-        
-        conn = sqlite3.connect('ecopiracicaba.db')
-        dicas = pd.read_sql_query("SELECT * FROM dicas ORDER BY likes DESC", conn)
-        conn.close()
-        
-        for _, dica in dicas.iterrows():
-            st.markdown(f"""
-            <div class='dica-card'>
-                <div style='display: flex; justify-content: space-between;'>
-                    <span class='categoria-badge' style='background: {icon_color}; color: white;'>{dica['categoria'].upper()}</span>
-                    <span><i class='fas fa-heart' style='color: #ff6b6b;'></i> {dica['likes']}</span>
-                </div>
-                <h4 style='color: {text_color}; margin: 10px 0;'>{dica['titulo']}</h4>
-                <p style='font-size: 14px;'>{dica['conteudo'][:120]}...</p>
-                <small><i class='fas fa-user'></i> {dica['autor']}</small>
-            </div>
-            """, unsafe_allow_html=True)
-    
-    with tab4:
-        st.markdown(f"<h2 style='color: {text_color};'>📍 Pontos de Coleta</h2>", unsafe_allow_html=True)
-        
-        conn = sqlite3.connect('ecopiracicaba.db')
-        pontos = pd.read_sql_query("SELECT * FROM pontos_coleta ORDER BY avaliacao DESC", conn)
-        conn.close()
-        
-        for _, ponto in pontos.iterrows():
-            st.markdown(f"""
-            <div class='ponto-card'>
-                <h4 style='color: {text_color}; margin: 0 0 5px 0;'>{ponto['nome']}</h4>
-                <p style='font-size: 13px;'><i class='fas fa-map-pin'></i> {ponto['endereco']}</p>
-                <p style='font-size: 13px;'><i class='fas fa-clock'></i> {ponto['horario']}</p>
-                <div style='display: flex; justify-content: space-between; align-items: center;'>
-                    <span class='categoria-badge' style='background: {icon_color}; color: white;'>{ponto['categoria'].upper()}</span>
-                    <div>
-                        <span style='color: gold;'>{'★' * int(ponto['avaliacao'])}</span>
-                        <span>{ponto['avaliacao']}</span>
-                    </div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-# Interface principal baseada no dispositivo
 if dispositivo == "mobile":
-    # CSS específico para mobile
-    st.markdown("""
-    <style>
-        .block-container {
-            padding: 0.5rem !important;
-            max-width: 100% !important;
-        }
-        .main-title {
-            font-size: 2rem !important;
-        }
-        .sub-title {
-            font-size: 1rem !important;
-        }
-        .stTabs [data-baseweb="tab-list"] {
-            gap: 5px !important;
-        }
-        .stTabs [data-baseweb="tab"] {
-            padding: 8px 10px !important;
-            font-size: 12px !important;
-        }
-        .stat-box {
-            padding: 15px !important;
-        }
-        .stat-number {
-            font-size: 1.8rem !important;
-        }
-        .stat-label {
-            font-size: 0.8rem !important;
-        }
-        .evento-card, .dica-card, .ponto-card {
-            padding: 12px !important;
-        }
-        .stButton button {
-            padding: 10px !important;
-        }
-        /* Ajustes para sidebar em mobile */
-        .stSidebar .stMarkdown h2 {
-            font-size: 1.2rem !important;
-        }
-        .stSidebar .stProgress {
-            margin: 5px 0 !important;
-        }
-    </style>
-    """, unsafe_allow_html=True)
+    # Layout mobile
+    st.markdown("<h1 style='text-align: center;'>🌿 EcoPiracicaba</h1>", unsafe_allow_html=True)
     
-    # Header mobile
+    # Login/Perfil (simplificado)
+    if 'usuario_logado' not in st.session_state:
+        st.session_state.usuario_logado = None
+    
+    if st.session_state.usuario_logado is None:
+        # Tela de login mobile
+        with st.form("login_mobile"):
+            email = st.text_input("E-mail")
+            senha = st.text_input("Senha", type="password")
+            if st.form_submit_button("Entrar", use_container_width=True):
+                if validar_email(email):
+                    conn = sqlite3.connect('ecopiracicaba.db')
+                    c = conn.cursor()
+                    c.execute("SELECT id, nome, email FROM usuarios WHERE email = ? AND senha = ?", (email, senha))
+                    user = c.fetchone()
+                    conn.close()
+                    
+                    if user:
+                        st.session_state.usuario_logado = {
+                            'id': user[0], 'nome': user[1], 'email': user[2]
+                        }
+                        inicializar_progresso(user[0])
+                        st.rerun()
+                    else:
+                        st.error("E-mail ou senha incorretos")
+    else:
+        # Menu mobile
+        opcao = st.radio("Menu", ["🏠 Início", "👤 Perfil", "🏆 Ranking", "🎯 Desafios", "👥 Convidar"])
+        
+        if opcao == "👤 Perfil":
+            mostrar_perfil(st.session_state.usuario_logado['id'], st.session_state.usuario_logado['nome'])
+        elif opcao == "🏆 Ranking":
+            mostrar_ranking()
+        elif opcao == "🎯 Desafios":
+            iniciar_desafios_semanais(st.session_state.usuario_logado['id'])
+            st.info("Desafios carregados!")
+        elif opcao == "👥 Convidar":
+            mostrar_convite(st.session_state.usuario_logado['id'])
+        else:
+            st.write("Bem-vindo ao EcoPiracicaba!")
+
+else:
+    # Layout desktop
     col1, col2 = st.columns([1, 3])
+    
     with col1:
-        st.markdown(f"<i class='fas fa-leaf eco-icon' style='font-size: 40px;'></i>", unsafe_allow_html=True)
+        st.markdown(f"<h1 style='color: {text_color};'>🌿 EcoPiracicaba</h1>", unsafe_allow_html=True)
+    
     with col2:
-        st.markdown(f"<h1 style='color: {text_color}; font-size: 1.5rem; margin: 0;'>EcoPiracicaba</h1>", unsafe_allow_html=True)
-        st.markdown(f"<p style='color: {secondary_text}; font-size: 0.8rem; margin: 0;'>Sustentabilidade em ação</p>", unsafe_allow_html=True)
-    
-    # Botão de tema compacto
-    if st.button("🌓", key="theme_mobile"):
-        toggle_theme()
-    
-    st.markdown("---")
+        if st.button("🌓 " + ("Modo Claro" if tema == "dark" else "Modo Escuro")):
+            toggle_theme()
     
     # Estado do usuário
     if 'usuario_logado' not in st.session_state:
         st.session_state.usuario_logado = None
     
     if st.session_state.usuario_logado is None:
-        # Login mobile
-        st.markdown(f"<h3 style='color: {text_color}; text-align: center;'>🔐 Acesso Rápido</h3>", unsafe_allow_html=True)
-        
-        # Botões sociais
-        if st.button("🌐 Google", key="google_mobile", use_container_width=True):
-            login_com_google()
-        if st.button("🍎 Apple", key="apple_mobile", use_container_width=True):
-            login_com_apple()
-        
-        st.markdown(f'<div class="divider">ou</div>', unsafe_allow_html=True)
-        
-        # Login com e-mail
-        with st.expander("📧 Login com E-mail"):
-            tab1, tab2 = st.tabs(["Entrar", "Cadastrar"])
+        # Sidebar de login
+        with st.sidebar:
+            st.markdown(f"<h2 style='color: {text_color};'>🔐 Login</h2>", unsafe_allow_html=True)
             
-            with tab1:
-                email = st.text_input("E-mail", key="login_email_mobile")
-                senha = st.text_input("Senha", type="password", key="login_senha_mobile")
-                if st.button("Entrar", key="entrar_mobile", use_container_width=True):
-                    if not validar_email(email):
-                        st.error("E-mail inválido!")
-                    else:
+            with st.form("login_form"):
+                email = st.text_input("E-mail")
+                senha = st.text_input("Senha", type="password")
+                if st.form_submit_button("Entrar", use_container_width=True):
+                    if validar_email(email):
                         conn = sqlite3.connect('ecopiracicaba.db')
                         c = conn.cursor()
                         c.execute("SELECT id, nome, email FROM usuarios WHERE email = ? AND senha = ?", (email, senha))
@@ -1010,175 +1074,75 @@ if dispositivo == "mobile":
                             st.session_state.usuario_logado = {
                                 'id': user[0], 'nome': user[1], 'email': user[2]
                             }
+                            inicializar_progresso(user[0])
                             st.rerun()
                         else:
                             st.error("E-mail ou senha incorretos")
             
-            with tab2:
-                with st.form("cadastro_mobile"):
-                    nome = st.text_input("Nome")
-                    email = st.text_input("E-mail")
-                    senha = st.text_input("Senha", type="password")
-                    confirmar = st.text_input("Confirmar", type="password")
-                    interesses = st.multiselect("Interesses", 
-                        ["Sustentabilidade", "Reciclagem", "Eventos"])
-                    
-                    if st.form_submit_button("Criar conta", use_container_width=True):
-                        if not nome:
-                            st.error("Nome obrigatório")
-                        elif not validar_email(email):
-                            st.error("E-mail inválido")
-                        elif senha != confirmar:
-                            st.error("Senhas não coincidem")
-                        elif len(senha) < 6:
-                            st.error("Mínimo 6 caracteres")
-                        else:
-                            conn = sqlite3.connect('ecopiracicaba.db')
-                            c = conn.cursor()
-                            try:
-                                data_atual = datetime.now().strftime("%d/%m/%Y")
-                                c.execute(
-                                    "INSERT INTO usuarios (nome, email, senha, interesses, data_cadastro, login_provider, biometria_habilitada) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                                    (nome, email, senha, ",".join(interesses), data_atual, "email", 0)
-                                )
-                                conn.commit()
-                                st.success("Conta criada! Faça login.")
-                            except sqlite3.IntegrityError:
-                                st.error("E-mail já existe!")
-                            conn.close()
-    else:
-        # Usuário logado - mostra o mesmo conteúdo do desktop adaptado
-        mostrar_conteudo_logado()
-
-else:
-    # ========== INTERFACE DESKTOP ==========
-    
-    # Header
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col1:
-        st.markdown(f"<i class='fas fa-leaf eco-icon' style='font-size: 60px;'></i>", unsafe_allow_html=True)
-    with col2:
-        st.markdown(f'<h1 class="main-title">🌿 EcoPiracicaba 2026</h1>', unsafe_allow_html=True)
-        st.markdown(f'<p class="sub-title">Sustentabilidade em ação na cidade de Piracicaba</p>', unsafe_allow_html=True)
-    with col3:
-        if st.button("🌓 " + ("Modo Claro" if tema == "dark" else "Modo Escuro")):
-            toggle_theme()
-    
-    # Estado do usuário
-    if 'usuario_logado' not in st.session_state:
-        st.session_state.usuario_logado = None
-    
-    if st.session_state.usuario_logado is None:
-        # Sidebar para login
-        with st.sidebar:
-            st.markdown(f"<i class='fas fa-leaf eco-icon' style='font-size: 80px; display: block; text-align: center;'></i>", unsafe_allow_html=True)
-            st.markdown(f"<h2 style='color: {text_color}; text-align: center;'>🌱 EcoCidadão</h2>", unsafe_allow_html=True)
-            
-            st.markdown(f"<h3 style='color: {text_color};'>🔐 Acesso Rápido</h3>", unsafe_allow_html=True)
-            
-            if st.button("🌐 Continuar com Google", key="google_desktop", use_container_width=True):
-                login_com_google()
-            if st.button("🍎 Continuar com Apple", key="apple_desktop", use_container_width=True):
-                login_com_apple()
-            
-            st.markdown(f'<div class="divider">ou</div>', unsafe_allow_html=True)
-            
-            with st.expander("📧 Login com E-mail", expanded=True):
-                tab1, tab2 = st.tabs(["Entrar", "Cadastrar"])
-                
-                with tab1:
-                    email = st.text_input("E-mail", key="login_email_desktop")
-                    senha = st.text_input("Senha", type="password", key="login_senha_desktop")
-                    if st.button("🌿 Entrar", use_container_width=True):
-                        if not validar_email(email):
-                            st.error("E-mail inválido!")
-                        else:
-                            conn = sqlite3.connect('ecopiracicaba.db')
-                            c = conn.cursor()
-                            c.execute("SELECT id, nome, email FROM usuarios WHERE email = ? AND senha = ?", (email, senha))
-                            user = c.fetchone()
-                            conn.close()
-                            
-                            if user:
-                                st.session_state.usuario_logado = {
-                                    'id': user[0], 'nome': user[1], 'email': user[2]
-                                }
-                                st.rerun()
-                            else:
-                                st.error("E-mail ou senha incorretos")
-                
-                with tab2:
-                    with st.form("cadastro_desktop"):
-                        nome = st.text_input("Nome completo")
-                        email = st.text_input("E-mail")
-                        senha = st.text_input("Senha", type="password")
-                        confirmar_senha = st.text_input("Confirmar senha", type="password")
-                        interesses = st.multiselect("Interesses", 
-                            ["Sustentabilidade", "Reciclagem", "Eventos", "Voluntariado", "Compostagem"])
-                        
-                        if st.form_submit_button("🌱 Criar conta", use_container_width=True):
-                            if not nome:
-                                st.error("Nome é obrigatório!")
-                            elif not validar_email(email):
-                                st.error("E-mail inválido!")
-                            elif senha != confirmar_senha:
-                                st.error("As senhas não coincidem!")
-                            elif len(senha) < 6:
-                                st.error("A senha deve ter pelo menos 6 caracteres!")
-                            else:
-                                conn = sqlite3.connect('ecopiracicaba.db')
-                                c = conn.cursor()
-                                try:
-                                    data_atual = datetime.now().strftime("%d/%m/%Y")
-                                    c.execute(
-                                        "INSERT INTO usuarios (nome, email, senha, interesses, data_cadastro, login_provider, biometria_habilitada) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                                        (nome, email, senha, ",".join(interesses), data_atual, "email", 0)
-                                    )
-                                    conn.commit()
-                                    st.success("Conta criada! Faça login.")
-                                except sqlite3.IntegrityError:
-                                    st.error("E-mail já existe!")
-                                conn.close()
-            
             st.markdown("---")
-            st.markdown(f"<p style='color: {secondary_text}; text-align: center;'>🌱 Piracicaba - SP</p>", unsafe_allow_html=True)
-        
-        # Página de boas-vindas
-        st.markdown(f"""
-        <div style='text-align: center; padding: 50px; color: {text_color};'>
-            <i class="fas fa-seedling" style='font-size: 80px; color: {icon_color};'></i>
-            <h1>Bem-vindo ao EcoPiracicaba</h1>
-            <p style='font-size: 1.2rem;'>Use sua conta Google, Apple ou e-mail para acessar</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Cards de apresentação
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.markdown(f"""
-            <div class='eco-card' style='text-align: center;'>
-                <i class='fas fa-calendar-alt eco-icon' style='font-size: 40px;'></i>
-                <h3>Eventos 2026</h3>
-                <p>Palestras, workshops, mutirões e feiras sustentáveis</p>
-            </div>
-            """, unsafe_allow_html=True)
-        with col2:
-            st.markdown(f"""
-            <div class='eco-card' style='text-align: center;'>
-                <i class='fas fa-lightbulb eco-icon' style='font-size: 40px;'></i>
-                <h3>Dicas Ambientais</h3>
-                <p>Aprenda a viver de forma mais sustentável</p>
-            </div>
-            """, unsafe_allow_html=True)
-        with col3:
-            st.markdown(f"""
-            <div class='eco-card' style='text-align: center;'>
-                <i class='fas fa-map-marker-alt eco-icon' style='font-size: 40px;'></i>
-                <h3>Pontos de Coleta</h3>
-                <p>Onde descartar cada tipo de resíduo</p>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown("### 🆕 Novo por aqui?")
+            if st.button("Criar conta", use_container_width=True):
+                st.info("Função de cadastro em breve!")
     
     else:
-        # Usuário logado no desktop
-        mostrar_conteudo_logado()
+        # Sidebar com perfil resumido
+        with st.sidebar:
+            conn = sqlite3.connect('ecopiracicaba.db')
+            progresso = pd.read_sql_query(f"SELECT * FROM progresso WHERE usuario_id = {st.session_state.usuario_logado['id']}", conn)
+            conn.close()
+            
+            pontos = progresso.iloc[0]['total_pontos'] if not progresso.empty else 0
+            nivel = progresso.iloc[0]['nivel'] if not progresso.empty else "🌱 EcoIniciante"
+            
+            st.markdown(f"""
+            <div style='text-align: center;'>
+                <h3 style='color: {text_color};'>{st.session_state.usuario_logado['nome']}</h3>
+                <h4 style='color: {icon_color};'>{nivel}</h4>
+                <h2>{pontos} pts</h2>
+                <div class='progress-bar'>
+                    <div class='progress-fill' style='width: {min(100, (pontos/5000)*100)}%;'></div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            if st.button("Sair", use_container_width=True):
+                st.session_state.usuario_logado = None
+                st.rerun()
+        
+        # Tabs principais
+        tab1, tab2, tab3, tab4 = st.tabs(["🏠 Início", "👤 Perfil", "🏆 Ranking", "👥 Convidar"])
+        
+        with tab1:
+            st.markdown(f"<h2 style='color: {text_color};'>Bem-vindo ao EcoPiracicaba!</h2>", unsafe_allow_html=True)
+            st.markdown("Acompanhe seu progresso e participe de desafios ambientais!")
+            
+            # Feed de conquistas
+            conn = sqlite3.connect('ecopiracicaba.db')
+            feed = pd.read_sql_query("""
+                SELECT u.nome, c.descricao, c.pontos, c.data 
+                FROM conquistas c
+                JOIN usuarios u ON c.usuario_id = u.id
+                ORDER BY c.data DESC
+                LIMIT 10
+            """, conn)
+            conn.close()
+            
+            if not feed.empty:
+                st.markdown(f"<h3 style='color: {text_color};'>📰 Feed de Atividades</h3>", unsafe_allow_html=True)
+                for _, item in feed.iterrows():
+                    st.markdown(f"""
+                    <div style='background: {card_bg}; padding: 10px; border-radius: 10px; margin-bottom: 5px;'>
+                        <strong>{item['nome']}</strong> {item['descricao']} 
+                        <span style='color: {icon_color};'>+{item['pontos']} pts</span>
+                        <br><small>{item['data']}</small>
+                    </div>
+                    """, unsafe_allow_html=True)
+        
+        with tab2:
+            mostrar_perfil(st.session_state.usuario_logado['id'], st.session_state.usuario_logado['nome'])
+        
+        with tab3:
+            mostrar_ranking()
+        
+        with tab4:
+            mostrar_convite(st.session_state.usuario_logado['id'])
