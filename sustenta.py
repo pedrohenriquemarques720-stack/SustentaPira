@@ -3,8 +3,6 @@ import streamlit.components.v1 as components
 import pandas as pd
 import sqlite3
 from datetime import datetime
-import plotly.express as px
-import plotly.graph_objects as go
 import random
 import string
 
@@ -157,7 +155,9 @@ def init_database():
             ("🌿 Palestra: Compostagem", "Como fazer compostagem doméstica e comunitária", "12/04/2026", "10:00", "Horto Municipal", "Dr. Carlos Ambiental", "palestra", 100, 0, "🌱", "Horto Municipal", "(19) 3434-5678"),
             ("🌍 Dia da Terra", "Celebração com atividades, música e feira verde", "22/04/2026", "09:00", "Parque da Rua do Porto", "Coletivo Ambiental", "evento", 2000, 0, "🌎", "ONG Planeta Verde", "(19) 99876-5432"),
             ("🔋 Descarte de Eletrônicos", "Campanha de coleta de lixo eletrônico", "10/05/2026", "09:00", "Shopping Piracicaba", "Green Eletronics", "campanha", 0, 0, "📱", "Shopping Piracicaba", "(19) 3403-3000"),
-            ("🌳 Plantio de Árvores", "Mutirão de plantio de árvores nativas", "05/06/2026", "08:30", "Parque Ecológico", "SOS Mata Atlântica", "mutirão", 300, 0, "🌳", "SOS Mata Atlântica", "(11) 3262-4088")
+            ("🌳 Plantio de Árvores", "Mutirão de plantio de árvores nativas", "05/06/2026", "08:30", "Parque Ecológico", "SOS Mata Atlântica", "mutirão", 300, 0, "🌳", "SOS Mata Atlântica", "(11) 3262-4088"),
+            ("🚴 Passeio Ciclístico", "Passeio ecológico de bike pela cidade", "20/06/2026", "08:00", "Largo dos Pescadores", "Ciclovida", "passeio", 150, 0, "🚲", "Associação Ciclistas", "(19) 99876-1234"),
+            ("🥕 Feira Orgânica", "Feira de produtos orgânicos e agroecológicos", "10/07/2026", "08:00", "Mercado Municipal", "Associação Orgânicos", "feira", 0, 0, "🥬", "Mercadão", "(19) 3434-7890")
         ]
         for e in eventos:
             c.execute(
@@ -171,10 +171,16 @@ def init_database():
     c.execute("SELECT * FROM dicas")
     if not c.fetchone():
         dicas = [
-            ("🌱 Compostagem Doméstica", "Você sabia que 50% do lixo doméstico pode ser compostado? Aprenda a fazer sua própria composteira com baldes e minhocas californianas.", "resíduos", datetime.now().strftime("%d/%m/%Y"), 0, "Equipe EcoPiracicaba"),
-            ("💧 Economia de Água", "Um banho de 15 minutos gasta 135 litros de água. Reduza para 5 minutos e economize 90 litros por banho!", "água", datetime.now().strftime("%d/%m/%Y"), 0, "Sabesp"),
-            ("🔋 Pilhas e Baterias", "Nunca descarte pilhas no lixo comum. Leve a pontos de coleta específicos. Uma pilha pode contaminar 20 mil litros de água.", "resíduos", datetime.now().strftime("%d/%m/%Y"), 0, "Greenpeace"),
-            ("🌳 Plante uma Árvore", "Uma árvore adulta absorve até 150kg de CO2 por ano. Plante árvores nativas da região de Piracicaba.", "natureza", datetime.now().strftime("%d/%m/%Y"), 0, "SOS Mata Atlântica")
+            ("🌱 Compostagem Doméstica", "Você sabia que 50% do lixo doméstico pode ser compostado? Aprenda a fazer sua própria composteira com baldes e minhocas californianas. Em 3 meses você terá adubo de alta qualidade.", "resíduos", datetime.now().strftime("%d/%m/%Y"), 0, "Equipe EcoPiracicaba"),
+            ("💧 Economia de Água", "Um banho de 15 minutos gasta 135 litros de água. Reduza para 5 minutos e economize 90 litros por banho! Isso representa 2.700 litros por mês.", "água", datetime.now().strftime("%d/%m/%Y"), 0, "Sabesp"),
+            ("🔋 Pilhas e Baterias", "Nunca descarte pilhas no lixo comum. Leve a pontos de coleta específicos. Uma pilha pode contaminar 20 mil litros de água por até 50 anos.", "resíduos", datetime.now().strftime("%d/%m/%Y"), 0, "Greenpeace"),
+            ("🌳 Plante uma Árvore", "Uma árvore adulta absorve até 150kg de CO2 por ano. Plante árvores nativas da região de Piracicaba como ipê, jatobá e pitanga.", "natureza", datetime.now().strftime("%d/%m/%Y"), 0, "SOS Mata Atlântica"),
+            ("🛍️ Sacolas Retornáveis", "Uma sacola plástica leva 400 anos para se decompor. Use sempre sacolas retornáveis nas compras.", "plástico", datetime.now().strftime("%d/%m/%Y"), 0, "WWF"),
+            ("🚗 Carona Solidária", "Compartilhe carro com colegas de trabalho. Reduz emissões, congestionamento e você ainda economiza até 40% com combustível.", "mobilidade", datetime.now().strftime("%d/%m/%Y"), 0, "Instituto Clima"),
+            ("🥗 Alimentação Orgânica", "Alimentos orgânicos são mais saudáveis e não contaminam o solo com agrotóxicos. Em Piracicaba, feiras orgânicas acontecem aos sábados.", "alimentação", datetime.now().strftime("%d/%m/%Y"), 0, "Feira Orgânica"),
+            ("♻️ Separação do Lixo", "Separe sempre recicláveis: papel limpo, plástico, vidro e metal. Lave as embalagens antes de descartar.", "reciclagem", datetime.now().strftime("%d/%m/%Y"), 0, "Cooperativa Recicladores"),
+            ("☀️ Energia Solar", "A energia solar já é a fonte mais barata do Brasil. Uma placa solar de 330W evita a emissão de 4,5 toneladas de CO2 em 25 anos.", "energia", datetime.now().strftime("%d/%m/%Y"), 0, "ABSOLAR"),
+            ("🐝 Proteja as Abelhas", "As abelhas são responsáveis por 80% da polinização das plantas. Evite inseticidas e plante flores nativas.", "biodiversidade", datetime.now().strftime("%d/%m/%Y"), 0, "Bee Or not to be")
         ]
         for d in dicas:
             c.execute(
@@ -188,7 +194,14 @@ def init_database():
         pontos = [
             ("Ecoponto Centro", "Av. Rui Barbosa, 800 - Centro", "geral", "Seg-Sex 8h-17h, Sáb 8h-12h", "(19) 3403-1100", -22.724, -47.648, 4.5, "Recebe todos os tipos de recicláveis, eletrônicos e óleo de cozinha"),
             ("Shopping Piracicaba", "Av. Limeira, 700 - Areão", "pilhas", "Seg-Sáb 10h-22h, Dom 14h-20h", "(19) 3432-4545", -22.718, -47.642, 4.8, "Ponto de coleta de pilhas e baterias no piso G1"),
-            ("Coopervidros", "R. Treze de Maio, 300 - Centro", "vidros", "Seg-Sex 8h-17h", "(19) 3421-1234", -22.731, -47.651, 4.2, "Cooperativa especializada em reciclagem de vidros")
+            ("Coopervidros", "R. Treze de Maio, 300 - Centro", "vidros", "Seg-Sex 8h-17h", "(19) 3421-1234", -22.731, -47.651, 4.2, "Cooperativa especializada em reciclagem de vidros"),
+            ("CDI Eletrônicos", "R. do Porto, 234 - Centro", "eletronicos", "Seg-Sex 9h-18h, Sáb 9h-12h", "(19) 3433-5678", -22.722, -47.646, 4.7, "Centro de Descarte de Eletrônicos - computadores, celulares e pilhas"),
+            ("Ecoponto Paulicéia", "R. Javari, 150 - Paulicéia", "geral", "Ter-Sáb 8h-16h", "(19) 3403-2200", -22.710, -47.670, 4.3, "Ecoponto completo com coleta de óleo e recicláveis"),
+            ("Drogaria São Paulo", "Av. Limeira, 900 - Centro", "medicamentos", "24 horas", "(19) 3432-7800", -22.720, -47.640, 4.0, "Descarte de medicamentos vencidos e pilhas"),
+            ("Unimed Sede", "R. Voluntários, 450 - Centro", "pilhas", "Seg-Sex 7h-19h", "(19) 3432-9000", -22.725, -47.649, 4.6, "Coleta de pilhas e baterias na recepção"),
+            ("Esalq/USP", "Av. Pádua Dias, 11 - Agronomia", "eletronicos", "Seg-Sex 8h-17h", "(19) 3447-8500", -22.710, -47.630, 4.9, "Campus da ESALQ com pontos de coleta de eletrônicos"),
+            ("Supermercado Pague Menos", "R. Campos Salles, 500 - Centro", "oleo", "Seg-Sáb 8h-21h", "(19) 3434-1234", -22.728, -47.652, 4.4, "Coleta de óleo de cozinha usado"),
+            ("Horto Municipal", "Av. Maurílio Biagi, 1500 - Santa Cecília", "organicos", "Seg-Sex 8h-16h", "(19) 3434-5678", -22.730, -47.655, 4.3, "Recebimento de podas e resíduos orgânicos")
         ]
         for p in pontos:
             c.execute(
@@ -463,6 +476,7 @@ st.markdown(f"""
     .badge-mutirao {{ background: #2196f3; color: white; }}
     .badge-feira {{ background: #9c27b0; color: white; }}
     .badge-campanha {{ background: #f44336; color: white; }}
+    .badge-passeio {{ background: #00bcd4; color: white; }}
     
     /* Progresso */
     .progress-bar {{
@@ -478,6 +492,24 @@ st.markdown(f"""
         border-radius: 4px;
         transition: width 0.3s;
     }}
+    
+    /* Grid de cards */
+    .card-grid {{
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin: 20px 0;
+    }}
+    
+    /* Animações */
+    @keyframes fadeIn {{
+        from {{ opacity: 0; transform: translateY(20px); }}
+        to {{ opacity: 1; transform: translateY(0); }}
+    }}
+    
+    .fade-in {{
+        animation: fadeIn 0.5s ease-out;
+    }}
 </style>
 
 <!-- Font Awesome para ícones sociais -->
@@ -487,7 +519,6 @@ st.markdown(f"""
 # Funções de login social
 def login_com_google():
     """Simula login com Google"""
-    # Em produção, aqui viria a integração real com OAuth
     nome = f"Usuário Google {random.randint(100, 999)}"
     email = f"usuario.google{random.randint(1000, 9999)}@gmail.com"
     senha = gerar_senha_aleatoria()
@@ -495,7 +526,6 @@ def login_com_google():
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     
-    # Verifica se já existe
     c.execute("SELECT * FROM usuarios WHERE email = ?", (email,))
     user = c.fetchone()
     
@@ -504,7 +534,6 @@ def login_com_google():
             'id': user[0], 'nome': user[1], 'email': user[2]
         }
     else:
-        # Cria novo usuário
         c.execute(
             """INSERT INTO usuarios (nome, email, senha, login_provider, data_cadastro) 
                VALUES (?, ?, ?, ?, ?)""",
@@ -512,7 +541,6 @@ def login_com_google():
         )
         conn.commit()
         
-        # Busca o usuário recém-criado
         c.execute("SELECT * FROM usuarios WHERE email = ?", (email,))
         user = c.fetchone()
         st.session_state.usuario_logado = {
@@ -557,7 +585,6 @@ def login_com_apple():
 
 # Interface principal
 if dispositivo == "mobile":
-    # Versão mobile simplificada
     st.markdown("""
     <style>
         .block-container {
@@ -605,21 +632,11 @@ else:
             st.markdown(f"<h3 style='color: {text_color};'>Acesso Rápido</h3>", unsafe_allow_html=True)
             
             # Botão Google
-            st.markdown(f"""
-            <button class='social-login-btn google-btn' onclick='login_google()'>
-                <i class='fab fa-google'></i> Continuar com Google
-            </button>
-            """, unsafe_allow_html=True)
-            if st.button("🌐 Login com Google", key="google_btn", use_container_width=True):
+            if st.button("🌐 Continuar com Google", key="google_btn", use_container_width=True):
                 login_com_google()
             
             # Botão Apple
-            st.markdown(f"""
-            <button class='social-login-btn apple-btn' onclick='login_apple()'>
-                <i class='fab fa-apple'></i> Continuar com Apple
-            </button>
-            """, unsafe_allow_html=True)
-            if st.button("🍎 Login com Apple", key="apple_btn", use_container_width=True):
+            if st.button("🍎 Continuar com Apple", key="apple_btn", use_container_width=True):
                 login_com_apple()
             
             # Divisor
@@ -800,25 +817,47 @@ else:
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # Gráficos
+            # Cards de estatísticas adicionais
+            st.markdown(f"<h3 style='color: {text_color};'>📊 Indicadores Ambientais</h3>", unsafe_allow_html=True)
+            
             col1, col2 = st.columns(2)
             with col1:
-                tipos = ['Palestras', 'Workshops', 'Mutirões', 'Feiras', 'Campanhas']
-                quantidades = [25, 18, 12, 8, 15]
-                fig = px.pie(values=quantidades, names=tipos, title="Eventos por Tipo em 2026",
-                            color_discrete_sequence=['#0f5c3f', '#1a8c5f', '#2ecc71', '#27ae60', '#229954'])
-                fig.update_layout(template="plotly_white" if tema == "light" else "plotly_dark")
-                st.plotly_chart(fig, use_container_width=True)
+                st.markdown(f"""
+                <div class='eco-card'>
+                    <h4>Qualidade do Ar</h4>
+                    <div style='font-size: 24px; color: #4caf50;'>Boa ✓</div>
+                    <p>Índice: 32 (MP10)</p>
+                    <div class='progress-bar'><div class='progress-fill' style='width: 75%;'></div></div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                st.markdown(f"""
+                <div class='eco-card'>
+                    <h4>Qualidade da Água - Rio Piracicaba</h4>
+                    <div style='font-size: 24px; color: #ff9800;'>Regular ⚠</div>
+                    <p>Índice: 68 (IQA)</p>
+                    <div class='progress-bar'><div class='progress-fill' style='width: 55%;'></div></div>
+                </div>
+                """, unsafe_allow_html=True)
             
             with col2:
-                meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun']
-                participantes = [850, 1200, 2100, 1850, 2300, 2800]
-                fig = go.Figure(data=go.Scatter(x=meses, y=participantes, mode='lines+markers',
-                                               line=dict(color='#0f5c3f', width=4)))
-                fig.update_layout(title="Participação em Eventos - 1º Semestre 2026",
-                                 xaxis_title="Mês", yaxis_title="Participantes",
-                                 template="plotly_white" if tema == "light" else "plotly_dark")
-                st.plotly_chart(fig, use_container_width=True)
+                st.markdown(f"""
+                <div class='eco-card'>
+                    <h4>Coleta Seletiva</h4>
+                    <div style='font-size: 24px; color: #2196f3;'>68% da cidade</div>
+                    <p>45 pontos de coleta</p>
+                    <div class='progress-bar'><div class='progress-fill' style='width: 68%;'></div></div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                st.markdown(f"""
+                <div class='eco-card'>
+                    <h4>Energia Renovável</h4>
+                    <div style='font-size: 24px; color: #8bc34a;'>32% da matriz</div>
+                    <p>Meta para 2030: 50%</p>
+                    <div class='progress-bar'><div class='progress-fill' style='width: 64%;'></div></div>
+                </div>
+                """, unsafe_allow_html=True)
             
             # Próximos eventos
             st.markdown(f"<h3 style='color: {text_color};'>📅 Próximos Eventos</h3>", unsafe_allow_html=True)
@@ -836,14 +875,11 @@ else:
                             <h3 style='color: {text_color};'>{evento['titulo']}</h3>
                             <p><i class='fas fa-calendar'></i> {evento['data']} às {evento['hora']}</p>
                             <p><i class='fas fa-map-marker-alt'></i> {evento['local']}</p>
-                            <p><i class='fas fa-user'></i> {evento['palestrante']}</p>
                         </div>
                         <div style='text-align: right;'>
                             <i class='fas fa-users' style='color: {icon_color};'></i>
-                            <p><strong>{evento['inscritos']}/{evento['vagas']}</strong> inscritos</p>
-                            <div class='progress-bar'>
-                                <div class='progress-fill' style='width: {min(100, (evento["inscritos"]/max(evento["vagas"],1))*100)}%;'></div>
-                            </div>
+                            <p><strong>{evento['inscritos']}/{evento['vagas'] if evento['vagas'] > 0 else '∞'}</strong> inscritos</p>
+                            {f"<div class='progress-bar'><div class='progress-fill' style='width: {min(100, (evento["inscritos"]/evento["vagas"])*100)}%;'></div></div>" if evento['vagas'] > 0 else ""}
                         </div>
                     </div>
                 </div>
@@ -852,8 +888,22 @@ else:
         with tab2:
             st.markdown(f"<h2 style='color: {text_color};'>📅 Agenda Sustentável 2026</h2>", unsafe_allow_html=True)
             
+            # Filtros
+            col1, col2 = st.columns(2)
+            with col1:
+                mes_filter = st.selectbox("Filtrar por mês", 
+                    ["Todos", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto"])
+            with col2:
+                tipo_filter = st.selectbox("Filtrar por tipo", 
+                    ["Todos", "palestra", "workshop", "mutirão", "feira", "campanha", "passeio"])
+            
             conn = sqlite3.connect('ecopiracicaba.db')
-            eventos = pd.read_sql_query("SELECT * FROM eventos ORDER BY data", conn)
+            query = "SELECT * FROM eventos WHERE 1=1"
+            if mes_filter != "Todos":
+                query += f" AND data LIKE '%{mes_filter}%'"
+            if tipo_filter != "Todos":
+                query += f" AND tipo = '{tipo_filter}'"
+            eventos = pd.read_sql_query(query + " ORDER BY data", conn)
             conn.close()
             
             for _, evento in eventos.iterrows():
@@ -873,6 +923,7 @@ else:
                             <h3 style='color: {text_color}; margin: 0;'>{evento['titulo']}</h3>
                             <p style='color: {secondary_text};'>{evento['descricao']}</p>
                             <p><i class='fas fa-user'></i> {evento['palestrante']} · <i class='fas fa-building'></i> {evento['organizador']}</p>
+                            {f"<p><strong>Vagas: {evento['inscritos']}/{evento['vagas']}</strong></p>" if evento['vagas'] > 0 else ""}
                         </div>
                     </div>
                 </div>
@@ -881,8 +932,15 @@ else:
         with tab3:
             st.markdown(f"<h2 style='color: {text_color};'>💡 Dicas para um Planeta Mais Verde</h2>", unsafe_allow_html=True)
             
+            # Categorias
+            categorias = ["Todas", "resíduos", "água", "energia", "natureza", "reciclagem", "alimentação", "mobilidade", "biodiversidade", "plástico"]
+            cat_filter = st.selectbox("Filtrar por categoria", categorias)
+            
             conn = sqlite3.connect('ecopiracicaba.db')
-            dicas = pd.read_sql_query("SELECT * FROM dicas ORDER BY likes DESC", conn)
+            if cat_filter != "Todas":
+                dicas = pd.read_sql_query(f"SELECT * FROM dicas WHERE categoria = '{cat_filter}' ORDER BY likes DESC", conn)
+            else:
+                dicas = pd.read_sql_query("SELECT * FROM dicas ORDER BY likes DESC", conn)
             conn.close()
             
             col1, col2 = st.columns(2)
@@ -898,6 +956,7 @@ else:
                         <p style='color: {secondary_text};'>{dica['conteudo']}</p>
                         <div style='display: flex; justify-content: space-between; align-items: center;'>
                             <small><i class='fas fa-user'></i> {dica['autor']} · {dica['data_publicacao']}</small>
+                            <button class='eco-button' style='padding: 5px 15px;' onclick="alert('Dica curtida!')">Curtir</button>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
@@ -905,8 +964,21 @@ else:
         with tab4:
             st.markdown(f"<h2 style='color: {text_color};'>📍 Pontos de Coleta Seletiva</h2>", unsafe_allow_html=True)
             
+            # Filtros
+            col1, col2 = st.columns(2)
+            with col1:
+                categoria_map = st.selectbox("Filtrar por categoria", 
+                    ["Todos", "geral", "pilhas", "vidros", "eletronicos", "oleo", "organicos", "medicamentos"])
+            with col2:
+                avaliacao_min = st.slider("Avaliação mínima", 0.0, 5.0, 3.0, 0.5)
+            
             conn = sqlite3.connect('ecopiracicaba.db')
-            pontos = pd.read_sql_query("SELECT * FROM pontos_coleta ORDER BY avaliacao DESC", conn)
+            query = "SELECT * FROM pontos_coleta WHERE avaliacao >= ?"
+            params = [avaliacao_min]
+            if categoria_map != "Todos":
+                query += " AND categoria = ?"
+                params.append(categoria_map)
+            pontos = pd.read_sql_query(query + " ORDER BY avaliacao DESC", conn, params=params)
             conn.close()
             
             for _, ponto in pontos.iterrows():
@@ -920,7 +992,7 @@ else:
                             <p><i class='fas fa-phone'></i> {ponto['telefone']}</p>
                             <p><small>{ponto['descricao']}</small></p>
                         </div>
-                        <div style='text-align: center;'>
+                        <div style='text-align: center; min-width: 100px;'>
                             <div style='font-size: 24px; color: gold;'>{'★' * int(ponto['avaliacao'])}{'☆' * (5 - int(ponto['avaliacao']))}</div>
                             <p>{ponto['avaliacao']}/5.0</p>
                             <span class='categoria-badge' style='background: {icon_color}; color: white;'>{ponto['categoria'].upper()}</span>
