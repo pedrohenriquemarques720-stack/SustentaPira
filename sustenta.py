@@ -88,7 +88,7 @@ CONQUISTAS = {
     "plantar_arvore": {"nome": "Guardião da Floresta", "pontos": 100, "icone": "🌳"},
 }
 
-# Desafios semanais - AGORA COMO LISTA DE DICIONÁRIOS PARA INSERIR NO BANCO
+# Desafios semanais
 DESAFIOS_LISTA = [
     {
         "id": 1,
@@ -178,7 +178,7 @@ def init_database():
         )
     ''')
     
-    # NOVA TABELA: desafios (catálogo de desafios)
+    # Tabela: desafios (catálogo de desafios)
     c.execute('''
         CREATE TABLE IF NOT EXISTS desafios (
             id INTEGER PRIMARY KEY,
@@ -508,7 +508,7 @@ def mostrar_perfil(usuario_id, nome, text_color, card_bg, icon_color, border_col
     c.execute("SELECT * FROM badges WHERE usuario_id = ?", (usuario_id,))
     badges = c.fetchall()
     
-    # Buscar desafios ativos - CORRIGIDO: agora usa JOIN com a tabela desafios
+    # Buscar desafios ativos
     c.execute("""
         SELECT d.id, d.titulo, d.descricao, d.pontos, d.icone, da.progresso, da.data_inicio 
         FROM desafios_ativos da
@@ -519,22 +519,23 @@ def mostrar_perfil(usuario_id, nome, text_color, card_bg, icon_color, border_col
     
     conn.close()
     
-    if progresso:
-        pontos = progresso[1]  # total_pontos
-        nivel = progresso[2]    # nivel
-        streak = progresso[9] if len(progresso) > 9 else 0  # streak_dias
+    # CORREÇÃO: Verificar se progresso existe e tem o tamanho esperado
+    if progresso and len(progresso) >= 10:
+        pontos = progresso[1] if len(progresso) > 1 else 0
+        nivel = progresso[2] if len(progresso) > 2 else "🌱 EcoIniciante"
         eventos = progresso[3] if len(progresso) > 3 else 0
         dicas = progresso[4] if len(progresso) > 4 else 0
         visitas = progresso[5] if len(progresso) > 5 else 0
         kg = progresso[6] if len(progresso) > 6 else 0
+        streak = progresso[9] if len(progresso) > 9 else 0
     else:
         pontos = 0
         nivel = "🌱 EcoIniciante"
-        streak = 0
         eventos = 0
         dicas = 0
         visitas = 0
         kg = 0
+        streak = 0
     
     proximo = get_proximo_nivel(pontos)
     
@@ -644,7 +645,7 @@ def mostrar_perfil(usuario_id, nome, text_color, card_bg, icon_color, border_col
                 <div style='background: {card_bg}; padding: 10px; border-radius: 10px; text-align: center; margin-bottom: 10px; border: 1px solid {border_color};'>
                     <span style='font-size: 30px;'>✨</span>
                     <h4 style='color: {text_color};'>{conquista[5]}</h4>
-                    <p style='color: {text_color};'><small>{conquista[4][:10]}</small></p>
+                    <p style='color: {text_color};'><small>{conquista[4][:10] if conquista[4] else ''}</small></p>
                     <span style='color: {icon_color};'>+{conquista[3]} pts</span>
                 </div>
                 """, unsafe_allow_html=True)
@@ -726,7 +727,7 @@ def mostrar_dicas(usuario_id, text_color, card_bg, icon_color, border_color):
             </div>
             """, unsafe_allow_html=True)
         with col2:
-            if st.button(f"❤️ {dica[5]}", key=f"like_{dica[0]}"):
+            if st.button(f"❤️ {dica[5]}", key=f"like_{dica[0]}_{random.randint(1,1000)}"):
                 conn = sqlite3.connect('ecopiracicaba.db')
                 c = conn.cursor()
                 c.execute("UPDATE dicas SET likes = likes + 1 WHERE id = ?", (dica[0],))
@@ -1038,8 +1039,13 @@ else:
             progresso = c.fetchone()
             conn.close()
             
-            pontos = progresso[1] if progresso else 0
-            nivel = progresso[2] if progresso else "🌱 EcoIniciante"
+            # CORREÇÃO: Verificar se progresso existe
+            if progresso:
+                pontos = progresso[1] if len(progresso) > 1 else 0
+                nivel = progresso[2] if len(progresso) > 2 else "🌱 EcoIniciante"
+            else:
+                pontos = 0
+                nivel = "🌱 EcoIniciante"
             
             st.markdown(f"""
             <div style='text-align: center; padding: 10px; background: {card_bg}; border-radius: 10px; border: 1px solid {border_color};'>
