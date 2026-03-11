@@ -15,7 +15,7 @@ import base64
 
 # Configuração da página
 st.set_page_config(
-    page_title="SustentaPira",
+    page_title="EcoPiracicaba 2026",
     page_icon="🌿",
     layout="wide",
     initial_sidebar_state="auto"
@@ -266,9 +266,30 @@ def dados_iniciais(conn, c):
         # Criar progresso para admin
         admin_id = c.lastrowid
         c.execute(
-            "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
-            (admin_id, 1000, get_nivel(1000), data_atual)
+            "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade, desafios_completados) VALUES (?, ?, ?, ?, ?)",
+            (admin_id, 1000, get_nivel(1000), data_atual, 5)
         )
+    
+    # Usuários de exemplo (opcional)
+    usuarios_exemplo = [
+        ("João Silva", "joao@email.com", "123", "sustentabilidade,reciclagem", 350, 2),
+        ("Maria Santos", "maria@email.com", "123", "eventos,voluntariado", 520, 3),
+        ("Pedro Oliveira", "pedro@email.com", "123", "compostagem,natureza", 180, 1)
+    ]
+    
+    for nome, email, senha, interesses, pontos, desafios in usuarios_exemplo:
+        c.execute("SELECT * FROM usuarios WHERE email = ?", (email,))
+        if not c.fetchone():
+            data_atual = datetime.now().strftime("%d/%m/%Y")
+            c.execute(
+                "INSERT INTO usuarios (nome, email, senha, data_cadastro, interesses) VALUES (?, ?, ?, ?, ?)",
+                (nome, email, senha, data_atual, interesses)
+            )
+            user_id = c.lastrowid
+            c.execute(
+                "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade, desafios_completados) VALUES (?, ?, ?, ?, ?)",
+                (user_id, pontos, get_nivel(pontos), data_atual, desafios)
+            )
     
     # Eventos 2026
     c.execute("SELECT COUNT(*) FROM eventos")
@@ -364,8 +385,8 @@ def criar_usuario(nome, email, senha, interesses=""):
         
         # Inicializar progresso
         c.execute(
-            "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
-            (user_id, 0, "🌱 EcoIniciante", data_atual)
+            "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade, desafios_completados) VALUES (?, ?, ?, ?, ?)",
+            (user_id, 0, "🌱 EcoIniciante", data_atual, 0)
         )
         
         conn.commit()
@@ -416,8 +437,8 @@ def adicionar_pontos(usuario_id, pontos, descricao, icone="✨", tipo="geral"):
         novo_nivel = get_nivel(novos_pontos)
         
         c.execute(
-            "UPDATE progresso SET total_pontos = ?, nivel = ?, ultima_atividade = ? WHERE usuario_id = ?",
-            (novos_pontos, novo_nivel, data_atual, usuario_id)
+            "UPDATE progresso SET total_pontos = ?, nivel = ?, ultima_atividade = ?, desafios_completados = ? WHERE usuario_id = ?",
+            (novos_pontos, novo_nivel, data_atual, desafios_atuais + 1, usuario_id)
         )
     
     conn.commit()
@@ -440,17 +461,33 @@ def salvar_comprovante(usuario_id, tipo, descricao, imagem_bytes, pontos):
     conn.close()
 
 def get_ranking():
-    """Busca ranking de usuários"""
+    """Busca ranking de usuários - CORRIGIDO para evitar erro de coluna"""
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     
-    c.execute("""
-        SELECT u.nome, p.total_pontos, p.nivel, p.desafios_completados
-        FROM usuarios u
-        JOIN progresso p ON u.id = p.usuario_id
-        ORDER BY p.total_pontos DESC
-        LIMIT 20
-    """)
+    # Primeiro, verificar se a coluna desafios_completados existe
+    c.execute("PRAGMA table_info(progresso)")
+    colunas = [col[1] for col in c.fetchall()]
+    
+    if 'desafios_completados' in colunas:
+        # Se existe, usar na consulta
+        c.execute("""
+            SELECT u.nome, p.total_pontos, p.nivel, p.desafios_completados
+            FROM usuarios u
+            JOIN progresso p ON u.id = p.usuario_id
+            ORDER BY p.total_pontos DESC
+            LIMIT 20
+        """)
+    else:
+        # Se não existe, buscar sem essa coluna
+        c.execute("""
+            SELECT u.nome, p.total_pontos, p.nivel, 0 as desafios_completados
+            FROM usuarios u
+            JOIN progresso p ON u.id = p.usuario_id
+            ORDER BY p.total_pontos DESC
+            LIMIT 20
+        """)
+    
     ranking = c.fetchall()
     conn.close()
     
@@ -468,16 +505,16 @@ def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_
     
     nome, email, cidade, interesses, data_cadastro = user
     
-    # Dados do progresso
-    pontos = progresso[1]
-    nivel = progresso[2]
-    eventos = progresso[3]
-    dicas = progresso[4]
-    visitas = progresso[5]
-    kg = progresso[6]
-    arvores = progresso[7]
-    amigos = progresso[8]
-    streak = progresso[9]
+    # Dados do progresso - com verificação de tamanho
+    pontos = progresso[1] if len(progresso) > 1 else 0
+    nivel = progresso[2] if len(progresso) > 2 else "🌱 EcoIniciante"
+    eventos = progresso[3] if len(progresso) > 3 else 0
+    dicas = progresso[4] if len(progresso) > 4 else 0
+    visitas = progresso[5] if len(progresso) > 5 else 0
+    kg = progresso[6] if len(progresso) > 6 else 0
+    arvores = progresso[7] if len(progresso) > 7 else 0
+    amigos = progresso[8] if len(progresso) > 8 else 0
+    streak = progresso[9] if len(progresso) > 9 else 0
     desafios = progresso[11] if len(progresso) > 11 else 0
     
     proximo = get_proximo_nivel(pontos)
@@ -567,7 +604,7 @@ def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_
                 <div style='background: {card_bg}; padding: 10px; border-radius: 10px; text-align: center; margin-bottom: 10px; border: 1px solid {border_color};'>
                     <span style='font-size: 30px;'>{icone}</span>
                     <h4 style='color: {text_color};'>{conquista[5]}</h4>
-                    <p style='color: {text_color};'><small>{conquista[4][:10]}</small></p>
+                    <p style='color: {text_color};'><small>{conquista[4][:10] if conquista[4] else ''}</small></p>
                     <span style='color: {icon_color};'>+{conquista[3]} pts</span>
                 </div>
                 """, unsafe_allow_html=True)
@@ -590,9 +627,9 @@ def mostrar_pagina_desafios(usuario_id, text_color, card_bg, icon_color, border_
     # Progresso do usuário
     user, progresso, _, _ = get_user_data(usuario_id)
     
-    if progresso:
+    if progresso and len(progresso) > 11:
         pontos = progresso[1]
-        desafios_feitos = progresso[11] if len(progresso) > 11 else 0
+        desafios_feitos = progresso[11]
     else:
         pontos = 0
         desafios_feitos = 0
@@ -643,7 +680,7 @@ def mostrar_pagina_desafios(usuario_id, text_color, card_bg, icon_color, border_
         
         uploaded_file = st.file_uploader(
             "Tire uma foto ou envie um comprovante",
-            type=['jpg', 'jpeg', 'png', 'heic'],
+            type=['jpg', 'jpeg', 'png'],
             key="upload_comprovante"
         )
         
@@ -679,14 +716,6 @@ def mostrar_pagina_desafios(usuario_id, text_color, card_bg, icon_color, border_
                         desafio['tipo']
                     )
                     
-                    # Registrar atividade específica
-                    if desafio['tipo'] == 'reciclagem':
-                        registrar_atividade(usuario_id, 'reciclagem', 10)
-                    elif desafio['tipo'] == 'evento':
-                        registrar_atividade(usuario_id, 'evento', 1)
-                    elif desafio['tipo'] == 'plantio':
-                        registrar_atividade(usuario_id, 'arvore', 1)
-                    
                     st.balloons()
                     st.success(f"Parabéns! Você ganhou {desafio['pontos']} pontos!")
                     
@@ -712,14 +741,12 @@ def registrar_atividade(usuario_id, tipo, valor):
         c.execute("UPDATE progresso SET kg_reciclados = kg_reciclados + ? WHERE usuario_id = ?", (valor, usuario_id))
     elif tipo == "arvore":
         c.execute("UPDATE progresso SET arvores_plantadas = arvores_plantadas + ? WHERE usuario_id = ?", (valor, usuario_id))
-    elif tipo == "desafio":
-        c.execute("UPDATE progresso SET desafios_completados = desafios_completados + 1 WHERE usuario_id = ?", (usuario_id,))
     
     conn.commit()
     conn.close()
 
 def mostrar_ranking_completo(text_color, card_bg, icon_color, border_color):
-    """Mostra ranking completo"""
+    """Mostra ranking completo - CORRIGIDO"""
     ranking = get_ranking()
     
     st.markdown(f"<h2 style='color: {text_color};'>🏆 Ranking EcoCidadãos</h2>", unsafe_allow_html=True)
@@ -918,8 +945,8 @@ if 'usuario_logado' not in st.session_state:
 # Header
 col1, col2, col3 = st.columns([1, 3, 1])
 with col2:
-    st.markdown(f"<h1 style='text-align: center;'>🌿 SustentaPira</h1>", unsafe_allow_html=True)
-    st.markdown(f"<p style='text-align: center; color: {secondary_text};'>Não herdamos a Terra de nossos antepassados, nós a pegamos emprestada de nossos filhos.</p>", unsafe_allow_html=True)
+    st.markdown(f"<h1 style='text-align: center;'>🌿 EcoPiracicaba 2026</h1>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; color: {secondary_text};'>Sustentabilidade em ação</p>", unsafe_allow_html=True)
 with col3:
     if st.button("🌓 " + ("Modo Claro" if tema == "dark" else "Modo Escuro")):
         toggle_theme()
@@ -985,10 +1012,10 @@ else:
     with st.sidebar:
         user, progresso, _, _ = get_user_data(st.session_state.usuario_logado['id'])
         
-        if progresso:
+        if progresso and len(progresso) > 11:
             pontos = progresso[1]
             nivel = progresso[2]
-            desafios = progresso[11] if len(progresso) > 11 else 0
+            desafios = progresso[11]
         else:
             pontos = 0
             nivel = "🌱 EcoIniciante"
