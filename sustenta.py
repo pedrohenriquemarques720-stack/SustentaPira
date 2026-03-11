@@ -138,6 +138,20 @@ def init_database():
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     
+    # Para garantir estrutura nova, dropamos as tabelas existentes (apenas em desenvolvimento)
+    # Em produção, comente estas linhas
+    c.execute("DROP TABLE IF EXISTS convites")
+    c.execute("DROP TABLE IF EXISTS visitas_pontos")
+    c.execute("DROP TABLE IF EXISTS pontos_coleta")
+    c.execute("DROP TABLE IF EXISTS dicas_vistas")
+    c.execute("DROP TABLE IF EXISTS dicas")
+    c.execute("DROP TABLE IF EXISTS inscricoes")
+    c.execute("DROP TABLE IF EXISTS eventos")
+    c.execute("DROP TABLE IF EXISTS comprovantes")
+    c.execute("DROP TABLE IF EXISTS conquistas")
+    c.execute("DROP TABLE IF EXISTS progresso")
+    c.execute("DROP TABLE IF EXISTS usuarios")
+    
     # Tabela de usuários
     c.execute('''
         CREATE TABLE IF NOT EXISTS usuarios (
@@ -315,16 +329,11 @@ def dados_iniciais(conn, c):
     c.execute("SELECT * FROM usuarios WHERE email = 'admin@ecopiracicaba.com'")
     if not c.fetchone():
         data_atual = datetime.now().strftime("%d/%m/%Y")
-        
-        # Inserir admin
         c.execute(
             "INSERT INTO usuarios (nome, email, senha, data_cadastro, interesses) VALUES (?, ?, ?, ?, ?)",
             ("Administrador", "admin@ecopiracicaba.com", "eco2026", data_atual, "sustentabilidade,reciclagem")
         )
-        
         admin_id = c.lastrowid
-        
-        # Inserir progresso do admin - SEM desafios_completados
         c.execute(
             "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
             (admin_id, 1000, get_nivel(1000), data_atual)
@@ -341,17 +350,12 @@ def dados_iniciais(conn, c):
         c.execute("SELECT * FROM usuarios WHERE email = ?", (email,))
         if not c.fetchone():
             data_atual = datetime.now().strftime("%d/%m/%Y")
-            
-            # Inserir usuário
             c.execute(
                 "INSERT INTO usuarios (nome, email, senha, data_cadastro, interesses) VALUES (?, ?, ?, ?, ?)",
                 (nome, email, senha, data_atual, interesses)
             )
-            
             user_id = c.lastrowid
             nivel = get_nivel(pontos)
-            
-            # Inserir progresso do usuário - SEM desafios_completados
             c.execute(
                 "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
                 (user_id, pontos, nivel, data_atual)
@@ -478,7 +482,7 @@ def criar_usuario(nome, email, senha, interesses=""):
         # Pegar ID do usuário
         user_id = c.lastrowid
         
-        # Inserir progresso - SEM desafios_completados
+        # Inserir progresso
         c.execute(
             "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
             (user_id, 0, "🌱 EcoIniciante", data_atual)
