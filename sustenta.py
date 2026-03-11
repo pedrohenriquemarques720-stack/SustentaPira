@@ -153,7 +153,7 @@ def init_database():
         )
     ''')
     
-    # Tabela de progresso do usuário
+    # Tabela de progresso do usuário - SEM a coluna desafios_completados
     c.execute('''
         CREATE TABLE IF NOT EXISTS progresso (
             usuario_id INTEGER PRIMARY KEY,
@@ -167,7 +167,6 @@ def init_database():
             amigos_convidados INTEGER DEFAULT 0,
             streak_dias INTEGER DEFAULT 0,
             ultima_atividade TEXT,
-            desafios_completados INTEGER DEFAULT 0,
             FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
         )
     ''')
@@ -310,7 +309,7 @@ def init_database():
     conn.close()
 
 def dados_iniciais(conn, c):
-    """Insere dados iniciais no banco - VERSÃO SIMPLIFICADA E CORRIGIDA"""
+    """Insere dados iniciais no banco - VERSÃO FINAL SEM DESAFIOS_COMPLETADOS"""
     
     # ===== USUÁRIO ADMIN =====
     c.execute("SELECT * FROM usuarios WHERE email = 'admin@ecopiracicaba.com'")
@@ -325,7 +324,7 @@ def dados_iniciais(conn, c):
         
         admin_id = c.lastrowid
         
-        # Inserir progresso do admin
+        # Inserir progresso do admin - SEM desafios_completados
         c.execute(
             "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
             (admin_id, 1000, get_nivel(1000), data_atual)
@@ -352,7 +351,7 @@ def dados_iniciais(conn, c):
             user_id = c.lastrowid
             nivel = get_nivel(pontos)
             
-            # Inserir progresso do usuário
+            # Inserir progresso do usuário - SEM desafios_completados
             c.execute(
                 "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
                 (user_id, pontos, nivel, data_atual)
@@ -430,7 +429,7 @@ def get_user_data(user_id):
     c.execute("SELECT nome, email, cidade, interesses, data_cadastro FROM usuarios WHERE id = ?", (user_id,))
     user = c.fetchone()
     
-    # Progresso - com tratamento para colunas que podem não existir
+    # Progresso
     c.execute("SELECT * FROM progresso WHERE usuario_id = ?", (user_id,))
     progresso = c.fetchone()
     
@@ -479,7 +478,7 @@ def criar_usuario(nome, email, senha, interesses=""):
         # Pegar ID do usuário
         user_id = c.lastrowid
         
-        # Inserir progresso
+        # Inserir progresso - SEM desafios_completados
         c.execute(
             "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
             (user_id, 0, "🌱 EcoIniciante", data_atual)
@@ -674,7 +673,7 @@ def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_
     
     nome, email, cidade, interesses, data_cadastro = user
     
-    # Dados do progresso - com verificação de tamanho
+    # Dados do progresso
     pontos = progresso[1] if len(progresso) > 1 else 0
     nivel = progresso[2] if len(progresso) > 2 else "🌱 EcoIniciante"
     eventos = progresso[3] if len(progresso) > 3 else 0
@@ -684,7 +683,6 @@ def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_
     arvores = progresso[7] if len(progresso) > 7 else 0
     amigos = progresso[8] if len(progresso) > 8 else 0
     streak = progresso[9] if len(progresso) > 9 else 0
-    desafios = 0  # Removido desafios_completados para simplificar
     
     proximo = get_proximo_nivel(pontos)
     
