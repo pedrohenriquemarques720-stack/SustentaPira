@@ -18,7 +18,7 @@ st.set_page_config(
     page_title="EcoPiracicaba 2026",
     page_icon="🌿",
     layout="wide",
-    initial_sidebar_state="expanded"  # Sidebar sempre expandida
+    initial_sidebar_state="expanded"
 )
 
 # ========== FUNÇÕES BÁSICAS ==========
@@ -153,7 +153,7 @@ def init_database():
         )
     ''')
     
-    # Tabela de progresso do usuário
+    # Tabela de progresso do usuário - VERIFICAR E AJUSTAR COLUNAS
     c.execute('''
         CREATE TABLE IF NOT EXISTS progresso (
             usuario_id INTEGER PRIMARY KEY,
@@ -171,6 +171,16 @@ def init_database():
             FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
         )
     ''')
+    
+    # Verificar se a coluna desafios_completados existe
+    c.execute("PRAGMA table_info(progresso)")
+    colunas = [col[1] for col in c.fetchall()]
+    
+    if 'desafios_completados' not in colunas:
+        try:
+            c.execute("ALTER TABLE progresso ADD COLUMN desafios_completados INTEGER DEFAULT 0")
+        except:
+            pass
     
     # Tabela de conquistas
     c.execute('''
@@ -201,7 +211,7 @@ def init_database():
         )
     ''')
     
-    # Tabela de eventos - CORRIGIDA (removido campo palestrante que não existe)
+    # Tabela de eventos
     c.execute('''
         CREATE TABLE IF NOT EXISTS eventos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -218,7 +228,7 @@ def init_database():
         )
     ''')
     
-    # Tabela de inscrições em eventos - CORRIGIDA (removida vírgula extra)
+    # Tabela de inscrições em eventos
     c.execute('''
         CREATE TABLE IF NOT EXISTS inscricoes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -319,12 +329,23 @@ def dados_iniciais(conn, c):
             ("Administrador", "admin@ecopiracicaba.com", "eco2026", data_atual, "sustentabilidade,reciclagem")
         )
         
-        # Criar progresso para admin
+        # Criar progresso para admin - CORRIGIDO: verificar colunas
         admin_id = c.lastrowid
-        c.execute(
-            "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade, desafios_completados) VALUES (?, ?, ?, ?, ?)",
-            (admin_id, 1000, get_nivel(1000), data_atual, 5)
-        )
+        
+        # Verificar quais colunas existem na tabela progresso
+        c.execute("PRAGMA table_info(progresso)")
+        colunas_progresso = [col[1] for col in c.fetchall()]
+        
+        if 'desafios_completados' in colunas_progresso:
+            c.execute(
+                "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade, desafios_completados) VALUES (?, ?, ?, ?, ?)",
+                (admin_id, 1000, get_nivel(1000), data_atual, 5)
+            )
+        else:
+            c.execute(
+                "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
+                (admin_id, 1000, get_nivel(1000), data_atual)
+            )
     
     # Usuários de exemplo
     usuarios_exemplo = [
@@ -332,6 +353,11 @@ def dados_iniciais(conn, c):
         ("Maria Santos", "maria@email.com", "123", "eventos,voluntariado", 520, 3),
         ("Pedro Oliveira", "pedro@email.com", "123", "compostagem,natureza", 180, 1)
     ]
+    
+    # Verificar colunas da tabela progresso
+    c.execute("PRAGMA table_info(progresso)")
+    colunas_progresso = [col[1] for col in c.fetchall()]
+    tem_desafios = 'desafios_completados' in colunas_progresso
     
     for nome, email, senha, interesses, pontos, desafios in usuarios_exemplo:
         c.execute("SELECT * FROM usuarios WHERE email = ?", (email,))
@@ -343,10 +369,17 @@ def dados_iniciais(conn, c):
             )
             user_id = c.lastrowid
             nivel = get_nivel(pontos)
-            c.execute(
-                "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade, desafios_completados) VALUES (?, ?, ?, ?, ?)",
-                (user_id, pontos, nivel, data_atual, desafios)
-            )
+            
+            if tem_desafios:
+                c.execute(
+                    "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade, desafios_completados) VALUES (?, ?, ?, ?, ?)",
+                    (user_id, pontos, nivel, data_atual, desafios)
+                )
+            else:
+                c.execute(
+                    "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
+                    (user_id, pontos, nivel, data_atual)
+                )
     
     # Eventos 2026 - Piracicaba
     c.execute("SELECT COUNT(*) FROM eventos")
@@ -469,11 +502,20 @@ def criar_usuario(nome, email, senha, interesses=""):
         # Pegar ID do usuário
         user_id = c.lastrowid
         
-        # Inicializar progresso
-        c.execute(
-            "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade, desafios_completados) VALUES (?, ?, ?, ?, ?)",
-            (user_id, 0, "🌱 EcoIniciante", data_atual, 0)
-        )
+        # Verificar colunas da tabela progresso
+        c.execute("PRAGMA table_info(progresso)")
+        colunas_progresso = [col[1] for col in c.fetchall()]
+        
+        if 'desafios_completados' in colunas_progresso:
+            c.execute(
+                "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade, desafios_completados) VALUES (?, ?, ?, ?, ?)",
+                (user_id, 0, "🌱 EcoIniciante", data_atual, 0)
+            )
+        else:
+            c.execute(
+                "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
+                (user_id, 0, "🌱 EcoIniciante", data_atual)
+            )
         
         # Gerar código de convite para o usuário
         codigo = hashlib.md5(f"{user_id}{time.time()}{random.random()}".encode()).hexdigest()[:8].upper()
@@ -540,20 +582,39 @@ def adicionar_pontos(usuario_id, pontos, descricao, icone="✨", tipo="geral"):
         (usuario_id, tipo, pontos, data_atual, descricao, icone)
     )
     
-    # Atualizar progresso
-    c.execute("SELECT total_pontos, desafios_completados FROM progresso WHERE usuario_id = ?", (usuario_id,))
-    resultado = c.fetchone()
+    # Verificar colunas da tabela progresso
+    c.execute("PRAGMA table_info(progresso)")
+    colunas_progresso = [col[1] for col in c.fetchall()]
+    tem_desafios = 'desafios_completados' in colunas_progresso
     
-    if resultado:
-        pontos_atuais = resultado[0]
-        desafios_atuais = resultado[1] if resultado[1] else 0
-        novos_pontos = pontos_atuais + pontos
-        novo_nivel = get_nivel(novos_pontos)
+    # Atualizar progresso
+    if tem_desafios:
+        c.execute("SELECT total_pontos, desafios_completados FROM progresso WHERE usuario_id = ?", (usuario_id,))
+        resultado = c.fetchone()
         
-        c.execute(
-            "UPDATE progresso SET total_pontos = ?, nivel = ?, ultima_atividade = ?, desafios_completados = ? WHERE usuario_id = ?",
-            (novos_pontos, novo_nivel, data_atual, desafios_atuais + 1, usuario_id)
-        )
+        if resultado:
+            pontos_atuais = resultado[0]
+            desafios_atuais = resultado[1] if resultado[1] else 0
+            novos_pontos = pontos_atuais + pontos
+            novo_nivel = get_nivel(novos_pontos)
+            
+            c.execute(
+                "UPDATE progresso SET total_pontos = ?, nivel = ?, ultima_atividade = ?, desafios_completados = ? WHERE usuario_id = ?",
+                (novos_pontos, novo_nivel, data_atual, desafios_atuais + 1, usuario_id)
+            )
+    else:
+        c.execute("SELECT total_pontos FROM progresso WHERE usuario_id = ?", (usuario_id,))
+        resultado = c.fetchone()
+        
+        if resultado:
+            pontos_atuais = resultado[0]
+            novos_pontos = pontos_atuais + pontos
+            novo_nivel = get_nivel(novos_pontos)
+            
+            c.execute(
+                "UPDATE progresso SET total_pontos = ?, nivel = ?, ultima_atividade = ? WHERE usuario_id = ?",
+                (novos_pontos, novo_nivel, data_atual, usuario_id)
+            )
     
     conn.commit()
     conn.close()
@@ -1295,7 +1356,36 @@ else:
         mostrar_ranking_completo(text_color, card_bg, icon_color, border_color, secondary_text)
     
     with tab4:
-        mostrar_eventos_destaque(text_color, card_bg, icon_color, border_color, secondary_text)
+        # Para usuários logados, mostrar eventos com opção de inscrição
+        conn = sqlite3.connect('ecopiracicaba.db')
+        c = conn.cursor()
+        c.execute("SELECT * FROM eventos ORDER BY data")
+        eventos = c.fetchall()
+        conn.close()
+        
+        st.markdown(f"<h2 style='color: {text_color};'>📅 Eventos 2026</h2>", unsafe_allow_html=True)
+        
+        for evento in eventos:
+            col1, col2 = st.columns([4, 1])
+            with col1:
+                st.markdown(f"""
+                <div style='background: {card_bg}; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 6px solid {icon_color}; border: 1px solid {border_color};'>
+                    <h4>{evento[1]}</h4>
+                    <p>{evento[2]}</p>
+                    <p><i class='fas fa-calendar'></i> {evento[3]} às {evento[4]}</p>
+                    <p><i class='fas fa-map-marker-alt'></i> {evento[5]}</p>
+                </div>
+                """, unsafe_allow_html=True)
+            with col2:
+                if evento[7] == 0 or evento[8] < evento[7]:
+                    if st.button(f"📝 Inscrever-se", key=f"insc_{evento[0]}"):
+                        if inscrever_evento(st.session_state.usuario_logado['id'], evento[0]):
+                            st.success("Inscrição realizada!")
+                            st.rerun()
+                        else:
+                            st.warning("Você já está inscrito neste evento.")
+                else:
+                    st.info("Esgotado")
     
     with tab5:
         mostrar_pontos_completos(text_color, card_bg, icon_color, border_color, secondary_text)
