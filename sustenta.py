@@ -133,292 +133,349 @@ DESAFIOS_LISTA = [
 def init_database():
     # Define o caminho absoluto para o banco de dados
     db_path = os.path.join(os.path.dirname(__file__), 'ecopiracicaba.db')
+    
+    # Verifica se o banco já existe
+    db_exists = os.path.exists(db_path)
+    
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
     
-    # Remove tabelas antigas para garantir estrutura nova (apenas para desenvolvimento)
-    c.execute("DROP TABLE IF EXISTS convites")
-    c.execute("DROP TABLE IF EXISTS visitas_pontos")
-    c.execute("DROP TABLE IF EXISTS pontos_coleta")
-    c.execute("DROP TABLE IF EXISTS dicas_vistas")
-    c.execute("DROP TABLE IF EXISTS dicas")
-    c.execute("DROP TABLE IF EXISTS inscricoes")
-    c.execute("DROP TABLE IF EXISTS eventos")
-    c.execute("DROP TABLE IF EXISTS comprovantes")
-    c.execute("DROP TABLE IF EXISTS conquistas")
-    c.execute("DROP TABLE IF EXISTS progresso")
-    c.execute("DROP TABLE IF EXISTS usuarios")
-    
-    # Tabela de usuários
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS usuarios (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nome TEXT NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            senha TEXT NOT NULL,
-            avatar TEXT,
-            cidade TEXT DEFAULT 'Piracicaba',
-            interesses TEXT,
-            data_cadastro TEXT,
-            ultimo_acesso TEXT
-        )
-    ''')
-    
-    # Tabela de progresso do usuário
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS progresso (
-            usuario_id INTEGER PRIMARY KEY,
-            total_pontos INTEGER DEFAULT 0,
-            nivel TEXT DEFAULT '🌱 EcoIniciante',
-            eventos_participados INTEGER DEFAULT 0,
-            dicas_vistas INTEGER DEFAULT 0,
-            pontos_visitados INTEGER DEFAULT 0,
-            kg_reciclados REAL DEFAULT 0,
-            arvores_plantadas INTEGER DEFAULT 0,
-            amigos_convidados INTEGER DEFAULT 0,
-            streak_dias INTEGER DEFAULT 0,
-            ultima_atividade TEXT,
-            FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
-        )
-    ''')
-    
-    # Tabela de conquistas
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS conquistas (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            usuario_id INTEGER,
-            tipo TEXT NOT NULL,
-            pontos INTEGER NOT NULL,
-            data TEXT NOT NULL,
-            descricao TEXT,
-            icone TEXT,
-            FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
-        )
-    ''')
-    
-    # Tabela de comprovantes (fotos)
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS comprovantes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            usuario_id INTEGER NOT NULL,
-            tipo TEXT NOT NULL,
-            descricao TEXT,
-            imagem BLOB,
-            pontos_ganhos INTEGER DEFAULT 0,
-            data TEXT NOT NULL,
-            aprovado INTEGER DEFAULT 0,
-            FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
-        )
-    ''')
-    
-    # Tabela de eventos
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS eventos (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            titulo TEXT NOT NULL,
-            descricao TEXT,
-            data TEXT,
-            hora TEXT,
-            local TEXT,
-            tipo TEXT,
-            vagas INTEGER,
-            inscritos INTEGER DEFAULT 0,
-            organizador TEXT,
-            contato TEXT
-        )
-    ''')
-    
-    # Tabela de inscrições em eventos
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS inscricoes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            usuario_id INTEGER,
-            evento_id INTEGER,
-            data_inscricao TEXT,
-            participou INTEGER DEFAULT 0,
-            UNIQUE(usuario_id, evento_id),
-            FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE,
-            FOREIGN KEY (evento_id) REFERENCES eventos (id) ON DELETE CASCADE
-        )
-    ''')
-    
-    # Tabela de dicas
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS dicas (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            titulo TEXT NOT NULL,
-            conteudo TEXT,
-            categoria TEXT,
-            data_publicacao TEXT,
-            likes INTEGER DEFAULT 0,
-            autor TEXT
-        )
-    ''')
-    
-    # Tabela de visualizações de dicas
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS dicas_vistas (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            usuario_id INTEGER,
-            dica_id INTEGER,
-            data_vista TEXT,
-            UNIQUE(usuario_id, dica_id),
-            FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE,
-            FOREIGN KEY (dica_id) REFERENCES dicas (id) ON DELETE CASCADE
-        )
-    ''')
-    
-    # Tabela de pontos de coleta
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS pontos_coleta (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nome TEXT NOT NULL,
-            endereco TEXT,
-            categoria TEXT,
-            horario TEXT,
-            telefone TEXT,
-            avaliacao REAL DEFAULT 0,
-            descricao TEXT
-        )
-    ''')
-    
-    # Tabela de visitas a pontos
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS visitas_pontos (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            usuario_id INTEGER,
-            ponto_id INTEGER,
-            data_visita TEXT,
-            quantidade REAL DEFAULT 0,
-            UNIQUE(usuario_id, ponto_id, data_visita),
-            FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE,
-            FOREIGN KEY (ponto_id) REFERENCES pontos_coleta (id) ON DELETE CASCADE
-        )
-    ''')
-    
-    # Tabela de convites
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS convites (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            usuario_id INTEGER,
-            codigo TEXT UNIQUE,
-            usado INTEGER DEFAULT 0,
-            usado_por INTEGER,
-            data_criacao TEXT,
-            data_uso TEXT,
-            FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE,
-            FOREIGN KEY (usado_por) REFERENCES usuarios (id) ON DELETE CASCADE
-        )
-    ''')
-    
-    conn.commit()
-    
-    # Inserir dados iniciais
-    try:
-        dados_iniciais(conn, c)
+    # Só recria as tabelas se o banco não existir
+    if not db_exists:
+        # Tabela de usuários
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS usuarios (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome TEXT NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                senha TEXT NOT NULL,
+                avatar TEXT,
+                cidade TEXT DEFAULT 'Piracicaba',
+                data_cadastro TEXT,
+                ultimo_acesso TEXT
+            )
+        ''')
+        
+        # Tabela de progresso do usuário
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS progresso (
+                usuario_id INTEGER PRIMARY KEY,
+                total_pontos INTEGER DEFAULT 0,
+                nivel TEXT DEFAULT '🌱 EcoIniciante',
+                eventos_participados INTEGER DEFAULT 0,
+                dicas_vistas INTEGER DEFAULT 0,
+                pontos_visitados INTEGER DEFAULT 0,
+                kg_reciclados REAL DEFAULT 0,
+                arvores_plantadas INTEGER DEFAULT 0,
+                amigos_convidados INTEGER DEFAULT 0,
+                streak_dias INTEGER DEFAULT 0,
+                ultima_atividade TEXT,
+                FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
+            )
+        ''')
+        
+        # Tabela de conquistas
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS conquistas (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                usuario_id INTEGER,
+                tipo TEXT NOT NULL,
+                pontos INTEGER NOT NULL,
+                data TEXT NOT NULL,
+                descricao TEXT,
+                icone TEXT,
+                FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
+            )
+        ''')
+        
+        # Tabela de comprovantes (fotos)
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS comprovantes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                usuario_id INTEGER NOT NULL,
+                tipo TEXT NOT NULL,
+                descricao TEXT,
+                imagem BLOB,
+                pontos_ganhos INTEGER DEFAULT 0,
+                data TEXT NOT NULL,
+                aprovado INTEGER DEFAULT 0,
+                FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
+            )
+        ''')
+        
+        # Tabela de eventos
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS eventos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                titulo TEXT NOT NULL,
+                descricao TEXT,
+                data TEXT,
+                hora TEXT,
+                local TEXT,
+                tipo TEXT,
+                vagas INTEGER,
+                inscritos INTEGER DEFAULT 0,
+                organizador TEXT,
+                contato TEXT
+            )
+        ''')
+        
+        # Tabela de inscrições em eventos
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS inscricoes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                usuario_id INTEGER,
+                evento_id INTEGER,
+                data_inscricao TEXT,
+                participou INTEGER DEFAULT 0,
+                UNIQUE(usuario_id, evento_id),
+                FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE,
+                FOREIGN KEY (evento_id) REFERENCES eventos (id) ON DELETE CASCADE
+            )
+        ''')
+        
+        # Tabela de dicas
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS dicas (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                titulo TEXT NOT NULL,
+                conteudo TEXT,
+                categoria TEXT,
+                data_publicacao TEXT,
+                likes INTEGER DEFAULT 0,
+                autor TEXT
+            )
+        ''')
+        
+        # Tabela de visualizações de dicas
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS dicas_vistas (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                usuario_id INTEGER,
+                dica_id INTEGER,
+                data_vista TEXT,
+                UNIQUE(usuario_id, dica_id),
+                FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE,
+                FOREIGN KEY (dica_id) REFERENCES dicas (id) ON DELETE CASCADE
+            )
+        ''')
+        
+        # Tabela de pontos de coleta
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS pontos_coleta (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome TEXT NOT NULL,
+                endereco TEXT,
+                categoria TEXT,
+                horario TEXT,
+                telefone TEXT,
+                avaliacao REAL DEFAULT 0,
+                descricao TEXT
+            )
+        ''')
+        
+        # Tabela de visitas a pontos
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS visitas_pontos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                usuario_id INTEGER,
+                ponto_id INTEGER,
+                data_visita TEXT,
+                quantidade REAL DEFAULT 0,
+                UNIQUE(usuario_id, ponto_id, data_visita),
+                FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE,
+                FOREIGN KEY (ponto_id) REFERENCES pontos_coleta (id) ON DELETE CASCADE
+            )
+        ''')
+        
+        # Tabela de convites
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS convites (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                usuario_id INTEGER,
+                codigo TEXT UNIQUE,
+                usado INTEGER DEFAULT 0,
+                usado_por INTEGER,
+                data_criacao TEXT,
+                data_uso TEXT,
+                FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE,
+                FOREIGN KEY (usado_por) REFERENCES usuarios (id) ON DELETE CASCADE
+            )
+        ''')
+        
         conn.commit()
-    except sqlite3.Error as e:
-        st.error(f"Erro ao inserir dados iniciais: {e}")
-        raise e
-    finally:
-        conn.close()
+        
+        # Inserir dados iniciais apenas se o banco foi criado agora
+        try:
+            dados_iniciais(conn, c)
+            conn.commit()
+        except sqlite3.Error as e:
+            st.error(f"Erro ao inserir dados iniciais: {e}")
+    else:
+        # Verificar se precisa adicionar dados iniciais (admin e eventos)
+        c.execute("SELECT COUNT(*) FROM usuarios WHERE email = 'admin@ecopiracicaba.com'")
+        if c.fetchone()[0] == 0:
+            # Adicionar apenas o admin se não existir
+            data_atual = datetime.now().strftime("%d/%m/%Y")
+            c.execute(
+                "INSERT INTO usuarios (nome, email, senha, data_cadastro) VALUES (?, ?, ?, ?)",
+                ("Administrador", "admin@ecopiracicaba.com", "eco2026", data_atual)
+            )
+            admin_id = c.lastrowid
+            c.execute(
+                "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
+                (admin_id, 1000, get_nivel(1000), data_atual)
+            )
+            conn.commit()
+        
+        # Verificar se precisa adicionar eventos
+        c.execute("SELECT COUNT(*) FROM eventos")
+        if c.fetchone()[0] == 0:
+            eventos = [
+                ("🌱 Feira de Sustentabilidade", "Feira com produtos orgânicos, artesanato sustentável e startups verdes", "15/03/2026", "09:00", "Engenho Central - Piracicaba", "feira", 1000, "Prefeitura de Piracicaba", "(19) 3403-1100"),
+                ("♻️ Workshop de Reciclagem", "Aprenda técnicas avançadas de reciclagem em casa", "22/03/2026", "14:00", "SENAI Piracicaba", "workshop", 50, "SENAI", "(19) 3412-5000"),
+                ("🌊 Mutirão Rio Piracicaba", "Limpeza das margens do rio com atividades educativas", "05/04/2026", "08:00", "Rua do Porto - Piracicaba", "mutirão", 200, "SOS Rio Piracicaba", "(19) 99765-4321"),
+                ("🌿 Palestra: Compostagem", "Como fazer compostagem doméstica e comunitária", "12/04/2026", "10:00", "Horto Municipal - Piracicaba", "palestra", 100, "Horto Municipal", "(19) 3434-5678"),
+                ("🌍 Dia da Terra", "Celebração com atividades, música e feira verde", "22/04/2026", "09:00", "Parque da Rua do Porto - Piracicaba", "evento", 2000, "ONG Planeta Verde", "(19) 99876-5432"),
+                ("🔋 Descarte de Eletrônicos", "Campanha de coleta de lixo eletrônico", "10/05/2026", "09:00", "Shopping Piracicaba", "campanha", 0, "Green Eletronics", "(19) 3403-3000"),
+                ("🌳 Plantio de Árvores", "Mutirão de plantio de árvores nativas", "05/06/2026", "08:30", "Parque Ecológico - Piracicaba", "mutirão", 300, "SOS Mata Atlântica", "(11) 3262-4088"),
+                ("🚴 Passeio Ciclístico", "Passeio ecológico de bike pela cidade", "20/06/2026", "08:00", "Largo dos Pescadores - Piracicaba", "passeio", 150, "Ciclovida", "(19) 99876-1234"),
+                ("🥕 Feira Orgânica", "Feira de produtos orgânicos e agroecológicos", "10/07/2026", "08:00", "Mercado Municipal - Piracicaba", "feira", 0, "Associação Orgânicos", "(19) 3434-7890"),
+                ("💧 Semana da Água", "Palestras e atividades sobre preservação da água", "15/08/2026", "09:00", "Teatro Municipal - Piracicaba", "evento", 400, "Comitê PCJ", "(19) 3437-2000"),
+                ("🐝 Dia das Abelhas", "Palestra sobre a importância das abelhas", "29/08/2026", "14:00", "ESALQ - Piracicaba", "palestra", 80, "USP", "(19) 3447-8500")
+            ]
+            for e in eventos:
+                c.execute(
+                    "INSERT INTO eventos (titulo, descricao, data, hora, local, tipo, vagas, organizador, contato) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    e
+                )
+            conn.commit()
+        
+        # Verificar se precisa adicionar dicas
+        c.execute("SELECT COUNT(*) FROM dicas")
+        if c.fetchone()[0] == 0:
+            dicas = [
+                ("🌱 Compostagem Doméstica", "50% do lixo doméstico pode ser compostado! Faça sua própria composteira com baldes e minhocas californianas.", "resíduos", datetime.now().strftime("%d/%m/%Y"), 0, "Equipe EcoPiracicaba"),
+                ("💧 Economia de Água", "Um banho de 15 minutos gasta 135 litros. Reduza para 5 minutos e economize 90 litros por banho!", "água", datetime.now().strftime("%d/%m/%Y"), 0, "Sabesp"),
+                ("🔋 Pilhas e Baterias", "Uma pilha pode contaminar 20 mil litros de água por até 50 anos. Descarte sempre em pontos de coleta.", "resíduos", datetime.now().strftime("%d/%m/%Y"), 0, "Greenpeace"),
+                ("🌳 Plante uma Árvore", "Uma árvore adulta absorve até 150kg de CO2 por ano. Plante árvores nativas como ipê e pitanga.", "natureza", datetime.now().strftime("%d/%m/%Y"), 0, "SOS Mata Atlântica"),
+                ("🛍️ Sacolas Retornáveis", "Uma sacola plástica leva 400 anos para se decompor. Use sempre sacolas retornáveis nas compras.", "plástico", datetime.now().strftime("%d/%m/%Y"), 0, "WWF"),
+                ("🥗 Alimentação Orgânica", "Alimentos orgânicos são mais saudáveis e não contaminam o solo com agrotóxicos.", "alimentação", datetime.now().strftime("%d/%m/%Y"), 0, "Feira Orgânica")
+            ]
+            for d in dicas:
+                c.execute(
+                    "INSERT INTO dicas (titulo, conteudo, categoria, data_publicacao, likes, autor) VALUES (?, ?, ?, ?, ?, ?)",
+                    d
+                )
+            conn.commit()
+        
+        # Verificar se precisa adicionar pontos de coleta
+        c.execute("SELECT COUNT(*) FROM pontos_coleta")
+        if c.fetchone()[0] == 0:
+            pontos = [
+                ("Ecoponto Centro", "Av. Rui Barbosa, 800 - Centro", "geral", "Seg-Sex 8h-17h, Sáb 8h-12h", "(19) 3403-1100", 4.5, "Recebe todos os tipos de recicláveis, eletrônicos e óleo de cozinha"),
+                ("Shopping Piracicaba", "Av. Limeira, 700 - Areão", "pilhas", "Seg-Sáb 10h-22h, Dom 14h-20h", "(19) 3432-4545", 4.8, "Ponto de coleta de pilhas e baterias no piso G1"),
+                ("Coopervidros", "R. Treze de Maio, 300 - Centro", "vidros", "Seg-Sex 8h-17h", "(19) 3421-1234", 4.2, "Cooperativa especializada em reciclagem de vidros"),
+                ("CDI Eletrônicos", "R. do Porto, 234 - Centro", "eletronicos", "Seg-Sex 9h-18h, Sáb 9h-12h", "(19) 3433-5678", 4.7, "Centro de Descarte de Eletrônicos - computadores, celulares e pilhas"),
+                ("Ecoponto Paulicéia", "R. Javari, 150 - Paulicéia", "geral", "Ter-Sáb 8h-16h", "(19) 3403-2200", 4.3, "Ecoponto completo com coleta de óleo e recicláveis"),
+                ("Unimed Sede", "R. Voluntários, 450 - Centro", "pilhas", "Seg-Sex 7h-19h", "(19) 3432-9000", 4.6, "Coleta de pilhas e baterias na recepção"),
+                ("Esalq/USP", "Av. Pádua Dias, 11 - Agronomia", "eletronicos", "Seg-Sex 8h-17h", "(19) 3447-8500", 4.9, "Campus da ESALQ com pontos de coleta de eletrônicos"),
+                ("Horto Municipal", "Av. Maurílio Biagi, 1500 - Santa Cecília", "organicos", "Seg-Sex 8h-16h", "(19) 3434-5678", 4.3, "Recebimento de podas e resíduos orgânicos")
+            ]
+            for p in pontos:
+                c.execute(
+                    "INSERT INTO pontos_coleta (nome, endereco, categoria, horario, telefone, avaliacao, descricao) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    p
+                )
+            conn.commit()
+    
+    conn.close()
 
 def dados_iniciais(conn, c):
     """Insere dados iniciais no banco"""
     
     # ===== USUÁRIO ADMIN =====
-    c.execute("SELECT * FROM usuarios WHERE email = 'admin@ecopiracicaba.com'")
-    if not c.fetchone():
-        data_atual = datetime.now().strftime("%d/%m/%Y")
-        c.execute(
-            "INSERT INTO usuarios (nome, email, senha, data_cadastro, interesses) VALUES (?, ?, ?, ?, ?)",
-            ("Administrador", "admin@ecopiracicaba.com", "eco2026", data_atual, "sustentabilidade,reciclagem")
-        )
-        admin_id = c.lastrowid
-        c.execute(
-            "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
-            (admin_id, 1000, get_nivel(1000), data_atual)
-        )
+    data_atual = datetime.now().strftime("%d/%m/%Y")
+    c.execute(
+        "INSERT INTO usuarios (nome, email, senha, data_cadastro) VALUES (?, ?, ?, ?)",
+        ("Administrador", "admin@ecopiracicaba.com", "eco2026", data_atual)
+    )
+    admin_id = c.lastrowid
+    c.execute(
+        "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
+        (admin_id, 1000, get_nivel(1000), data_atual)
+    )
     
     # ===== USUÁRIOS DE EXEMPLO =====
     usuarios_exemplo = [
-        ("João Silva", "joao@email.com", "123456", "sustentabilidade,reciclagem", 350),
-        ("Maria Santos", "maria@email.com", "123456", "eventos,voluntariado", 520),
-        ("Pedro Oliveira", "pedro@email.com", "123456", "compostagem,natureza", 180)
+        ("João Silva", "joao@email.com", "123456", 350),
+        ("Maria Santos", "maria@email.com", "123456", 520),
+        ("Pedro Oliveira", "pedro@email.com", "123456", 180)
     ]
     
-    for nome, email, senha, interesses, pontos in usuarios_exemplo:
-        c.execute("SELECT * FROM usuarios WHERE email = ?", (email,))
-        if not c.fetchone():
-            data_atual = datetime.now().strftime("%d/%m/%Y")
-            c.execute(
-                "INSERT INTO usuarios (nome, email, senha, data_cadastro, interesses) VALUES (?, ?, ?, ?, ?)",
-                (nome, email, senha, data_atual, interesses)
-            )
-            user_id = c.lastrowid
-            nivel = get_nivel(pontos)
-            c.execute(
-                "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
-                (user_id, pontos, nivel, data_atual)
-            )
+    for nome, email, senha, pontos in usuarios_exemplo:
+        c.execute(
+            "INSERT INTO usuarios (nome, email, senha, data_cadastro) VALUES (?, ?, ?, ?)",
+            (nome, email, senha, data_atual)
+        )
+        user_id = c.lastrowid
+        nivel = get_nivel(pontos)
+        c.execute(
+            "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
+            (user_id, pontos, nivel, data_atual)
+        )
     
     # ===== EVENTOS 2026 - PIRACICABA =====
-    c.execute("SELECT COUNT(*) FROM eventos")
-    if c.fetchone()[0] == 0:
-        eventos = [
-            ("🌱 Feira de Sustentabilidade", "Feira com produtos orgânicos, artesanato sustentável e startups verdes", "15/03/2026", "09:00", "Engenho Central - Piracicaba", "feira", 1000, "Prefeitura de Piracicaba", "(19) 3403-1100"),
-            ("♻️ Workshop de Reciclagem", "Aprenda técnicas avançadas de reciclagem em casa", "22/03/2026", "14:00", "SENAI Piracicaba", "workshop", 50, "SENAI", "(19) 3412-5000"),
-            ("🌊 Mutirão Rio Piracicaba", "Limpeza das margens do rio com atividades educativas", "05/04/2026", "08:00", "Rua do Porto - Piracicaba", "mutirão", 200, "SOS Rio Piracicaba", "(19) 99765-4321"),
-            ("🌿 Palestra: Compostagem", "Como fazer compostagem doméstica e comunitária", "12/04/2026", "10:00", "Horto Municipal - Piracicaba", "palestra", 100, "Horto Municipal", "(19) 3434-5678"),
-            ("🌍 Dia da Terra", "Celebração com atividades, música e feira verde", "22/04/2026", "09:00", "Parque da Rua do Porto - Piracicaba", "evento", 2000, "ONG Planeta Verde", "(19) 99876-5432"),
-            ("🔋 Descarte de Eletrônicos", "Campanha de coleta de lixo eletrônico", "10/05/2026", "09:00", "Shopping Piracicaba", "campanha", 0, "Green Eletronics", "(19) 3403-3000"),
-            ("🌳 Plantio de Árvores", "Mutirão de plantio de árvores nativas", "05/06/2026", "08:30", "Parque Ecológico - Piracicaba", "mutirão", 300, "SOS Mata Atlântica", "(11) 3262-4088"),
-            ("🚴 Passeio Ciclístico", "Passeio ecológico de bike pela cidade", "20/06/2026", "08:00", "Largo dos Pescadores - Piracicaba", "passeio", 150, "Ciclovida", "(19) 99876-1234"),
-            ("🥕 Feira Orgânica", "Feira de produtos orgânicos e agroecológicos", "10/07/2026", "08:00", "Mercado Municipal - Piracicaba", "feira", 0, "Associação Orgânicos", "(19) 3434-7890"),
-            ("💧 Semana da Água", "Palestras e atividades sobre preservação da água", "15/08/2026", "09:00", "Teatro Municipal - Piracicaba", "evento", 400, "Comitê PCJ", "(19) 3437-2000"),
-            ("🐝 Dia das Abelhas", "Palestra sobre a importância das abelhas", "29/08/2026", "14:00", "ESALQ - Piracicaba", "palestra", 80, "USP", "(19) 3447-8500")
-        ]
-        for e in eventos:
-            c.execute(
-                "INSERT INTO eventos (titulo, descricao, data, hora, local, tipo, vagas, organizador, contato) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                e
-            )
+    eventos = [
+        ("🌱 Feira de Sustentabilidade", "Feira com produtos orgânicos, artesanato sustentável e startups verdes", "15/03/2026", "09:00", "Engenho Central - Piracicaba", "feira", 1000, "Prefeitura de Piracicaba", "(19) 3403-1100"),
+        ("♻️ Workshop de Reciclagem", "Aprenda técnicas avançadas de reciclagem em casa", "22/03/2026", "14:00", "SENAI Piracicaba", "workshop", 50, "SENAI", "(19) 3412-5000"),
+        ("🌊 Mutirão Rio Piracicaba", "Limpeza das margens do rio com atividades educativas", "05/04/2026", "08:00", "Rua do Porto - Piracicaba", "mutirão", 200, "SOS Rio Piracicaba", "(19) 99765-4321"),
+        ("🌿 Palestra: Compostagem", "Como fazer compostagem doméstica e comunitária", "12/04/2026", "10:00", "Horto Municipal - Piracicaba", "palestra", 100, "Horto Municipal", "(19) 3434-5678"),
+        ("🌍 Dia da Terra", "Celebração com atividades, música e feira verde", "22/04/2026", "09:00", "Parque da Rua do Porto - Piracicaba", "evento", 2000, "ONG Planeta Verde", "(19) 99876-5432"),
+        ("🔋 Descarte de Eletrônicos", "Campanha de coleta de lixo eletrônico", "10/05/2026", "09:00", "Shopping Piracicaba", "campanha", 0, "Green Eletronics", "(19) 3403-3000"),
+        ("🌳 Plantio de Árvores", "Mutirão de plantio de árvores nativas", "05/06/2026", "08:30", "Parque Ecológico - Piracicaba", "mutirão", 300, "SOS Mata Atlântica", "(11) 3262-4088"),
+        ("🚴 Passeio Ciclístico", "Passeio ecológico de bike pela cidade", "20/06/2026", "08:00", "Largo dos Pescadores - Piracicaba", "passeio", 150, "Ciclovida", "(19) 99876-1234"),
+        ("🥕 Feira Orgânica", "Feira de produtos orgânicos e agroecológicos", "10/07/2026", "08:00", "Mercado Municipal - Piracicaba", "feira", 0, "Associação Orgânicos", "(19) 3434-7890"),
+        ("💧 Semana da Água", "Palestras e atividades sobre preservação da água", "15/08/2026", "09:00", "Teatro Municipal - Piracicaba", "evento", 400, "Comitê PCJ", "(19) 3437-2000"),
+        ("🐝 Dia das Abelhas", "Palestra sobre a importância das abelhas", "29/08/2026", "14:00", "ESALQ - Piracicaba", "palestra", 80, "USP", "(19) 3447-8500")
+    ]
+    for e in eventos:
+        c.execute(
+            "INSERT INTO eventos (titulo, descricao, data, hora, local, tipo, vagas, organizador, contato) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            e
+        )
     
     # ===== DICAS AMBIENTAIS =====
-    c.execute("SELECT COUNT(*) FROM dicas")
-    if c.fetchone()[0] == 0:
-        dicas = [
-            ("🌱 Compostagem Doméstica", "50% do lixo doméstico pode ser compostado! Faça sua própria composteira com baldes e minhocas californianas.", "resíduos", datetime.now().strftime("%d/%m/%Y"), 0, "Equipe EcoPiracicaba"),
-            ("💧 Economia de Água", "Um banho de 15 minutos gasta 135 litros. Reduza para 5 minutos e economize 90 litros por banho!", "água", datetime.now().strftime("%d/%m/%Y"), 0, "Sabesp"),
-            ("🔋 Pilhas e Baterias", "Uma pilha pode contaminar 20 mil litros de água por até 50 anos. Descarte sempre em pontos de coleta.", "resíduos", datetime.now().strftime("%d/%m/%Y"), 0, "Greenpeace"),
-            ("🌳 Plante uma Árvore", "Uma árvore adulta absorve até 150kg de CO2 por ano. Plante árvores nativas como ipê e pitanga.", "natureza", datetime.now().strftime("%d/%m/%Y"), 0, "SOS Mata Atlântica"),
-            ("🛍️ Sacolas Retornáveis", "Uma sacola plástica leva 400 anos para se decompor. Use sempre sacolas retornáveis nas compras.", "plástico", datetime.now().strftime("%d/%m/%Y"), 0, "WWF"),
-            ("🥗 Alimentação Orgânica", "Alimentos orgânicos são mais saudáveis e não contaminam o solo com agrotóxicos.", "alimentação", datetime.now().strftime("%d/%m/%Y"), 0, "Feira Orgânica")
-        ]
-        for d in dicas:
-            c.execute(
-                "INSERT INTO dicas (titulo, conteudo, categoria, data_publicacao, likes, autor) VALUES (?, ?, ?, ?, ?, ?)",
-                d
-            )
+    dicas = [
+        ("🌱 Compostagem Doméstica", "50% do lixo doméstico pode ser compostado! Faça sua própria composteira com baldes e minhocas californianas.", "resíduos", datetime.now().strftime("%d/%m/%Y"), 0, "Equipe EcoPiracicaba"),
+        ("💧 Economia de Água", "Um banho de 15 minutos gasta 135 litros. Reduza para 5 minutos e economize 90 litros por banho!", "água", datetime.now().strftime("%d/%m/%Y"), 0, "Sabesp"),
+        ("🔋 Pilhas e Baterias", "Uma pilha pode contaminar 20 mil litros de água por até 50 anos. Descarte sempre em pontos de coleta.", "resíduos", datetime.now().strftime("%d/%m/%Y"), 0, "Greenpeace"),
+        ("🌳 Plante uma Árvore", "Uma árvore adulta absorve até 150kg de CO2 por ano. Plante árvores nativas como ipê e pitanga.", "natureza", datetime.now().strftime("%d/%m/%Y"), 0, "SOS Mata Atlântica"),
+        ("🛍️ Sacolas Retornáveis", "Uma sacola plástica leva 400 anos para se decompor. Use sempre sacolas retornáveis nas compras.", "plástico", datetime.now().strftime("%d/%m/%Y"), 0, "WWF"),
+        ("🥗 Alimentação Orgânica", "Alimentos orgânicos são mais saudáveis e não contaminam o solo com agrotóxicos.", "alimentação", datetime.now().strftime("%d/%m/%Y"), 0, "Feira Orgânica")
+    ]
+    for d in dicas:
+        c.execute(
+            "INSERT INTO dicas (titulo, conteudo, categoria, data_publicacao, likes, autor) VALUES (?, ?, ?, ?, ?, ?)",
+            d
+        )
     
     # ===== PONTOS DE COLETA EM PIRACICABA =====
-    c.execute("SELECT COUNT(*) FROM pontos_coleta")
-    if c.fetchone()[0] == 0:
-        pontos = [
-            ("Ecoponto Centro", "Av. Rui Barbosa, 800 - Centro", "geral", "Seg-Sex 8h-17h, Sáb 8h-12h", "(19) 3403-1100", 4.5, "Recebe todos os tipos de recicláveis, eletrônicos e óleo de cozinha"),
-            ("Shopping Piracicaba", "Av. Limeira, 700 - Areão", "pilhas", "Seg-Sáb 10h-22h, Dom 14h-20h", "(19) 3432-4545", 4.8, "Ponto de coleta de pilhas e baterias no piso G1"),
-            ("Coopervidros", "R. Treze de Maio, 300 - Centro", "vidros", "Seg-Sex 8h-17h", "(19) 3421-1234", 4.2, "Cooperativa especializada em reciclagem de vidros"),
-            ("CDI Eletrônicos", "R. do Porto, 234 - Centro", "eletronicos", "Seg-Sex 9h-18h, Sáb 9h-12h", "(19) 3433-5678", 4.7, "Centro de Descarte de Eletrônicos - computadores, celulares e pilhas"),
-            ("Ecoponto Paulicéia", "R. Javari, 150 - Paulicéia", "geral", "Ter-Sáb 8h-16h", "(19) 3403-2200", 4.3, "Ecoponto completo com coleta de óleo e recicláveis"),
-            ("Unimed Sede", "R. Voluntários, 450 - Centro", "pilhas", "Seg-Sex 7h-19h", "(19) 3432-9000", 4.6, "Coleta de pilhas e baterias na recepção"),
-            ("Esalq/USP", "Av. Pádua Dias, 11 - Agronomia", "eletronicos", "Seg-Sex 8h-17h", "(19) 3447-8500", 4.9, "Campus da ESALQ com pontos de coleta de eletrônicos"),
-            ("Horto Municipal", "Av. Maurílio Biagi, 1500 - Santa Cecília", "organicos", "Seg-Sex 8h-16h", "(19) 3434-5678", 4.3, "Recebimento de podas e resíduos orgânicos")
-        ]
-        for p in pontos:
-            c.execute(
-                "INSERT INTO pontos_coleta (nome, endereco, categoria, horario, telefone, avaliacao, descricao) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                p
-            )
+    pontos = [
+        ("Ecoponto Centro", "Av. Rui Barbosa, 800 - Centro", "geral", "Seg-Sex 8h-17h, Sáb 8h-12h", "(19) 3403-1100", 4.5, "Recebe todos os tipos de recicláveis, eletrônicos e óleo de cozinha"),
+        ("Shopping Piracicaba", "Av. Limeira, 700 - Areão", "pilhas", "Seg-Sáb 10h-22h, Dom 14h-20h", "(19) 3432-4545", 4.8, "Ponto de coleta de pilhas e baterias no piso G1"),
+        ("Coopervidros", "R. Treze de Maio, 300 - Centro", "vidros", "Seg-Sex 8h-17h", "(19) 3421-1234", 4.2, "Cooperativa especializada em reciclagem de vidros"),
+        ("CDI Eletrônicos", "R. do Porto, 234 - Centro", "eletronicos", "Seg-Sex 9h-18h, Sáb 9h-12h", "(19) 3433-5678", 4.7, "Centro de Descarte de Eletrônicos - computadores, celulares e pilhas"),
+        ("Ecoponto Paulicéia", "R. Javari, 150 - Paulicéia", "geral", "Ter-Sáb 8h-16h", "(19) 3403-2200", 4.3, "Ecoponto completo com coleta de óleo e recicláveis"),
+        ("Unimed Sede", "R. Voluntários, 450 - Centro", "pilhas", "Seg-Sex 7h-19h", "(19) 3432-9000", 4.6, "Coleta de pilhas e baterias na recepção"),
+        ("Esalq/USP", "Av. Pádua Dias, 11 - Agronomia", "eletronicos", "Seg-Sex 8h-17h", "(19) 3447-8500", 4.9, "Campus da ESALQ com pontos de coleta de eletrônicos"),
+        ("Horto Municipal", "Av. Maurílio Biagi, 1500 - Santa Cecília", "organicos", "Seg-Sex 8h-16h", "(19) 3434-5678", 4.3, "Recebimento de podas e resíduos orgânicos")
+    ]
+    for p in pontos:
+        c.execute(
+            "INSERT INTO pontos_coleta (nome, endereco, categoria, horario, telefone, avaliacao, descricao) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            p
+        )
 
 # Inicializar banco
 init_database()
@@ -431,7 +488,7 @@ def get_user_data(user_id):
     c = conn.cursor()
     
     # Dados do usuário
-    c.execute("SELECT nome, email, cidade, interesses, data_cadastro FROM usuarios WHERE id = ?", (user_id,))
+    c.execute("SELECT nome, email, cidade, data_cadastro FROM usuarios WHERE id = ?", (user_id,))
     user = c.fetchone()
     
     # Progresso
@@ -466,24 +523,24 @@ def get_user_data(user_id):
     
     return user, progresso, conquistas, comprovantes, inscricoes, dicas_vistas, visitas, convites
 
-def criar_usuario(nome, email, senha, interesses=""):
+def criar_usuario(nome, email, senha):
     """Cria um novo usuário no banco"""
-    conn = sqlite3.connect('ecopiracicaba.db')
-    c = conn.cursor()
-    
+    conn = None
     try:
+        conn = sqlite3.connect('ecopiracicaba.db')
+        c = conn.cursor()
+        
         data_atual = datetime.now().strftime("%d/%m/%Y")
         
         # Verificar se email já existe
         c.execute("SELECT id FROM usuarios WHERE email = ?", (email,))
         if c.fetchone():
-            conn.close()
-            return False, None
+            return False, None, "Este e-mail já está cadastrado!"
         
         # Inserir usuário
         c.execute(
-            "INSERT INTO usuarios (nome, email, senha, interesses, data_cadastro) VALUES (?, ?, ?, ?, ?)",
-            (nome, email, senha, interesses, data_atual)
+            "INSERT INTO usuarios (nome, email, senha, data_cadastro) VALUES (?, ?, ?, ?)",
+            (nome, email, senha, data_atual)
         )
         
         # Pegar ID do usuário
@@ -503,15 +560,15 @@ def criar_usuario(nome, email, senha, interesses=""):
         )
         
         conn.commit()
-        return True, user_id
+        return True, user_id, "Conta criada com sucesso!"
     except sqlite3.IntegrityError as e:
-        print(f"Erro de integridade: {e}")
-        return False, None
+        return False, None, "Erro ao criar conta. Tente novamente."
     except Exception as e:
         print(f"Erro inesperado: {e}")
-        return False, None
+        return False, None, "Erro ao criar conta. Tente novamente."
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 def fazer_login(email, senha):
     """Faz login do usuário"""
@@ -691,7 +748,7 @@ def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_
         st.error("Erro ao carregar perfil")
         return
     
-    nome, email, cidade, interesses, data_cadastro = user
+    nome, email, cidade, data_cadastro = user
     
     # Dados do progresso - com verificação de tamanho
     pontos = progresso[1] if len(progresso) > 1 else 0
@@ -716,9 +773,6 @@ def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_
     with col2:
         st.markdown(f"**Cidade:** {cidade or 'Piracicaba'}")
         st.markdown(f"**Membro desde:** {data_cadastro}")
-    
-    if interesses:
-        st.markdown(f"**Interesses:** {interesses.replace(',', ', ')}")
     
     st.markdown("---")
     
@@ -1181,8 +1235,6 @@ with st.sidebar:
             email = st.text_input("E-mail")
             senha = st.text_input("Senha", type="password")
             confirmar_senha = st.text_input("Confirmar senha", type="password")
-            interesses = st.multiselect("Interesses", 
-                ["Sustentabilidade", "Reciclagem", "Eventos", "Voluntariado", "Compostagem", "Mobilidade"])
             
             if st.form_submit_button("Criar conta", use_container_width=True):
                 if not nome:
@@ -1194,13 +1246,11 @@ with st.sidebar:
                 elif senha != confirmar_senha:
                     st.error("As senhas não coincidem!")
                 else:
-                    sucesso, user_id = criar_usuario(
-                        nome, email, senha, ",".join(interesses) if interesses else ""
-                    )
+                    sucesso, user_id, mensagem = criar_usuario(nome, email, senha)
                     if sucesso:
-                        st.success("Conta criada com sucesso! Faça login.")
+                        st.success(mensagem)
                     else:
-                        st.error("Este e-mail já está cadastrado!")
+                        st.error(mensagem)
     else:
         # Sidebar do usuário logado
         user, progresso, conquistas, _, _, _, _, convites = get_user_data(st.session_state.usuario_logado['id'])
