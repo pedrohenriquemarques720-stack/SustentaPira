@@ -59,6 +59,34 @@ def validar_email(email):
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(pattern, email) is not None
 
+# ========== FUNÇÕES DE GAMIFICAÇÃO (DEFINIDAS PRIMEIRO) ==========
+
+def get_nivel(pontos):
+    """Retorna o nível baseado nos pontos"""
+    if pontos < 100:
+        return "🌱 EcoIniciante"
+    elif pontos < 500:
+        return "🌿 EcoAmigo"
+    elif pontos < 1000:
+        return "🍃 EcoGuardião"
+    elif pontos < 5000:
+        return "🌳 EcoMestre"
+    else:
+        return "🏆 EcoHerói"
+
+def get_proximo_nivel(pontos):
+    """Retorna pontos necessários para próximo nível"""
+    if pontos < 100:
+        return 100 - pontos
+    elif pontos < 500:
+        return 500 - pontos
+    elif pontos < 1000:
+        return 1000 - pontos
+    elif pontos < 5000:
+        return 5000 - pontos
+    else:
+        return 0
+
 # ========== SISTEMA DE GAMIFICAÇÃO ==========
 
 # Níveis e pontuação
@@ -321,7 +349,7 @@ def init_database():
             
             # Inicializar progresso com alguns pontos aleatórios
             pontos_iniciais = random.randint(50, 300)
-            nivel = get_nivel(pontos_iniciais)
+            nivel = get_nivel(pontos_iniciais)  # AGORA A FUNÇÃO JÁ FOI DEFINIDA
             c.execute(
                 "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade, desafios_completados) VALUES (?, ?, ?, ?, ?)",
                 (user_id, pontos_iniciais, nivel, datetime.now().strftime("%d/%m/%Y %H:%M"), random.randint(0, 2))
@@ -384,33 +412,7 @@ def init_database():
 # Inicializar banco
 init_database()
 
-# ========== FUNÇÕES DE GAMIFICAÇÃO ==========
-
-def get_nivel(pontos):
-    """Retorna o nível baseado nos pontos"""
-    if pontos < 100:
-        return "🌱 EcoIniciante"
-    elif pontos < 500:
-        return "🌿 EcoAmigo"
-    elif pontos < 1000:
-        return "🍃 EcoGuardião"
-    elif pontos < 5000:
-        return "🌳 EcoMestre"
-    else:
-        return "🏆 EcoHerói"
-
-def get_proximo_nivel(pontos):
-    """Retorna pontos necessários para próximo nível"""
-    if pontos < 100:
-        return 100 - pontos
-    elif pontos < 500:
-        return 500 - pontos
-    elif pontos < 1000:
-        return 1000 - pontos
-    elif pontos < 5000:
-        return 5000 - pontos
-    else:
-        return 0
+# ========== FUNÇÕES DE GAMIFICAÇÃO (CONTINUAÇÃO) ==========
 
 def inicializar_progresso(usuario_id):
     """Inicializa o progresso de um novo usuário"""
