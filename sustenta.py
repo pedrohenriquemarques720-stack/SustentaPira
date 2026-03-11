@@ -249,7 +249,7 @@ def init_database():
     dados_iniciais(conn, c)
     
     conn.commit()
-    conn.close()
+    # conn.close() - Não fechar aqui, será fechado depois de dados_iniciais
 
 def dados_iniciais(conn, c):
     """Insere dados iniciais no banco"""
@@ -266,11 +266,13 @@ def dados_iniciais(conn, c):
         # Criar progresso para admin
         admin_id = c.lastrowid
         c.execute(
-            "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade, desafios_completados) VALUES (?, ?, ?, ?, ?)",
+            """INSERT INTO progresso 
+               (usuario_id, total_pontos, nivel, ultima_atividade, desafios_completados) 
+               VALUES (?, ?, ?, ?, ?)""",
             (admin_id, 1000, get_nivel(1000), data_atual, 5)
         )
     
-    # Usuários de exemplo (opcional)
+    # Usuários de exemplo - CORRIGIDO: agora usando parâmetros corretos
     usuarios_exemplo = [
         ("João Silva", "joao@email.com", "123", "sustentabilidade,reciclagem", 350, 2),
         ("Maria Santos", "maria@email.com", "123", "eventos,voluntariado", 520, 3),
@@ -286,9 +288,12 @@ def dados_iniciais(conn, c):
                 (nome, email, senha, data_atual, interesses)
             )
             user_id = c.lastrowid
+            nivel = get_nivel(pontos)
             c.execute(
-                "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade, desafios_completados) VALUES (?, ?, ?, ?, ?)",
-                (user_id, pontos, get_nivel(pontos), data_atual, desafios)
+                """INSERT INTO progresso 
+                   (usuario_id, total_pontos, nivel, ultima_atividade, desafios_completados) 
+                   VALUES (?, ?, ?, ?, ?)""",
+                (user_id, pontos, nivel, data_atual, desafios)
             )
     
     # Eventos 2026
@@ -336,8 +341,11 @@ def dados_iniciais(conn, c):
                 p
             )
 
-# Inicializar banco
+# Inicializar banco e fechar conexão
 init_database()
+# Fechar conexão após init_database (já que não temos a conexão aqui, vamos reconectar e fechar)
+conn_temp = sqlite3.connect('ecopiracicaba.db')
+conn_temp.close()
 
 # ========== FUNÇÕES DE PROGRESSO ==========
 
@@ -391,7 +399,11 @@ def criar_usuario(nome, email, senha, interesses=""):
         
         conn.commit()
         return True, user_id
-    except sqlite3.IntegrityError:
+    except sqlite3.IntegrityError as e:
+        print(f"Erro de integridade: {e}")
+        return False, None
+    except Exception as e:
+        print(f"Erro inesperado: {e}")
         return False, None
     finally:
         conn.close()
@@ -461,7 +473,7 @@ def salvar_comprovante(usuario_id, tipo, descricao, imagem_bytes, pontos):
     conn.close()
 
 def get_ranking():
-    """Busca ranking de usuários - CORRIGIDO para evitar erro de coluna"""
+    """Busca ranking de usuários"""
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     
@@ -470,7 +482,6 @@ def get_ranking():
     colunas = [col[1] for col in c.fetchall()]
     
     if 'desafios_completados' in colunas:
-        # Se existe, usar na consulta
         c.execute("""
             SELECT u.nome, p.total_pontos, p.nivel, p.desafios_completados
             FROM usuarios u
@@ -479,7 +490,6 @@ def get_ranking():
             LIMIT 20
         """)
     else:
-        # Se não existe, buscar sem essa coluna
         c.execute("""
             SELECT u.nome, p.total_pontos, p.nivel, 0 as desafios_completados
             FROM usuarios u
@@ -495,7 +505,7 @@ def get_ranking():
 
 # ========== COMPONENTES DE INTERFACE ==========
 
-def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_color):
+def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_color, secondary_text):
     """Mostra perfil completo com estatísticas"""
     user, progresso, conquistas, comprovantes = get_user_data(usuario_id)
     
@@ -620,7 +630,7 @@ def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_
                 </div>
                 """, unsafe_allow_html=True)
 
-def mostrar_pagina_desafios(usuario_id, text_color, card_bg, icon_color, border_color):
+def mostrar_pagina_desafios(usuario_id, text_color, card_bg, icon_color, border_color, secondary_text):
     """Página de desafios com comprovação por foto"""
     st.markdown(f"<h2 style='color: {text_color};'>🎯 Desafios Ambientais</h2>", unsafe_allow_html=True)
     
@@ -745,8 +755,8 @@ def registrar_atividade(usuario_id, tipo, valor):
     conn.commit()
     conn.close()
 
-def mostrar_ranking_completo(text_color, card_bg, icon_color, border_color):
-    """Mostra ranking completo - CORRIGIDO"""
+def mostrar_ranking_completo(text_color, card_bg, icon_color, border_color, secondary_text):
+    """Mostra ranking completo"""
     ranking = get_ranking()
     
     st.markdown(f"<h2 style='color: {text_color};'>🏆 Ranking EcoCidadãos</h2>", unsafe_allow_html=True)
@@ -774,7 +784,7 @@ def mostrar_ranking_completo(text_color, card_bg, icon_color, border_color):
         </div>
         """, unsafe_allow_html=True)
 
-def mostrar_dicas_completas(text_color, card_bg, icon_color, border_color):
+def mostrar_dicas_completas(text_color, card_bg, icon_color, border_color, secondary_text):
     """Mostra dicas ambientais"""
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
@@ -793,7 +803,7 @@ def mostrar_dicas_completas(text_color, card_bg, icon_color, border_color):
         </div>
         """, unsafe_allow_html=True)
 
-def mostrar_eventos_completos(text_color, card_bg, icon_color, border_color):
+def mostrar_eventos_completos(text_color, card_bg, icon_color, border_color, secondary_text):
     """Mostra eventos"""
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
@@ -814,7 +824,7 @@ def mostrar_eventos_completos(text_color, card_bg, icon_color, border_color):
         </div>
         """, unsafe_allow_html=True)
 
-def mostrar_pontos_completos(text_color, card_bg, icon_color, border_color):
+def mostrar_pontos_completos(text_color, card_bg, icon_color, border_color, secondary_text):
     """Mostra pontos de coleta"""
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
@@ -1003,9 +1013,9 @@ if st.session_state.usuario_logado is None:
     
     col1, col2 = st.columns(2)
     with col1:
-        mostrar_dicas_completas(text_color, card_bg, icon_color, border_color)
+        mostrar_dicas_completas(text_color, card_bg, icon_color, border_color, secondary_text)
     with col2:
-        mostrar_eventos_completos(text_color, card_bg, icon_color, border_color)
+        mostrar_eventos_completos(text_color, card_bg, icon_color, border_color, secondary_text)
 
 else:
     # Sidebar do usuário logado
@@ -1043,20 +1053,20 @@ else:
     with tab1:
         mostrar_pagina_desafios(
             st.session_state.usuario_logado['id'],
-            text_color, card_bg, icon_color, border_color
+            text_color, card_bg, icon_color, border_color, secondary_text
         )
     
     with tab2:
         mostrar_perfil_completo(
             st.session_state.usuario_logado['id'],
-            text_color, card_bg, icon_color, border_color
+            text_color, card_bg, icon_color, border_color, secondary_text
         )
     
     with tab3:
-        mostrar_ranking_completo(text_color, card_bg, icon_color, border_color)
+        mostrar_ranking_completo(text_color, card_bg, icon_color, border_color, secondary_text)
     
     with tab4:
-        mostrar_eventos_completos(text_color, card_bg, icon_color, border_color)
+        mostrar_eventos_completos(text_color, card_bg, icon_color, border_color, secondary_text)
     
     with tab5:
-        mostrar_pontos_completos(text_color, card_bg, icon_color, border_color)
+        mostrar_pontos_completos(text_color, card_bg, icon_color, border_color, secondary_text)
