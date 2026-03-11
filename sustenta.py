@@ -156,6 +156,7 @@ def init_database():
             pontos INTEGER NOT NULL,
             data TEXT NOT NULL,
             descricao TEXT,
+            icone TEXT,
             FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
         )
     ''')
@@ -174,6 +175,7 @@ def init_database():
             amigos_convidados INTEGER DEFAULT 0,
             streak_dias INTEGER DEFAULT 0,
             ultima_atividade TEXT,
+            desafios_completados INTEGER DEFAULT 0,
             FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
         )
     ''')
@@ -298,6 +300,33 @@ def init_database():
             ("Administrador", "admin@ecopiracicaba.com", "eco2026", datetime.now().strftime("%d/%m/%Y"), "sustentabilidade,reciclagem", "email")
         )
     
+    # Inserir alguns usuários de exemplo
+    usuarios_exemplo = [
+        ("João Silva", "joao@email.com", "123", "sustentabilidade,reciclagem"),
+        ("Maria Santos", "maria@email.com", "123", "eventos,voluntariado"),
+        ("Pedro Oliveira", "pedro@email.com", "123", "compostagem,natureza")
+    ]
+    
+    for nome, email, senha, interesses in usuarios_exemplo:
+        c.execute("SELECT * FROM usuarios WHERE email = ?", (email,))
+        if not c.fetchone():
+            c.execute(
+                "INSERT INTO usuarios (nome, email, senha, data_cadastro, interesses, login_provider) VALUES (?, ?, ?, ?, ?, ?)",
+                (nome, email, senha, datetime.now().strftime("%d/%m/%Y"), interesses, "email")
+            )
+            
+            # Pegar o ID do usuário recém-criado
+            c.execute("SELECT id FROM usuarios WHERE email = ?", (email,))
+            user_id = c.fetchone()[0]
+            
+            # Inicializar progresso com alguns pontos aleatórios
+            pontos_iniciais = random.randint(50, 300)
+            nivel = get_nivel(pontos_iniciais)
+            c.execute(
+                "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade, desafios_completados) VALUES (?, ?, ?, ?, ?)",
+                (user_id, pontos_iniciais, nivel, datetime.now().strftime("%d/%m/%Y %H:%M"), random.randint(0, 2))
+            )
+    
     # Eventos 2026
     c.execute("SELECT * FROM eventos")
     if not c.fetchone():
@@ -392,42 +421,51 @@ def inicializar_progresso(usuario_id):
     if not c.fetchone():
         c.execute(
             """INSERT INTO progresso 
-               (usuario_id, total_pontos, nivel, ultima_atividade) 
-               VALUES (?, ?, ?, ?)""",
-            (usuario_id, 0, "🌱 EcoIniciante", datetime.now().strftime("%d/%m/%Y %H:%M"))
+               (usuario_id, total_pontos, nivel, ultima_atividade, desafios_completados) 
+               VALUES (?, ?, ?, ?, ?)""",
+            (usuario_id, 0, "🌱 EcoIniciante", datetime.now().strftime("%d/%m/%Y %H:%M"), 0)
         )
     
     conn.commit()
     conn.close()
 
-def adicionar_pontos(usuario_id, tipo, pontos_extra, descricao=""):
+def adicionar_pontos(usuario_id, pontos_extra, descricao="", icone="✨"):
     """Adiciona pontos ao usuário"""
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     
     data_atual = datetime.now().strftime("%d/%m/%Y %H:%M")
+    
+    # Registrar conquista
     c.execute(
-        "INSERT INTO conquistas (usuario_id, tipo, pontos, data, descricao) VALUES (?, ?, ?, ?, ?)",
-        (usuario_id, tipo, pontos_extra, data_atual, descricao)
+        "INSERT INTO conquistas (usuario_id, tipo, pontos, data, descricao, icone) VALUES (?, ?, ?, ?, ?, ?)",
+        (usuario_id, "desafio", pontos_extra, data_atual, descricao, icone)
     )
     
-    c.execute("SELECT total_pontos FROM progresso WHERE usuario_id = ?", (usuario_id,))
+    # Atualizar pontos no progresso
+    c.execute("SELECT total_pontos, desafios_completados FROM progresso WHERE usuario_id = ?", (usuario_id,))
     resultado = c.fetchone()
     
     if resultado:
         pontos_atuais = resultado[0]
+        desafios_atuais = resultado[1] if len(resultado) > 1 else 0
         novos_pontos = pontos_atuais + pontos_extra
         novo_nivel = get_nivel(novos_pontos)
+        novos_desafios = desafios_atuais + 1
         
         c.execute(
-            "UPDATE progresso SET total_pontos = ?, nivel = ?, ultima_atividade = ? WHERE usuario_id = ?",
-            (novos_pontos, novo_nivel, data_atual, usuario_id)
+            "UPDATE progresso SET total_pontos = ?, nivel = ?, ultima_atividade = ?, desafios_completados = ? WHERE usuario_id = ?",
+            (novos_pontos, novo_nivel, data_atual, novos_desafios, usuario_id)
         )
     
     conn.commit()
     conn.close()
     
-    return pontos_extra
+    return True
+
+def completar_desafio(usuario_id, desafio_id, desafio_titulo, desafio_pontos, desafio_icone):
+    """Completa um desafio e adiciona pontos"""
+    return adicionar_pontos(usuario_id, desafio_pontos, f"Completou: {desafio_titulo}", desafio_icone)
 
 def registrar_atividade(usuario_id, tipo, valor=1):
     """Registra atividades do usuário"""
@@ -510,24 +548,27 @@ def mostrar_perfil(usuario_id, nome, text_color, card_bg, icon_color, border_col
     
     # Buscar desafios ativos
     c.execute("""
-        SELECT d.id, d.titulo, d.descricao, d.pontos, d.icone, da.progresso, da.data_inicio 
+        SELECT d.id, d.titulo, d.descricao, d.pontos, d.icone, da.progresso, da.data_inicio, da.concluido
         FROM desafios_ativos da
         JOIN desafios d ON da.desafio_id = d.id
-        WHERE da.usuario_id = ? AND da.concluido = 0
+        WHERE da.usuario_id = ?
     """, (usuario_id,))
     desafios = c.fetchall()
     
     conn.close()
     
     # CORREÇÃO: Verificar se progresso existe e tem o tamanho esperado
-    if progresso and len(progresso) >= 10:
+    if progresso and len(progresso) >= 11:
         pontos = progresso[1] if len(progresso) > 1 else 0
         nivel = progresso[2] if len(progresso) > 2 else "🌱 EcoIniciante"
         eventos = progresso[3] if len(progresso) > 3 else 0
         dicas = progresso[4] if len(progresso) > 4 else 0
         visitas = progresso[5] if len(progresso) > 5 else 0
         kg = progresso[6] if len(progresso) > 6 else 0
+        arvores = progresso[7] if len(progresso) > 7 else 0
+        amigos = progresso[8] if len(progresso) > 8 else 0
         streak = progresso[9] if len(progresso) > 9 else 0
+        desafios_completados = progresso[11] if len(progresso) > 11 else 0
     else:
         pontos = 0
         nivel = "🌱 EcoIniciante"
@@ -535,7 +576,10 @@ def mostrar_perfil(usuario_id, nome, text_color, card_bg, icon_color, border_col
         dicas = 0
         visitas = 0
         kg = 0
+        arvores = 0
+        amigos = 0
         streak = 0
+        desafios_completados = 0
     
     proximo = get_proximo_nivel(pontos)
     
@@ -610,29 +654,67 @@ def mostrar_perfil(usuario_id, nome, text_color, card_bg, icon_color, border_col
         </div>
         """, unsafe_allow_html=True)
     
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.markdown(f"""
+        <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
+            <h4 style='color: {text_color};'>🌳 Árvores</h4>
+            <h2 style='color: {icon_color};'>{arvores}</h2>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+        <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
+            <h4 style='color: {text_color};'>👥 Amigos</h4>
+            <h2 style='color: {icon_color};'>{amigos}</h2>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown(f"""
+        <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
+            <h4 style='color: {text_color};'>🎯 Desafios</h4>
+            <h2 style='color: {icon_color};'>{desafios_completados}</h2>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col4:
+        st.markdown(f"""
+        <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
+            <h4 style='color: {text_color};'>🏆 Nível</h4>
+            <h2 style='color: {icon_color};'>{nivel}</h2>
+        </div>
+        """, unsafe_allow_html=True)
+    
     # Desafios ativos
     if desafios:
         st.markdown(f"<h3 style='color: {text_color};'>🎯 Desafios da Semana</h3>", unsafe_allow_html=True)
         
         for desafio in desafios:
-            st.markdown(f"""
-            <div style='background: {card_bg}; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 6px solid {icon_color}; border: 1px solid {border_color};'>
-                <div style='display: flex; justify-content: space-between; align-items: center;'>
-                    <div>
-                        <span style='font-size: 24px;'>{desafio[4]}</span>
-                        <strong style='color: {text_color};'>{desafio[1]}</strong>
-                        <p style='color: {text_color}; font-size: 12px;'>{desafio[2]}</p>
-                    </div>
-                    <div style='text-align: right;'>
-                        <span style='color: {icon_color};'>+{desafio[3]} pts</span>
-                        <div style='height: 8px; width: 100px; background: {border_color}; border-radius: 4px; margin: 5px 0;'>
-                            <div style='height: 100%; width: {desafio[5]}%; background: {icon_color}; border-radius: 4px;'></div>
+            concluido = desafio[7] if len(desafio) > 7 else 0
+            if concluido == 0:  # Só mostrar desafios não concluídos
+                col1, col2 = st.columns([4, 1])
+                with col1:
+                    st.markdown(f"""
+                    <div style='background: {card_bg}; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 6px solid {icon_color}; border: 1px solid {border_color};'>
+                        <div style='display: flex; align-items: center; gap: 15px;'>
+                            <span style='font-size: 40px;'>{desafio[4]}</span>
+                            <div>
+                                <h4 style='color: {text_color}; margin: 0;'>{desafio[1]}</h4>
+                                <p style='color: {text_color}; margin: 5px 0;'>{desafio[2]}</p>
+                                <p style='color: {icon_color}; margin: 0;'>Recompensa: +{desafio[3]} pontos</p>
+                            </div>
                         </div>
-                        <small style='color: {text_color};'>{desafio[5]}%</small>
                     </div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+                    """, unsafe_allow_html=True)
+                with col2:
+                    if st.button(f"✅ Completar", key=f"completar_{desafio[0]}"):
+                        if completar_desafio(usuario_id, desafio[0], desafio[1], desafio[3], desafio[4]):
+                            st.success(f"Parabéns! Você ganhou {desafio[3]} pontos!")
+                            st.balloons()
+                            st.rerun()
     
     # Conquistas recentes
     if conquistas:
@@ -641,9 +723,10 @@ def mostrar_perfil(usuario_id, nome, text_color, card_bg, icon_color, border_col
         cols = st.columns(3)
         for i, conquista in enumerate(conquistas[:3]):
             with cols[i]:
+                icone_conquista = conquista[6] if len(conquista) > 6 else '✨'
                 st.markdown(f"""
                 <div style='background: {card_bg}; padding: 10px; border-radius: 10px; text-align: center; margin-bottom: 10px; border: 1px solid {border_color};'>
-                    <span style='font-size: 30px;'>✨</span>
+                    <span style='font-size: 30px;'>{icone_conquista}</span>
                     <h4 style='color: {text_color};'>{conquista[5]}</h4>
                     <p style='color: {text_color};'><small>{conquista[4][:10] if conquista[4] else ''}</small></p>
                     <span style='color: {icon_color};'>+{conquista[3]} pts</span>
@@ -656,7 +739,7 @@ def mostrar_ranking(text_color, card_bg, icon_color, border_color):
     c = conn.cursor()
     
     c.execute("""
-        SELECT u.nome, p.total_pontos, p.nivel 
+        SELECT u.nome, p.total_pontos, p.nivel, p.desafios_completados
         FROM usuarios u
         JOIN progresso p ON u.id = p.usuario_id
         ORDER BY p.total_pontos DESC
@@ -675,9 +758,9 @@ def mostrar_ranking(text_color, card_bg, icon_color, border_color):
         medalha = "🥇" if i == 0 else "🥈" if i == 1 else "🥉" if i == 2 else f"{i+1}º"
         st.markdown(f"""
         <div style='background: {card_bg}; padding: 10px; border-radius: 10px; margin-bottom: 5px; border: 1px solid {border_color};'>
-            <div style='display: flex; justify-content: space-between;'>
+            <div style='display: flex; justify-content: space-between; align-items: center;'>
                 <span style='color: {text_color};'><strong>{medalha} {usuario[0]}</strong> - {usuario[2]}</span>
-                <span style='color: {icon_color};'><strong>{usuario[1]} pts</strong></span>
+                <span style='color: {icon_color};'><strong>{usuario[1]} pts</strong> | 🎯 {usuario[3]}</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -796,7 +879,12 @@ def mostrar_pontos_coleta(usuario_id, text_color, card_bg, icon_color, border_co
 tema = get_theme()
 dispositivo = detectar_dispositivo()
 
-# Configurações de cores
+# Configurações de cores - Sidebar SEMPRE BRANCA com texto PRETO
+sidebar_bg = "#FFFFFF"
+sidebar_text = "#000000"
+sidebar_secondary = "#2a5e45"
+
+# Cores do conteúdo principal baseadas no tema
 if tema == "dark":
     bg_color = "#0a1f17"
     card_bg = "#1a3329"
@@ -816,13 +904,51 @@ else:
     gradient_start = "#e8f5e9"
     gradient_end = "#c8e6c9"
 
-# CSS
+# CSS com sidebar fixa em branco
 st.markdown(f"""
 <style>
     .stApp {{
         background: linear-gradient(135deg, {gradient_start} 0%, {gradient_end} 100%);
     }}
     
+    /* Sidebar FIXA - sempre branca com texto preto */
+    section[data-testid="stSidebar"] {{
+        background-color: {sidebar_bg} !important;
+    }}
+    
+    section[data-testid="stSidebar"] .stMarkdown p,
+    section[data-testid="stSidebar"] .stMarkdown h1,
+    section[data-testid="stSidebar"] .stMarkdown h2,
+    section[data-testid="stSidebar"] .stMarkdown h3,
+    section[data-testid="stSidebar"] .stMarkdown h4,
+    section[data-testid="stSidebar"] .stMarkdown h5,
+    section[data-testid="stSidebar"] .stMarkdown h6,
+    section[data-testid="stSidebar"] .stText,
+    section[data-testid="stSidebar"] .stAlert p {{
+        color: {sidebar_text} !important;
+    }}
+    
+    section[data-testid="stSidebar"] .stTextInput label {{
+        color: {sidebar_text} !important;
+    }}
+    
+    section[data-testid="stSidebar"] .stTextInput input {{
+        background-color: #f0f0f0 !important;
+        color: {sidebar_text} !important;
+        border: 1px solid #cccccc !important;
+    }}
+    
+    section[data-testid="stSidebar"] .stButton button {{
+        background-color: {icon_color} !important;
+        color: white !important;
+        border: none !important;
+    }}
+    
+    section[data-testid="stSidebar"] hr {{
+        border-color: #cccccc !important;
+    }}
+    
+    /* Conteúdo principal segue o tema */
     .stMarkdown, p, h1, h2, h3, h4, h5, h6 {{
         color: {text_color} !important;
     }}
@@ -861,6 +987,17 @@ st.markdown(f"""
         background-color: {icon_color} !important;
         color: white !important;
     }}
+    
+    /* Animações */
+    @keyframes pulse {{
+        0% {{ transform: scale(1); }}
+        50% {{ transform: scale(1.05); }}
+        100% {{ transform: scale(1); }}
+    }}
+    
+    .pulse {{
+        animation: pulse 2s infinite;
+    }}
 </style>
 
 <!-- Font Awesome para ícones -->
@@ -884,6 +1021,7 @@ if dispositivo == "mobile":
     if st.session_state.usuario_logado is None:
         # Tela de login mobile
         with st.form("login_mobile"):
+            st.markdown("### 🔐 Login")
             email = st.text_input("E-mail")
             senha = st.text_input("Senha", type="password")
             if st.form_submit_button("Entrar", use_container_width=True):
@@ -937,9 +1075,7 @@ if dispositivo == "mobile":
         elif opcao == "🏆 Ranking":
             mostrar_ranking(text_color, card_bg, icon_color, border_color)
         elif opcao == "🎯 Desafios":
-            iniciar_desafios_semanais(st.session_state.usuario_logado['id'])
-            mostrar_perfil(st.session_state.usuario_logado['id'], st.session_state.usuario_logado['nome'], 
-                          text_color, card_bg, icon_color, border_color)
+            st.rerun()
         elif opcao == "👥 Convidar":
             mostrar_convite(st.session_state.usuario_logado['id'], text_color, card_bg, icon_color, border_color)
         elif opcao == "📍 Pontos":
@@ -964,9 +1100,9 @@ else:
             toggle_theme()
     
     if st.session_state.usuario_logado is None:
-        # Sidebar de login
+        # Sidebar de login - AGORA SEMPRE BRANCA
         with st.sidebar:
-            st.markdown(f"<h2 style='color: {text_color};'>🔐 Login</h2>", unsafe_allow_html=True)
+            st.markdown(f"<h2 style='color: {sidebar_text};'>🔐 Login</h2>", unsafe_allow_html=True)
             
             with st.form("login_form"):
                 email = st.text_input("E-mail")
@@ -990,7 +1126,7 @@ else:
                             st.error("E-mail ou senha incorretos")
             
             st.markdown("---")
-            st.markdown(f"<h3 style='color: {text_color};'>🆕 Cadastro</h3>", unsafe_allow_html=True)
+            st.markdown(f"<h3 style='color: {sidebar_text};'>🆕 Cadastro</h3>", unsafe_allow_html=True)
             
             with st.form("cadastro_form"):
                 nome = st.text_input("Nome")
@@ -1031,7 +1167,7 @@ else:
             mostrar_eventos(None, text_color, card_bg, icon_color, border_color)
     
     else:
-        # Sidebar com perfil resumido
+        # Sidebar com perfil resumido - AGORA SEMPRE BRANCA
         with st.sidebar:
             conn = sqlite3.connect('ecopiracicaba.db')
             c = conn.cursor()
@@ -1043,18 +1179,21 @@ else:
             if progresso:
                 pontos = progresso[1] if len(progresso) > 1 else 0
                 nivel = progresso[2] if len(progresso) > 2 else "🌱 EcoIniciante"
+                desafios = progresso[11] if len(progresso) > 11 else 0
             else:
                 pontos = 0
                 nivel = "🌱 EcoIniciante"
+                desafios = 0
             
             st.markdown(f"""
-            <div style='text-align: center; padding: 10px; background: {card_bg}; border-radius: 10px; border: 1px solid {border_color};'>
-                <h3 style='color: {text_color};'>{st.session_state.usuario_logado['nome']}</h3>
+            <div style='text-align: center; padding: 10px; background-color: #f5f5f5; border-radius: 10px; border: 1px solid #cccccc;'>
+                <h3 style='color: {sidebar_text};'>{st.session_state.usuario_logado['nome']}</h3>
                 <h4 style='color: {icon_color};'>{nivel}</h4>
                 <h2 style='color: {icon_color};'>{pontos} pts</h2>
-                <div style='height: 8px; background: {border_color}; border-radius: 4px; margin: 10px 0;'>
+                <div style='height: 8px; background: #cccccc; border-radius: 4px; margin: 10px 0;'>
                     <div style='height: 100%; width: {min(100, (pontos/5000)*100)}%; background: {icon_color}; border-radius: 4px;'></div>
                 </div>
+                <p style='color: {sidebar_text};'>🎯 Desafios: {desafios}</p>
             </div>
             """, unsafe_allow_html=True)
             
@@ -1084,7 +1223,6 @@ else:
             mostrar_ranking(text_color, card_bg, icon_color, border_color)
         
         with tab4:
-            iniciar_desafios_semanais(st.session_state.usuario_logado['id'])
             mostrar_perfil(st.session_state.usuario_logado['id'], st.session_state.usuario_logado['nome'], 
                           text_color, card_bg, icon_color, border_color)
         
