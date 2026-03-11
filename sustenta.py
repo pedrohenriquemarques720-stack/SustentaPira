@@ -137,7 +137,6 @@ def init_database():
     c = conn.cursor()
     
     # Remove tabelas antigas para garantir estrutura nova (apenas para desenvolvimento)
-    # Em produção, comente estas linhas para não perder dados
     c.execute("DROP TABLE IF EXISTS convites")
     c.execute("DROP TABLE IF EXISTS visitas_pontos")
     c.execute("DROP TABLE IF EXISTS pontos_coleta")
@@ -165,7 +164,7 @@ def init_database():
         )
     ''')
     
-    # Tabela de progresso do usuário - SEM a coluna desafios_completados
+    # Tabela de progresso do usuário
     c.execute('''
         CREATE TABLE IF NOT EXISTS progresso (
             usuario_id INTEGER PRIMARY KEY,
@@ -325,7 +324,7 @@ def init_database():
         conn.close()
 
 def dados_iniciais(conn, c):
-    """Insere dados iniciais no banco - SEM referência a desafios_completados"""
+    """Insere dados iniciais no banco"""
     
     # ===== USUÁRIO ADMIN =====
     c.execute("SELECT * FROM usuarios WHERE email = 'admin@ecopiracicaba.com'")
@@ -336,7 +335,6 @@ def dados_iniciais(conn, c):
             ("Administrador", "admin@ecopiracicaba.com", "eco2026", data_atual, "sustentabilidade,reciclagem")
         )
         admin_id = c.lastrowid
-        # CORREÇÃO: Removido o campo desafios_completados
         c.execute(
             "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
             (admin_id, 1000, get_nivel(1000), data_atual)
@@ -344,9 +342,9 @@ def dados_iniciais(conn, c):
     
     # ===== USUÁRIOS DE EXEMPLO =====
     usuarios_exemplo = [
-        ("João Silva", "joao@email.com", "123", "sustentabilidade,reciclagem", 350),
-        ("Maria Santos", "maria@email.com", "123", "eventos,voluntariado", 520),
-        ("Pedro Oliveira", "pedro@email.com", "123", "compostagem,natureza", 180)
+        ("João Silva", "joao@email.com", "123456", "sustentabilidade,reciclagem", 350),
+        ("Maria Santos", "maria@email.com", "123456", "eventos,voluntariado", 520),
+        ("Pedro Oliveira", "pedro@email.com", "123456", "compostagem,natureza", 180)
     ]
     
     for nome, email, senha, interesses, pontos in usuarios_exemplo:
@@ -359,7 +357,6 @@ def dados_iniciais(conn, c):
             )
             user_id = c.lastrowid
             nivel = get_nivel(pontos)
-            # CORREÇÃO: Removido o campo desafios_completados
             c.execute(
                 "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
                 (user_id, pontos, nivel, data_atual)
@@ -477,6 +474,12 @@ def criar_usuario(nome, email, senha, interesses=""):
     try:
         data_atual = datetime.now().strftime("%d/%m/%Y")
         
+        # Verificar se email já existe
+        c.execute("SELECT id FROM usuarios WHERE email = ?", (email,))
+        if c.fetchone():
+            conn.close()
+            return False, None
+        
         # Inserir usuário
         c.execute(
             "INSERT INTO usuarios (nome, email, senha, interesses, data_cadastro) VALUES (?, ?, ?, ?, ?)",
@@ -512,37 +515,46 @@ def criar_usuario(nome, email, senha, interesses=""):
 
 def fazer_login(email, senha):
     """Faz login do usuário"""
-    conn = sqlite3.connect('ecopiracicaba.db')
-    c = conn.cursor()
-    
-    c.execute("SELECT id, nome FROM usuarios WHERE email = ? AND senha = ?", (email, senha))
-    user = c.fetchone()
-    
-    if user:
-        # Atualizar último acesso
-        data_atual = datetime.now().strftime("%d/%m/%Y %H:%M")
-        c.execute("UPDATE usuarios SET ultimo_acesso = ? WHERE id = ?", (data_atual, user[0]))
+    conn = None
+    try:
+        conn = sqlite3.connect('ecopiracicaba.db')
+        c = conn.cursor()
         
-        # Atualizar streak
-        c.execute("SELECT ultima_atividade FROM progresso WHERE usuario_id = ?", (user[0],))
-        resultado = c.fetchone()
+        # Buscar usuário com email e senha
+        c.execute("SELECT id, nome FROM usuarios WHERE email = ? AND senha = ?", (email, senha))
+        user = c.fetchone()
         
-        if resultado and resultado[0]:
-            try:
-                ultima = datetime.strptime(resultado[0].split()[0], "%d/%m/%Y")
-                hoje = datetime.now()
-                
-                if (hoje - ultima).days == 1:
-                    c.execute("UPDATE progresso SET streak_dias = streak_dias + 1 WHERE usuario_id = ?", (user[0],))
-                elif (hoje - ultima).days > 1:
-                    c.execute("UPDATE progresso SET streak_dias = 1 WHERE usuario_id = ?", (user[0],))
-            except:
-                pass
-        
-        conn.commit()
-    
-    conn.close()
-    return user
+        if user:
+            # Atualizar último acesso
+            data_atual = datetime.now().strftime("%d/%m/%Y %H:%M")
+            c.execute("UPDATE usuarios SET ultimo_acesso = ? WHERE id = ?", (data_atual, user[0]))
+            
+            # Atualizar streak
+            c.execute("SELECT ultima_atividade FROM progresso WHERE usuario_id = ?", (user[0],))
+            resultado = c.fetchone()
+            
+            if resultado and resultado[0]:
+                try:
+                    ultima = datetime.strptime(resultado[0].split()[0], "%d/%m/%Y")
+                    hoje = datetime.now()
+                    
+                    if (hoje - ultima).days == 1:
+                        c.execute("UPDATE progresso SET streak_dias = streak_dias + 1 WHERE usuario_id = ?", (user[0],))
+                    elif (hoje - ultima).days > 1:
+                        c.execute("UPDATE progresso SET streak_dias = 1 WHERE usuario_id = ?", (user[0],))
+                except:
+                    pass
+            
+            conn.commit()
+            return user
+        else:
+            return None
+    except Exception as e:
+        print(f"Erro no login: {e}")
+        return None
+    finally:
+        if conn:
+            conn.close()
 
 def adicionar_pontos(usuario_id, pontos, descricao, icone="✨", tipo="geral"):
     """Adiciona pontos ao usuário"""
@@ -973,30 +985,6 @@ def mostrar_ranking_completo(text_color, card_bg, icon_color, border_color, seco
             </div>
         </div>
         """, unsafe_allow_html=True)
-
-def mostrar_dicas_completas(text_color, card_bg, icon_color, border_color, secondary_text):
-    """Mostra dicas ambientais"""
-    conn = sqlite3.connect('ecopiracicaba.db')
-    c = conn.cursor()
-    c.execute("SELECT * FROM dicas ORDER BY likes DESC")
-    dicas = c.fetchall()
-    conn.close()
-    
-    st.markdown(f"<h2 style='color: {text_color};'>💡 Dicas Ambientais</h2>", unsafe_allow_html=True)
-    
-    cols = st.columns(2)
-    for i, dica in enumerate(dicas):
-        with cols[i % 2]:
-            st.markdown(f"""
-            <div style='background: {card_bg}; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-right: 6px solid {icon_color}; border: 1px solid {border_color};'>
-                <h4 style='color: {text_color}; margin-top: 0;'>{dica[1]}</h4>
-                <p style='color: {text_color}; font-size: 14px;'>{dica[2]}</p>
-                <div style='display: flex; justify-content: space-between; margin-top: 10px;'>
-                    <span style='color: {secondary_text}; font-size: 12px;'>Categoria: {dica[3]}</span>
-                    <span style='color: {icon_color};'>👍 {dica[5]}</span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
 
 def mostrar_pontos_completos(text_color, card_bg, icon_color, border_color, secondary_text):
     """Mostra pontos de coleta"""
