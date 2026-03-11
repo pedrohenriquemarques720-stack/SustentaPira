@@ -15,7 +15,7 @@ import base64
 
 # Configuração da página
 st.set_page_config(
-    page_title="EcoPiracicaba 2026",
+    page_title="SustentaPira",
     page_icon="🌿",
     layout="wide",
     initial_sidebar_state="auto"
