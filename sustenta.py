@@ -919,7 +919,7 @@ if 'usuario_logado' not in st.session_state:
 col1, col2, col3 = st.columns([1, 3, 1])
 with col2:
     st.markdown(f"<h1 style='text-align: center;'>🌿 SustentaPira</h1>", unsafe_allow_html=True)
-    st.markdown(f"<p style='text-align: center; color: {secondary_text};'>"Não herdamos a Terra de nossos antepassados, nós a pegamos emprestada de nossos filhos."</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; color: {secondary_text};'>Não herdamos a Terra de nossos antepassados, nós a pegamos emprestada de nossos filhos.</p>", unsafe_allow_html=True)
 with col3:
     if st.button("🌓 " + ("Modo Claro" if tema == "dark" else "Modo Escuro")):
         toggle_theme()
