@@ -172,16 +172,6 @@ def init_database():
         )
     ''')
     
-    # Verificar se a coluna desafios_completados existe
-    c.execute("PRAGMA table_info(progresso)")
-    colunas = [col[1] for col in c.fetchall()]
-    
-    if 'desafios_completados' not in colunas:
-        try:
-            c.execute("ALTER TABLE progresso ADD COLUMN desafios_completados INTEGER DEFAULT 0")
-        except:
-            pass
-    
     # Tabela de conquistas
     c.execute('''
         CREATE TABLE IF NOT EXISTS conquistas (
@@ -311,14 +301,24 @@ def init_database():
         )
     ''')
     
-    # Inserir dados iniciais
+    conn.commit()
+    
+    # Agora que as tabelas estão criadas, vamos inserir os dados iniciais
+    # com tratamento adequado para colunas que podem ou não existir
     dados_iniciais(conn, c)
     
     conn.commit()
     conn.close()
 
 def dados_iniciais(conn, c):
-    """Insere dados iniciais no banco"""
+    """Insere dados iniciais no banco - VERSÃO CORRIGIDA"""
+    
+    # Primeiro, verificar a estrutura da tabela progresso
+    c.execute("PRAGMA table_info(progresso)")
+    colunas_progresso = [col[1] for col in c.fetchall()]
+    
+    # Criar um dicionário para mapear os índices das colunas
+    colunas_map = {col: idx for idx, (cid, name, type_, notnull, dflt_value, pk) in enumerate(c.execute("PRAGMA table_info(progresso)").fetchall())}
     
     # Usuário admin
     c.execute("SELECT * FROM usuarios WHERE email = 'admin@ecopiracicaba.com'")
@@ -329,23 +329,24 @@ def dados_iniciais(conn, c):
             ("Administrador", "admin@ecopiracicaba.com", "eco2026", data_atual, "sustentabilidade,reciclagem")
         )
         
-        # Criar progresso para admin - CORRIGIDO: verificar colunas
+        # Criar progresso para admin - usando método seguro
         admin_id = c.lastrowid
         
-        # Verificar quais colunas existem na tabela progresso
-        c.execute("PRAGMA table_info(progresso)")
-        colunas_progresso = [col[1] for col in c.fetchall()]
+        # Construir a query dinamicamente baseada nas colunas existentes
+        colunas_disponiveis = ['usuario_id', 'total_pontos', 'nivel', 'ultima_atividade']
+        valores = [admin_id, 1000, get_nivel(1000), data_atual]
         
         if 'desafios_completados' in colunas_progresso:
-            c.execute(
-                "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade, desafios_completados) VALUES (?, ?, ?, ?, ?)",
-                (admin_id, 1000, get_nivel(1000), data_atual, 5)
-            )
-        else:
-            c.execute(
-                "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
-                (admin_id, 1000, get_nivel(1000), data_atual)
-            )
+            colunas_disponiveis.append('desafios_completados')
+            valores.append(5)
+        
+        placeholders = ','.join(['?' for _ in valores])
+        colunas_str = ','.join(colunas_disponiveis)
+        
+        c.execute(
+            f"INSERT INTO progresso ({colunas_str}) VALUES ({placeholders})",
+            valores
+        )
     
     # Usuários de exemplo
     usuarios_exemplo = [
@@ -353,11 +354,6 @@ def dados_iniciais(conn, c):
         ("Maria Santos", "maria@email.com", "123", "eventos,voluntariado", 520, 3),
         ("Pedro Oliveira", "pedro@email.com", "123", "compostagem,natureza", 180, 1)
     ]
-    
-    # Verificar colunas da tabela progresso
-    c.execute("PRAGMA table_info(progresso)")
-    colunas_progresso = [col[1] for col in c.fetchall()]
-    tem_desafios = 'desafios_completados' in colunas_progresso
     
     for nome, email, senha, interesses, pontos, desafios in usuarios_exemplo:
         c.execute("SELECT * FROM usuarios WHERE email = ?", (email,))
@@ -370,16 +366,21 @@ def dados_iniciais(conn, c):
             user_id = c.lastrowid
             nivel = get_nivel(pontos)
             
-            if tem_desafios:
-                c.execute(
-                    "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade, desafios_completados) VALUES (?, ?, ?, ?, ?)",
-                    (user_id, pontos, nivel, data_atual, desafios)
-                )
-            else:
-                c.execute(
-                    "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
-                    (user_id, pontos, nivel, data_atual)
-                )
+            # Construir a query dinamicamente baseada nas colunas existentes
+            colunas_disponiveis = ['usuario_id', 'total_pontos', 'nivel', 'ultima_atividade']
+            valores = [user_id, pontos, nivel, data_atual]
+            
+            if 'desafios_completados' in colunas_progresso:
+                colunas_disponiveis.append('desafios_completados')
+                valores.append(desafios)
+            
+            placeholders = ','.join(['?' for _ in valores])
+            colunas_str = ','.join(colunas_disponiveis)
+            
+            c.execute(
+                f"INSERT INTO progresso ({colunas_str}) VALUES ({placeholders})",
+                valores
+            )
     
     # Eventos 2026 - Piracicaba
     c.execute("SELECT COUNT(*) FROM eventos")
@@ -453,7 +454,7 @@ def get_user_data(user_id):
     c.execute("SELECT nome, email, cidade, interesses, data_cadastro FROM usuarios WHERE id = ?", (user_id,))
     user = c.fetchone()
     
-    # Progresso
+    # Progresso - com tratamento para colunas que podem não existir
     c.execute("SELECT * FROM progresso WHERE usuario_id = ?", (user_id,))
     progresso = c.fetchone()
     
@@ -506,16 +507,21 @@ def criar_usuario(nome, email, senha, interesses=""):
         c.execute("PRAGMA table_info(progresso)")
         colunas_progresso = [col[1] for col in c.fetchall()]
         
+        # Construir query dinamicamente
+        colunas_disponiveis = ['usuario_id', 'total_pontos', 'nivel', 'ultima_atividade']
+        valores = [user_id, 0, "🌱 EcoIniciante", data_atual]
+        
         if 'desafios_completados' in colunas_progresso:
-            c.execute(
-                "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade, desafios_completados) VALUES (?, ?, ?, ?, ?)",
-                (user_id, 0, "🌱 EcoIniciante", data_atual, 0)
-            )
-        else:
-            c.execute(
-                "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
-                (user_id, 0, "🌱 EcoIniciante", data_atual)
-            )
+            colunas_disponiveis.append('desafios_completados')
+            valores.append(0)
+        
+        placeholders = ','.join(['?' for _ in valores])
+        colunas_str = ','.join(colunas_disponiveis)
+        
+        c.execute(
+            f"INSERT INTO progresso ({colunas_str}) VALUES ({placeholders})",
+            valores
+        )
         
         # Gerar código de convite para o usuário
         codigo = hashlib.md5(f"{user_id}{time.time()}{random.random()}".encode()).hexdigest()[:8].upper()
@@ -585,10 +591,8 @@ def adicionar_pontos(usuario_id, pontos, descricao, icone="✨", tipo="geral"):
     # Verificar colunas da tabela progresso
     c.execute("PRAGMA table_info(progresso)")
     colunas_progresso = [col[1] for col in c.fetchall()]
-    tem_desafios = 'desafios_completados' in colunas_progresso
     
-    # Atualizar progresso
-    if tem_desafios:
+    if 'desafios_completados' in colunas_progresso:
         c.execute("SELECT total_pontos, desafios_completados FROM progresso WHERE usuario_id = ?", (usuario_id,))
         resultado = c.fetchone()
         
