@@ -9,9 +9,6 @@ import re
 import hashlib
 import time
 import os
-from PIL import Image
-import io
-import base64
 
 # Configuração da página
 st.set_page_config(
@@ -27,7 +24,6 @@ def get_theme():
     try:
         if 'theme' in st.session_state:
             return st.session_state.theme
-        
         theme = st.get_option("theme.base")
         if theme == "dark":
             st.session_state.theme = "dark"
@@ -135,11 +131,13 @@ DESAFIOS_LISTA = [
 # ========== INICIALIZAÇÃO DO BANCO DE DADOS ==========
 
 def init_database():
-    conn = sqlite3.connect('ecopiracicaba.db')
+    # Define o caminho absoluto para o banco de dados
+    db_path = os.path.join(os.path.dirname(__file__), 'ecopiracicaba.db')
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     
-    # Para garantir estrutura nova, dropamos as tabelas existentes (apenas em desenvolvimento)
-    # Em produção, comente estas linhas
+    # Remove tabelas antigas para garantir estrutura nova (apenas para desenvolvimento)
+    # Em produção, comente estas linhas para não perder dados
     c.execute("DROP TABLE IF EXISTS convites")
     c.execute("DROP TABLE IF EXISTS visitas_pontos")
     c.execute("DROP TABLE IF EXISTS pontos_coleta")
@@ -316,14 +314,18 @@ def init_database():
     
     conn.commit()
     
-    # Agora que as tabelas estão criadas, vamos inserir os dados iniciais
-    dados_iniciais(conn, c)
-    
-    conn.commit()
-    conn.close()
+    # Inserir dados iniciais
+    try:
+        dados_iniciais(conn, c)
+        conn.commit()
+    except sqlite3.Error as e:
+        st.error(f"Erro ao inserir dados iniciais: {e}")
+        raise e
+    finally:
+        conn.close()
 
 def dados_iniciais(conn, c):
-    """Insere dados iniciais no banco - VERSÃO FINAL SEM DESAFIOS_COMPLETADOS"""
+    """Insere dados iniciais no banco - SEM referência a desafios_completados"""
     
     # ===== USUÁRIO ADMIN =====
     c.execute("SELECT * FROM usuarios WHERE email = 'admin@ecopiracicaba.com'")
@@ -677,7 +679,7 @@ def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_
     
     nome, email, cidade, interesses, data_cadastro = user
     
-    # Dados do progresso
+    # Dados do progresso - com verificação de tamanho
     pontos = progresso[1] if len(progresso) > 1 else 0
     nivel = progresso[2] if len(progresso) > 2 else "🌱 EcoIniciante"
     eventos = progresso[3] if len(progresso) > 3 else 0
@@ -795,6 +797,17 @@ def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_
                     <h4 style='color: {text_color}; font-size: 14px;'>{conquista[5][:30]}</h4>
                     <p style='color: {text_color};'><small>{conquista[4][:10] if conquista[4] else ''}</small></p>
                     <span style='color: {icon_color};'>+{conquista[3]} pts</span>
+                </div>
+                """, unsafe_allow_html=True)
+    
+    # Histórico de comprovantes
+    if comprovantes:
+        with st.expander("📸 Histórico de Comprovantes"):
+            for comp in comprovantes[:5]:
+                st.markdown(f"""
+                <div style='background: {card_bg}; padding: 10px; border-radius: 10px; margin-bottom: 5px; border: 1px solid {border_color};'>
+                    <strong>{comp[2]}</strong> - {comp[3]}<br>
+                    <small>{comp[6]} | {comp[5]} pontos | {'✅ Aprovado' if comp[7] else '⏳ Pendente'}</small>
                 </div>
                 """, unsafe_allow_html=True)
 
