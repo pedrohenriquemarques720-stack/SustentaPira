@@ -69,7 +69,7 @@ def get_proximo_nivel(pontos):
     else:
         return 0
 
-# ========== SISTEMA DE GAMIFICAÇÃO ==========
+# ========== SISTEMA DE GAMIFICAÇÃO COM ANTI-FRAUDE ==========
 
 DESAFIOS_LISTA = [
     {
@@ -79,9 +79,13 @@ DESAFIOS_LISTA = [
         "pontos": 200,
         "icone": "♻️",
         "tipo": "reciclagem",
-        "dica_validacao": "Tire foto dos materiais na balança",
+        "dica_validacao": "Tire foto dos materiais na balança com peso visível",
         "limite_diario": 1,
-        "dias_entre_validacoes": 7
+        "dias_entre_validacoes": 7,
+        "requer_gps": False,
+        "requer_data_visivel": True,
+        "min_pontos": 150,
+        "max_pontos": 250
     },
     {
         "id": 2,
@@ -92,7 +96,11 @@ DESAFIOS_LISTA = [
         "tipo": "evento",
         "dica_validacao": "Tire foto no local do evento com a data visível",
         "limite_diario": 1,
-        "dias_entre_validacoes": 1
+        "dias_entre_validacoes": 1,
+        "requer_gps": True,
+        "requer_data_visivel": True,
+        "min_pontos": 150,
+        "max_pontos": 150
     },
     {
         "id": 3,
@@ -103,7 +111,11 @@ DESAFIOS_LISTA = [
         "tipo": "plantio",
         "dica_validacao": "Tire foto da muda plantada com coordenadas GPS",
         "limite_diario": 1,
-        "dias_entre_validacoes": 30
+        "dias_entre_validacoes": 30,
+        "requer_gps": True,
+        "requer_data_visivel": True,
+        "min_pontos": 250,
+        "max_pontos": 350
     },
     {
         "id": 4,
@@ -114,7 +126,11 @@ DESAFIOS_LISTA = [
         "tipo": "pilhas",
         "dica_validacao": "Tire foto das pilhas no ponto de coleta",
         "limite_diario": 1,
-        "dias_entre_validacoes": 1
+        "dias_entre_validacoes": 1,
+        "requer_gps": True,
+        "requer_data_visivel": True,
+        "min_pontos": 80,
+        "max_pontos": 120
     },
     {
         "id": 5,
@@ -123,237 +139,286 @@ DESAFIOS_LISTA = [
         "pontos": 180,
         "icone": "🚲",
         "tipo": "mobilidade",
-        "dica_validacao": "Tire foto do aplicativo de tracking de bike",
+        "dica_validacao": "Tire foto do aplicativo de tracking de bike com distância",
         "limite_diario": 1,
-        "dias_entre_validacoes": 1
+        "dias_entre_validacoes": 1,
+        "requer_gps": False,
+        "requer_data_visivel": True,
+        "min_pontos": 150,
+        "max_pontos": 200
     }
 ]
 
-# ========== SISTEMA DE VALIDAÇÃO DE FOTOS ==========
+# ========== SISTEMA AVANÇADO DE VALIDAÇÃO DE FOTOS ==========
 
-def validar_foto(imagem_bytes, tipo_desafio, usuario_id):
-    """
-    Sistema de validação de fotos em múltiplas camadas
-    Retorna: (aprovado, mensagem, pontos_ajustados)
-    """
-    try:
-        # Carregar imagem
-        imagem = Image.open(io.BytesIO(imagem_bytes))
-        
-        # ===== CAMADA 1: VALIDAÇÕES BÁSICAS DA IMAGEM =====
-        
-        # Verificar tamanho mínimo
-        if len(imagem_bytes) < 1024:  # Menos de 1KB
-            return False, "Imagem muito pequena. Tire uma foto de melhor qualidade.", 0
-        
-        # Verificar dimensões mínimas
-        if imagem.width < 300 or imagem.height < 300:
-            return False, "Imagem com resolução muito baixa. Tire uma foto mais nítida.", 0
-        
-        # Verificar se é colorida (não é totalmente preta/branca)
-        img_array = np.array(imagem.convert('L'))
-        if np.std(img_array) < 5:  # Pouca variação de cor
-            return False, "Imagem parece ser muito escura ou uniforme. Tire uma foto mais clara.", 0
-        
-        # ===== CAMADA 2: PREVENÇÃO DE REUSO DE FOTOS =====
-        
-        conn = sqlite3.connect('ecopiracicaba.db')
-        c = conn.cursor()
-        
-        # Gerar hash da imagem para detectar reuso
-        image_hash = hashlib.md5(imagem_bytes).hexdigest()
-        
-        # Verificar se esta imagem já foi usada por alguém
-        c.execute("SELECT id, usuario_id, data FROM comprovantes WHERE imagem_hash = ?", (image_hash,))
-        imagem_existente = c.fetchone()
-        
-        if imagem_existente:
-            if imagem_existente[1] == usuario_id:
+class ValidadorFotos:
+    def __init__(self):
+        self.historico_rejeicoes = {}
+    
+    def validar_metadados_exif(self, imagem):
+        """Extrai e valida metadados EXIF da imagem"""
+        try:
+            from PIL.ExifTags import TAGS
+            metadados = {}
+            
+            if hasattr(imagem, '_getexif') and imagem._getexif():
+                exif = imagem._getexif()
+                for tag_id, value in exif.items():
+                    tag = TAGS.get(tag_id, tag_id)
+                    metadados[tag] = str(value)[:100]  # Limitar tamanho
+                
+                # Verificar se tem dados de data
+                if 'DateTime' in metadados:
+                    return True, metadados
+                else:
+                    return False, "Foto sem data nos metadados"
+            return False, "Foto sem metadados EXIF"
+        except Exception as e:
+            return False, f"Erro ao ler metadados: {str(e)}"
+    
+    def validar_qualidade_imagem(self, imagem, imagem_bytes):
+        """Valida qualidade básica da imagem"""
+        try:
+            # Verificar tamanho
+            if len(imagem_bytes) < 50 * 1024:  # Menos de 50KB
+                return False, "Imagem muito pequena (menos de 50KB). Tire uma foto de melhor qualidade."
+            
+            if len(imagem_bytes) > 10 * 1024 * 1024:  # Mais de 10MB
+                return False, "Imagem muito grande (mais de 10MB). Reduza o tamanho."
+            
+            # Verificar dimensões
+            if imagem.width < 400 or imagem.height < 400:
+                return False, f"Resolução muito baixa ({imagem.width}x{imagem.height}). Mínimo 400x400 pixels."
+            
+            # Verificar se é colorida (não é totalmente preta/branca)
+            img_array = np.array(imagem.convert('L'))
+            if np.std(img_array) < 10:
+                return False, "Imagem muito escura ou uniforme. Tire uma foto mais clara."
+            
+            return True, "Qualidade OK"
+        except Exception as e:
+            return False, f"Erro na validação de qualidade: {str(e)}"
+    
+    def verificar_hash_unico(self, imagem_bytes, usuario_id):
+        """Verifica se a imagem já foi usada antes"""
+        try:
+            conn = sqlite3.connect('ecopiracicaba.db')
+            c = conn.cursor()
+            
+            image_hash = hashlib.sha256(imagem_bytes).hexdigest()
+            
+            # Verificar se já existe
+            c.execute("SELECT usuario_id, data FROM comprovantes WHERE imagem_hash = ?", (image_hash,))
+            resultado = c.fetchone()
+            
+            conn.close()
+            
+            if resultado:
+                if resultado[0] == usuario_id:
+                    return False, "Você já enviou esta foto antes. Tire uma nova foto."
+                else:
+                    return False, "Esta foto já foi usada por outro usuário. Tire sua própria foto."
+            
+            return True, image_hash
+        except Exception as e:
+            return False, f"Erro ao verificar hash: {str(e)}"
+    
+    def verificar_limites_temporais(self, usuario_id, tipo_desafio):
+        """Verifica limites de tempo para o desafio"""
+        try:
+            conn = sqlite3.connect('ecopiracicaba.db')
+            c = conn.cursor()
+            
+            # Buscar desafio
+            desafio = next((d for d in DESAFIOS_LISTA if d["tipo"] == tipo_desafio), None)
+            if not desafio:
                 conn.close()
-                return False, "Esta foto já foi enviada por você anteriormente. Tire uma nova foto.", 0
-            else:
+                return False, "Tipo de desafio inválido"
+            
+            # Verificar limite diário
+            hoje = datetime.now().strftime("%d/%m/%Y")
+            c.execute("""
+                SELECT COUNT(*) FROM comprovantes 
+                WHERE usuario_id = ? AND tipo = ? AND data LIKE ?
+            """, (usuario_id, tipo_desafio, f"{hoje}%"))
+            
+            count_hoje = c.fetchone()[0]
+            if count_hoje >= desafio["limite_diario"]:
                 conn.close()
-                return False, "Esta foto já foi usada por outro usuário. Tire sua própria foto.", 0
-        
-        # ===== CAMADA 3: LIMITE DE TEMPO ENTRE VALIDAÇÕES =====
-        
-        desafio = next((d for d in DESAFIOS_LISTA if d["tipo"] == tipo_desafio), None)
-        if desafio:
-            # Verificar última submissão do mesmo tipo
+                return False, f"Limite diário atingido para este desafio. Tente novamente amanhã."
+            
+            # Verificar intervalo entre validações
             c.execute("""
                 SELECT data FROM comprovantes 
                 WHERE usuario_id = ? AND tipo = ? 
                 ORDER BY data DESC LIMIT 1
             """, (usuario_id, tipo_desafio))
-            ultima_submissao = c.fetchone()
             
-            if ultima_submissao:
+            ultimo = c.fetchone()
+            if ultimo:
                 try:
-                    data_ultima = datetime.strptime(ultima_submissao[0].split()[0], "%d/%m/%Y")
-                    hoje = datetime.now()
-                    dias_diferenca = (hoje - data_ultima).days
+                    data_ultimo = datetime.strptime(ultimo[0].split()[0], "%d/%m/%Y")
+                    dias_diff = (datetime.now() - data_ultimo).days
                     
-                    if dias_diferenca < desafio["dias_entre_validacoes"]:
-                        dias_restantes = desafio["dias_entre_validacoes"] - dias_diferenca
+                    if dias_diff < desafio["dias_entre_validacoes"]:
+                        dias_restantes = desafio["dias_entre_validacoes"] - dias_diff
                         conn.close()
-                        return False, f"Você precisa aguardar {dias_restantes} dias antes de enviar outro comprovante deste tipo.", 0
+                        return False, f"Aguarde {dias_restantes} dias antes de enviar outro comprovante deste tipo."
                 except:
                     pass
-        
-        # ===== CAMADA 4: LIMITE DIÁRIO =====
-        
-        hoje_str = datetime.now().strftime("%d/%m/%Y")
-        c.execute("""
-            SELECT COUNT(*) FROM comprovantes 
-            WHERE usuario_id = ? AND data LIKE ? AND tipo = ?
-        """, (usuario_id, f"{hoje_str}%", tipo_desafio))
-        count_hoje = c.fetchone()[0]
-        
-        if desafio and count_hoje >= desafio["limite_diario"]:
+            
             conn.close()
-            return False, f"Você já atingiu o limite diário para este tipo de desafio. Tente novamente amanhã.", 0
-        
-        # ===== CAMADA 5: VALIDAÇÃO ESPECÍFICA POR TIPO =====
-        
-        pontos_ajustados = desafio["pontos"] if desafio else 100
-        
-        if tipo_desafio == "reciclagem":
-            # Tentar estimar quantidade de material
-            # Simulação: quanto maior a imagem, mais material (heurística simples)
-            tamanho_arquivo = len(imagem_bytes)
-            if tamanho_arquivo > 500000:  # >500KB
-                pontos_ajustados = 250  # Bônus por foto de qualidade
-            elif tamanho_arquivo < 50000:  # <50KB
-                pontos_ajustados = 150  # Redução por foto suspeita
-        
-        elif tipo_desafio == "evento":
-            # Verificar metadados da foto (data)
-            try:
-                # Extrair metadados EXIF se disponíveis
-                from PIL.ExifTags import TAGS
-                exif_data = {}
-                if hasattr(imagem, '_getexif') and imagem._getexif():
-                    exif = imagem._getexif()
-                    for tag_id, value in exif.items():
-                        tag = TAGS.get(tag_id, tag_id)
-                        exif_data[tag] = value
-                    
-                    # Verificar data da foto
-                    if 'DateTime' in exif_data:
-                        data_foto = exif_data['DateTime']
-                        # Aqui poderia validar se a foto é recente
-                        pass
-            except:
-                pass
-        
-        conn.close()
-        return True, "Comprovante validado com sucesso!", pontos_ajustados
-        
-    except Exception as e:
-        print(f"Erro na validação da foto: {e}")
-        return False, "Erro ao processar a imagem. Tente novamente.", 0
+            return True, "Limites OK"
+        except Exception as e:
+            return False, f"Erro ao verificar limites: {str(e)}"
+
+# Instanciar validador
+validador = ValidadorFotos()
 
 # ========== SISTEMA DE VALIDAÇÃO DE EVENTOS ==========
 
-def validar_inscricao_evento(usuario_id, evento_id):
-    """
-    Valida se o usuário pode se inscrever no evento
-    """
-    conn = sqlite3.connect('ecopiracicaba.db')
-    c = conn.cursor()
+class ValidadorEventos:
+    def __init__(self):
+        self.codigos_usados = set()
     
-    try:
-        # Verificar se evento existe e tem vagas
-        c.execute("SELECT vagas, inscritos, data FROM eventos WHERE id = ?", (evento_id,))
-        evento = c.fetchone()
-        
-        if not evento:
-            conn.close()
-            return False, "Evento não encontrado."
-        
-        vagas, inscritos, data_evento = evento
-        
-        if vagas > 0 and inscritos >= vagas:
-            conn.close()
-            return False, "Evento sem vagas disponíveis."
-        
-        # Verificar se já está inscrito
-        c.execute("SELECT id FROM inscricoes WHERE usuario_id = ? AND evento_id = ?", (usuario_id, evento_id))
-        if c.fetchone():
-            conn.close()
-            return False, "Você já está inscrito neste evento."
-        
-        # Verificar data do evento (não pode ser no passado)
+    def validar_inscricao(self, usuario_id, evento_id):
+        """Valida inscrição em evento com múltiplas camadas"""
+        conn = None
         try:
-            data_ev = datetime.strptime(data_evento, "%d/%m/%Y")
-            if data_ev < datetime.now():
+            conn = sqlite3.connect('ecopiracicaba.db')
+            c = conn.cursor()
+            
+            # Verificar se evento existe
+            c.execute("SELECT titulo, data, hora, local, vagas, inscritos FROM eventos WHERE id = ?", (evento_id,))
+            evento = c.fetchone()
+            
+            if not evento:
+                return False, "Evento não encontrado."
+            
+            titulo, data_evento, hora, local, vagas, inscritos = evento
+            
+            # Verificar vagas
+            if vagas > 0 and inscritos >= vagas:
+                return False, "Evento sem vagas disponíveis."
+            
+            # Verificar se já está inscrito
+            c.execute("SELECT id, participou FROM inscricoes WHERE usuario_id = ? AND evento_id = ?", (usuario_id, evento_id))
+            inscricao = c.fetchone()
+            
+            if inscricao:
+                if inscricao[1] == 1:
+                    return False, "Você já participou deste evento."
+                else:
+                    return False, "Você já está inscrito neste evento."
+            
+            # Verificar data do evento
+            try:
+                data_ev = datetime.strptime(data_evento, "%d/%m/%Y")
+                if data_ev < datetime.now():
+                    return False, "Este evento já ocorreu."
+            except:
+                pass
+            
+            # Verificar limite de inscrições por usuário (máx 3 eventos futuros)
+            c.execute("""
+                SELECT COUNT(*) FROM inscricoes i
+                JOIN eventos e ON i.evento_id = e.id
+                WHERE i.usuario_id = ? AND i.particou = 0 
+                AND e.data >= ?
+            """, (usuario_id, datetime.now().strftime("%d/%m/%Y")))
+            
+            inscricoes_futuras = c.fetchone()[0]
+            if inscricoes_futuras >= 3:
+                return False, "Você já tem 3 inscrições em eventos futuros. Complete-os antes de se inscrever em novos."
+            
+            conn.close()
+            return True, "Inscrição válida."
+            
+        except Exception as e:
+            print(f"Erro na validação: {e}")
+            return False, "Erro ao validar inscrição."
+        finally:
+            if conn:
                 conn.close()
-                return False, "Este evento já ocorreu."
-        except:
-            pass
-        
-        conn.close()
-        return True, "Inscrição válida."
-        
-    except Exception as e:
-        print(f"Erro na validação do evento: {e}")
-        conn.close()
-        return False, "Erro ao validar inscrição."
-
-def confirmar_presenca_evento(usuario_id, evento_id):
-    """
-    Confirma presença do usuário no evento e concede pontos
-    """
-    conn = sqlite3.connect('ecopiracicaba.db')
-    c = conn.cursor()
     
-    try:
-        # Verificar se está inscrito e ainda não participou
-        c.execute("""
-            SELECT id, participou FROM inscricoes 
-            WHERE usuario_id = ? AND evento_id = ?
-        """, (usuario_id, evento_id))
-        inscricao = c.fetchone()
-        
-        if not inscricao:
+    def confirmar_presenca(self, usuario_id, evento_id, codigo=None):
+        """Confirma presença com validação adicional"""
+        conn = None
+        try:
+            conn = sqlite3.connect('ecopiracicaba.db')
+            c = conn.cursor()
+            
+            # Buscar inscrição
+            c.execute("""
+                SELECT i.id, i.participou, i.codigo_confirmacao, e.titulo, e.data, e.codigo_confirmacao 
+                FROM inscricoes i
+                JOIN eventos e ON i.evento_id = e.id
+                WHERE i.usuario_id = ? AND i.evento_id = ?
+            """, (usuario_id, evento_id))
+            
+            resultado = c.fetchone()
+            
+            if not resultado:
+                conn.close()
+                return False, "Inscrição não encontrada."
+            
+            inscricao_id, participou, codigo_inscricao, titulo, data_evento, codigo_evento = resultado
+            
+            if participou == 1:
+                conn.close()
+                return False, "Presença já confirmada anteriormente."
+            
+            # Verificar data do evento
+            try:
+                data_ev = datetime.strptime(data_evento, "%d/%m/%Y")
+                hoje = datetime.now()
+                
+                # Só pode confirmar no dia do evento
+                if data_ev.date() != hoje.date():
+                    conn.close()
+                    return False, "A presença só pode ser confirmada no dia do evento."
+            except:
+                pass
+            
+            # Verificar código se fornecido
+            if codigo_evento and codigo_evento.strip():
+                if not codigo or codigo.upper() != codigo_evento:
+                    conn.close()
+                    return False, "Código de confirmação inválido."
+            
+            # Atualizar presença
+            c.execute("UPDATE inscricoes SET participou = 1, data_confirmacao = ? WHERE id = ?", 
+                     (datetime.now().strftime("%d/%m/%Y %H:%M"), inscricao_id))
+            
+            # Atualizar progresso
+            c.execute("""
+                UPDATE progresso 
+                SET eventos_participados = eventos_participados + 1,
+                    total_pontos = total_pontos + 150
+                WHERE usuario_id = ?
+            """, (usuario_id,))
+            
+            # Registrar conquista
+            c.execute("""
+                INSERT INTO conquistas (usuario_id, tipo, pontos, data, descricao, icone)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (usuario_id, "evento", 150, datetime.now().strftime("%d/%m/%Y %H:%M"), 
+                  f"Participou do evento: {titulo}", "📅"))
+            
+            conn.commit()
             conn.close()
-            return False, "Você não está inscrito neste evento."
-        
-        if inscricao[1] == 1:
-            conn.close()
-            return False, "Presença já confirmada anteriormente."
-        
-        # Verificar data do evento (deve ser hoje)
-        c.execute("SELECT data FROM eventos WHERE id = ?", (evento_id,))
-        data_evento = c.fetchone()[0]
-        
-        hoje = datetime.now().strftime("%d/%m/%Y")
-        if data_evento != hoje:
-            conn.close()
-            return False, "A presença só pode ser confirmada no dia do evento."
-        
-        # Atualizar participação
-        c.execute("UPDATE inscricoes SET participou = 1 WHERE id = ?", (inscricao[0],))
-        
-        # Atualizar contador no progresso
-        c.execute("""
-            UPDATE progresso 
-            SET eventos_participados = eventos_participados + 1 
-            WHERE usuario_id = ?
-        """, (usuario_id,))
-        
-        conn.commit()
-        conn.close()
-        
-        # Conceder pontos
-        adicionar_pontos(usuario_id, 150, "Participou de evento", "📅", "evento")
-        
-        return True, "Presença confirmada! Pontos concedidos."
-        
-    except Exception as e:
-        print(f"Erro ao confirmar presença: {e}")
-        conn.close()
-        return False, "Erro ao confirmar presença."
+            
+            return True, "Presença confirmada! 150 pontos adicionados."
+            
+        except Exception as e:
+            print(f"Erro ao confirmar presença: {e}")
+            return False, "Erro ao confirmar presença."
+        finally:
+            if conn:
+                conn.close()
+
+# Instanciar validador de eventos
+validador_eventos = ValidadorEventos()
 
 # ========== INICIALIZAÇÃO DO BANCO DE DADOS ==========
 
@@ -374,7 +439,9 @@ def init_database():
             avatar TEXT,
             cidade TEXT DEFAULT 'Piracicaba',
             data_cadastro TEXT,
-            ultimo_acesso TEXT
+            ultimo_acesso TEXT,
+            banido INTEGER DEFAULT 0,
+            motivo_ban TEXT
         )
     ''')
     
@@ -391,6 +458,7 @@ def init_database():
             amigos_convidados INTEGER DEFAULT 0,
             streak_dias INTEGER DEFAULT 0,
             ultima_atividade TEXT,
+            tentativas_falhas INTEGER DEFAULT 0,
             FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
         )
     ''')
@@ -408,7 +476,6 @@ def init_database():
         )
     ''')
     
-    # Modificar tabela de comprovantes para incluir hash e status de validação
     c.execute('''
         CREATE TABLE IF NOT EXISTS comprovantes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -416,13 +483,16 @@ def init_database():
             tipo TEXT NOT NULL,
             descricao TEXT,
             imagem BLOB,
-            imagem_hash TEXT,
+            imagem_hash TEXT UNIQUE,
             pontos_ganhos INTEGER DEFAULT 0,
             data TEXT NOT NULL,
             aprovado INTEGER DEFAULT 0,
             validado_por TEXT,
             data_validacao TEXT,
             metadados TEXT,
+            motivo_rejeicao TEXT,
+            ip_address TEXT,
+            user_agent TEXT,
             FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
         )
     ''')
@@ -440,7 +510,10 @@ def init_database():
             inscritos INTEGER DEFAULT 0,
             organizador TEXT,
             contato TEXT,
-            codigo_confirmacao TEXT
+            codigo_confirmacao TEXT,
+            latitude REAL,
+            longitude REAL,
+            raio_validacao INTEGER DEFAULT 100
         )
     ''')
     
@@ -453,6 +526,8 @@ def init_database():
             participou INTEGER DEFAULT 0,
             data_confirmacao TEXT,
             codigo_confirmacao TEXT,
+            latitude_confirmacao REAL,
+            longitude_confirmacao REAL,
             UNIQUE(usuario_id, evento_id),
             FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE,
             FOREIGN KEY (evento_id) REFERENCES eventos (id) ON DELETE CASCADE
@@ -492,7 +567,9 @@ def init_database():
             horario TEXT,
             telefone TEXT,
             avaliacao REAL DEFAULT 0,
-            descricao TEXT
+            descricao TEXT,
+            latitude REAL,
+            longitude REAL
         )
     ''')
     
@@ -523,16 +600,27 @@ def init_database():
         )
     ''')
     
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS logs_fraude (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER,
+            tipo TEXT,
+            descricao TEXT,
+            data TEXT,
+            ip_address TEXT,
+            user_agent TEXT,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
+        )
+    ''')
+    
     conn.commit()
     
-    # Criar índices para melhor performance - SOMENTE SE A COLUNA EXISTIR
+    # Criar índices
     try:
+        c.execute('CREATE INDEX IF NOT EXISTS idx_comprovantes_hash ON comprovantes(imagem_hash)')
         c.execute('CREATE INDEX IF NOT EXISTS idx_comprovantes_usuario ON comprovantes(usuario_id, tipo, data)')
-    except:
-        pass
-    
-    try:
         c.execute('CREATE INDEX IF NOT EXISTS idx_inscricoes_evento ON inscricoes(evento_id, participou)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_logs_fraude ON logs_fraude(usuario_id, data)')
     except:
         pass
     
@@ -584,16 +672,16 @@ def dados_iniciais(conn, c):
     
     # Eventos com código de confirmação
     eventos = [
-        ("🌱 Feira de Sustentabilidade", "Feira com produtos orgânicos, artesanato sustentável e startups verdes", "15/03/2026", "09:00", "Engenho Central - Piracicaba", "feira", 1000, "Prefeitura de Piracicaba", "(19) 3403-1100", "FEIRA2026"),
-        ("♻️ Workshop de Reciclagem", "Aprenda técnicas avançadas de reciclagem em casa", "22/03/2026", "14:00", "SENAI Piracicaba", "workshop", 50, "SENAI", "(19) 3412-5000", "WORKSHOP01"),
-        ("🌊 Mutirão Rio Piracicaba", "Limpeza das margens do rio com atividades educativas", "05/04/2026", "08:00", "Rua do Porto - Piracicaba", "mutirão", 200, "SOS Rio Piracicaba", "(19) 99765-4321", "MUTIRAO01"),
-        ("🌿 Palestra: Compostagem", "Como fazer compostagem doméstica e comunitária", "12/04/2026", "10:00", "Horto Municipal - Piracicaba", "palestra", 100, "Horto Municipal", "(19) 3434-5678", "PALESTRA01"),
-        ("🌍 Dia da Terra", "Celebração com atividades, música e feira verde", "22/04/2026", "09:00", "Parque da Rua do Porto - Piracicaba", "evento", 2000, "ONG Planeta Verde", "(19) 99876-5432", "DIATERRA")
+        ("🌱 Feira de Sustentabilidade", "Feira com produtos orgânicos, artesanato sustentável e startups verdes", "15/03/2026", "09:00", "Engenho Central - Piracicaba", "feira", 1000, "Prefeitura de Piracicaba", "(19) 3403-1100", "FEIRA2026", -22.7253, -47.6492, 100),
+        ("♻️ Workshop de Reciclagem", "Aprenda técnicas avançadas de reciclagem em casa", "22/03/2026", "14:00", "SENAI Piracicaba", "workshop", 50, "SENAI", "(19) 3412-5000", "WORKSHOP01", -22.7142, -47.6428, 50),
+        ("🌊 Mutirão Rio Piracicaba", "Limpeza das margens do rio com atividades educativas", "05/04/2026", "08:00", "Rua do Porto - Piracicaba", "mutirão", 200, "SOS Rio Piracicaba", "(19) 99765-4321", "MUTIRAO01", -22.7247, -47.6483, 200)
     ]
     
     for e in eventos:
         c.execute(
-            "INSERT INTO eventos (titulo, descricao, data, hora, local, tipo, vagas, organizador, contato, codigo_confirmacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            """INSERT INTO eventos 
+               (titulo, descricao, data, hora, local, tipo, vagas, organizador, contato, codigo_confirmacao, latitude, longitude, raio_validacao) 
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             e
         )
     
@@ -609,14 +697,14 @@ def dados_iniciais(conn, c):
             d
         )
     
-    # Pontos de coleta
+    # Pontos de coleta com coordenadas
     pontos = [
-        ("Ecoponto Centro", "Av. Rui Barbosa, 800 - Centro", "geral", "Seg-Sex 8h-17h, Sáb 8h-12h", "(19) 3403-1100", 4.5, "Recebe todos os tipos de recicláveis, eletrônicos e óleo de cozinha"),
-        ("Shopping Piracicaba", "Av. Limeira, 700 - Areão", "pilhas", "Seg-Sáb 10h-22h, Dom 14h-20h", "(19) 3432-4545", 4.8, "Ponto de coleta de pilhas e baterias no piso G1")
+        ("Ecoponto Centro", "Av. Rui Barbosa, 800 - Centro", "geral", "Seg-Sex 8h-17h, Sáb 8h-12h", "(19) 3403-1100", 4.5, "Recebe todos os tipos de recicláveis", -22.7250, -47.6490),
+        ("Shopping Piracicaba", "Av. Limeira, 700 - Areão", "pilhas", "Seg-Sáb 10h-22h, Dom 14h-20h", "(19) 3432-4545", 4.8, "Ponto de coleta de pilhas", -22.7140, -47.6425)
     ]
     for p in pontos:
         c.execute(
-            "INSERT INTO pontos_coleta (nome, endereco, categoria, horario, telefone, avaliacao, descricao) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO pontos_coleta (nome, endereco, categoria, horario, telefone, avaliacao, descricao, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             p
         )
 
@@ -627,6 +715,13 @@ init_database()
 def get_user_data(user_id):
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
+    
+    # Verificar se usuário está banido
+    c.execute("SELECT banido, motivo_ban FROM usuarios WHERE id = ?", (user_id,))
+    banido = c.fetchone()
+    if banido and banido[0] == 1:
+        conn.close()
+        return None, None, None, None, None, None, None, None, banido[1]
     
     c.execute("SELECT nome, email, cidade, data_cadastro FROM usuarios WHERE id = ?", (user_id,))
     user = c.fetchone()
@@ -654,7 +749,39 @@ def get_user_data(user_id):
     
     conn.close()
     
-    return user, progresso, conquistas, comprovantes, inscricoes, dicas_vistas, visitas, convites
+    return user, progresso, conquistas, comprovantes, inscricoes, dicas_vistas, visitas, convites, None
+
+def registrar_tentativa_fraude(usuario_id, tipo, descricao):
+    """Registra tentativa de fraude no sistema"""
+    conn = sqlite3.connect('ecopiracicaba.db')
+    c = conn.cursor()
+    
+    data_atual = datetime.now().strftime("%d/%m/%Y %H:%M")
+    
+    c.execute("""
+        INSERT INTO logs_fraude (usuario_id, tipo, descricao, data)
+        VALUES (?, ?, ?, ?)
+    """, (usuario_id, tipo, descricao, data_atual))
+    
+    # Incrementar contador de tentativas falhas
+    c.execute("""
+        UPDATE progresso SET tentativas_falhas = tentativas_falhas + 1 
+        WHERE usuario_id = ?
+    """, (usuario_id,))
+    
+    # Verificar se deve banir (3+ tentativas)
+    c.execute("SELECT tentativas_falhas FROM progresso WHERE usuario_id = ?", (usuario_id,))
+    tentativas = c.fetchone()[0]
+    
+    if tentativas >= 3:
+        c.execute("""
+            UPDATE usuarios 
+            SET banido = 1, motivo_ban = 'Múltiplas tentativas de fraude' 
+            WHERE id = ?
+        """, (usuario_id,))
+    
+    conn.commit()
+    conn.close()
 
 def criar_usuario(nome, email, senha):
     conn = None
@@ -701,10 +828,14 @@ def fazer_login(email, senha):
         conn = sqlite3.connect('ecopiracicaba.db')
         c = conn.cursor()
         
-        c.execute("SELECT id, nome FROM usuarios WHERE email = ? AND senha = ?", (email, senha))
+        # Verificar se está banido
+        c.execute("SELECT id, nome, banido FROM usuarios WHERE email = ? AND senha = ?", (email, senha))
         user = c.fetchone()
         
         if user:
+            if user[2] == 1:
+                return None, "Usuário banido por atividades suspeitas."
+            
             data_atual = datetime.now().strftime("%d/%m/%Y %H:%M")
             c.execute("UPDATE usuarios SET ultimo_acesso = ? WHERE id = ?", (data_atual, user[0]))
             
@@ -724,11 +855,11 @@ def fazer_login(email, senha):
                     pass
             
             conn.commit()
-            return user
-        return None
+            return (user[0], user[1]), None
+        return None, "E-mail ou senha inválidos"
     except Exception as e:
         print(f"Erro no login: {e}")
-        return None
+        return None, "Erro ao fazer login"
     finally:
         if conn:
             conn.close()
@@ -756,28 +887,76 @@ def adicionar_pontos(usuario_id, pontos, descricao, icone="✨", tipo="geral"):
             (novos_pontos, novo_nivel, data_atual, usuario_id)
         )
     
+    # Atualizar kg_reciclados se for reciclagem
+    if tipo == "reciclagem":
+        c.execute("UPDATE progresso SET kg_reciclados = kg_reciclados + 10 WHERE usuario_id = ?", (usuario_id,))
+    elif tipo == "plantio":
+        c.execute("UPDATE progresso SET arvores_plantadas = arvores_plantadas + 1 WHERE usuario_id = ?", (usuario_id,))
+    
     conn.commit()
     conn.close()
     return True
 
-def salvar_comprovante(usuario_id, tipo, descricao, imagem_bytes, pontos_sugeridos):
-    """Salva comprovante com validação"""
+def salvar_comprovante(usuario_id, tipo, descricao, imagem_bytes):
+    """Salva comprovante com validação anti-fraude"""
+    
+    # VALIDAÇÃO 1: Verificar limites temporais
+    limites_ok, msg_limites = validador.verificar_limites_temporais(usuario_id, tipo)
+    if not limites_ok:
+        registrar_tentativa_fraude(usuario_id, "limite_temporal", msg_limites)
+        return False, msg_limites, 0
+    
+    # VALIDAÇÃO 2: Verificar hash único
+    hash_ok, resultado_hash = validador.verificar_hash_unico(imagem_bytes, usuario_id)
+    if not hash_ok:
+        registrar_tentativa_fraude(usuario_id, "hash_duplicado", resultado_hash)
+        return False, resultado_hash, 0
+    image_hash = resultado_hash
+    
+    # VALIDAÇÃO 3: Carregar e validar imagem
+    try:
+        imagem = Image.open(io.BytesIO(imagem_bytes))
+    except:
+        registrar_tentativa_fraude(usuario_id, "imagem_invalida", "Arquivo de imagem inválido")
+        return False, "Arquivo de imagem inválido. Envie uma foto válida.", 0
+    
+    # VALIDAÇÃO 4: Qualidade da imagem
+    qualidade_ok, msg_qualidade = validador.validar_qualidade_imagem(imagem, imagem_bytes)
+    if not qualidade_ok:
+        registrar_tentativa_fraude(usuario_id, "qualidade_imagem", msg_qualidade)
+        return False, msg_qualidade, 0
+    
+    # VALIDAÇÃO 5: Metadados EXIF
+    metadados_ok, metadados = validador.validar_metadados_exif(imagem)
+    if not metadados_ok:
+        registrar_tentativa_fraude(usuario_id, "sem_metadados", metadados)
+        return False, "Foto sem metadados. Tire uma nova foto com seu celular.", 0
+    
+    # Buscar desafio para pontos
+    desafio = next((d for d in DESAFIOS_LISTA if d["tipo"] == tipo), None)
+    if not desafio:
+        return False, "Tipo de desafio inválido", 0
+    
+    # Calcular pontos (pode variar baseado na qualidade)
+    pontos_base = desafio["pontos"]
+    
+    # Ajustar pontos baseado na qualidade
+    if len(imagem_bytes) > 1024 * 1024:  # > 1MB
+        pontos_base = min(desafio["max_pontos"], pontos_base + 20)
+    elif len(imagem_bytes) < 100 * 1024:  # < 100KB
+        pontos_base = max(desafio["min_pontos"], pontos_base - 20)
+    
+    # Salvar no banco
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     
     data_atual = datetime.now().strftime("%d/%m/%Y %H:%M")
-    image_hash = hashlib.md5(imagem_bytes).hexdigest()
     
-    # Validar a foto
-    aprovado, mensagem, pontos_ajustados = validar_foto(imagem_bytes, tipo, usuario_id)
-    
-    if not aprovado:
-        conn.close()
-        return False, mensagem, 0
-    
-    # Salvar metadados básicos
-    metadados = json.dumps({
+    # Preparar metadados para salvar
+    metadados_json = json.dumps({
         "tamanho": len(imagem_bytes),
+        "dimensoes": f"{imagem.width}x{imagem.height}",
+        "exif": metadados,
         "data_envio": data_atual
     })
     
@@ -786,19 +965,24 @@ def salvar_comprovante(usuario_id, tipo, descricao, imagem_bytes, pontos_sugerid
             """INSERT INTO comprovantes 
                (usuario_id, tipo, descricao, imagem, imagem_hash, pontos_ganhos, data, aprovado, metadados) 
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            (usuario_id, tipo, descricao, imagem_bytes, image_hash, pontos_ajustados, data_atual, 1, metadados)
+            (usuario_id, tipo, descricao, imagem_bytes, image_hash, pontos_base, data_atual, 1, metadados_json)
         )
         
         conn.commit()
+        
+        # Adicionar pontos
+        adicionar_pontos(usuario_id, pontos_base, f"Completou: {descricao}", desafio["icone"], tipo)
+        
         conn.close()
+        return True, f"✅ Comprovante validado! Você ganhou {pontos_base} pontos.", pontos_base
         
-        # Adicionar pontos automaticamente (aprovado)
-        adicionar_pontos(usuario_id, pontos_ajustados, f"Completou: {descricao}", "📸", tipo)
-        
-        return True, f"Comprovante validado! Você ganhou {pontos_ajustados} pontos.", pontos_ajustados
+    except sqlite3.IntegrityError:
+        conn.close()
+        registrar_tentativa_fraude(usuario_id, "hash_duplicado", "Tentativa de reuso de imagem")
+        return False, "Esta foto já foi enviada antes.", 0
     except Exception as e:
-        print(f"Erro ao salvar comprovante: {e}")
         conn.close()
+        print(f"Erro ao salvar: {e}")
         return False, "Erro ao salvar comprovante.", 0
 
 def get_ranking():
@@ -809,6 +993,7 @@ def get_ranking():
         SELECT u.nome, p.total_pontos, p.nivel
         FROM usuarios u
         JOIN progresso p ON u.id = p.usuario_id
+        WHERE u.banido = 0
         ORDER BY p.total_pontos DESC
         LIMIT 20
     """)
@@ -820,7 +1005,9 @@ def get_ranking():
 
 def inscrever_evento(usuario_id, evento_id):
     """Inscreve usuário em evento com validação"""
-    valido, mensagem = validar_inscricao_evento(usuario_id, evento_id)
+    
+    # Validar inscrição
+    valido, mensagem = validador_eventos.validar_inscricao(usuario_id, evento_id)
     
     if not valido:
         return False, mensagem
@@ -832,7 +1019,7 @@ def inscrever_evento(usuario_id, evento_id):
         data_atual = datetime.now().strftime("%d/%m/%Y %H:%M")
         
         # Gerar código de confirmação único
-        codigo = hashlib.md5(f"{usuario_id}{evento_id}{time.time()}".encode()).hexdigest()[:8].upper()
+        codigo = hashlib.md5(f"{usuario_id}{evento_id}{time.time()}{random.random()}".encode()).hexdigest()[:8].upper()
         
         c.execute(
             """INSERT INTO inscricoes 
@@ -845,11 +1032,19 @@ def inscrever_evento(usuario_id, evento_id):
         conn.commit()
         conn.close()
         
-        return True, f"Inscrição realizada! Seu código: {codigo}"
-    except Exception as e:
-        print(f"Erro na inscrição: {e}")
+        return True, f"✅ Inscrição realizada! Guarde seu código: {codigo}"
+        
+    except sqlite3.IntegrityError:
         conn.close()
+        return False, "Você já está inscrito neste evento."
+    except Exception as e:
+        conn.close()
+        print(f"Erro na inscrição: {e}")
         return False, "Erro ao realizar inscrição."
+
+def confirmar_presenca_evento(usuario_id, evento_id, codigo=None):
+    """Confirma presença em evento"""
+    return validador_eventos.confirmar_presenca(usuario_id, evento_id, codigo)
 
 # ========== COMPONENTES DE INTERFACE ==========
 
@@ -891,7 +1086,20 @@ def mostrar_eventos_destaque(text_color, card_bg, icon_color, border_color, seco
             """, unsafe_allow_html=True)
 
 def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_color, secondary_text):
-    user, progresso, conquistas, comprovantes, inscricoes, dicas_vistas, visitas, convites = get_user_data(usuario_id)
+    result = get_user_data(usuario_id)
+    
+    if len(result) == 9:
+        user, progresso, conquistas, comprovantes, inscricoes, dicas_vistas, visitas, convites, motivo_ban = result
+    else:
+        user, progresso, conquistas, comprovantes, inscricoes, dicas_vistas, visitas, convites = result
+        motivo_ban = None
+    
+    if motivo_ban:
+        st.error(f"🚫 Usuário banido: {motivo_ban}")
+        if st.button("Sair"):
+            st.session_state.usuario_logado = None
+            st.rerun()
+        return
     
     if not user or not progresso:
         st.error("Erro ao carregar perfil")
@@ -906,10 +1114,14 @@ def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_
     pontos_visitados = progresso[5] if len(progresso) > 5 else 0
     kg = progresso[6] if len(progresso) > 6 else 0
     streak = progresso[9] if len(progresso) > 9 else 0
+    tentativas = progresso[11] if len(progresso) > 11 else 0
     
     proximo = get_proximo_nivel(pontos)
     
     st.markdown(f"<h2 style='color: {text_color};'>👤 Meu Perfil</h2>", unsafe_allow_html=True)
+    
+    if tentativas > 0:
+        st.warning(f"⚠️ Você tem {tentativas} tentativas de envio inválidas. Cuidado para não ser banido!")
     
     col1, col2 = st.columns(2)
     with col1:
@@ -998,8 +1210,8 @@ def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_
     # Histórico de comprovantes
     if comprovantes:
         with st.expander("📸 Histórico de Comprovantes"):
-            for comp in comprovantes[:5]:
-                status = "✅ Aprovado" if comp[7] else "⏳ Pendente"
+            for comp in comprovantes[:10]:
+                status = "✅ Aprovado" if comp[7] else "❌ Rejeitado"
                 st.markdown(f"""
                 <div style='background: {card_bg}; padding: 10px; border-radius: 10px; margin-bottom: 5px; border: 1px solid {border_color};'>
                     <strong style='color: {text_color};'>{comp[2]}</strong><br>
@@ -1010,56 +1222,83 @@ def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_
 def mostrar_pagina_desafios(usuario_id, text_color, card_bg, icon_color, border_color, secondary_text):
     st.markdown(f"<h2 style='color: {text_color};'>🎯 Desafios Ambientais</h2>", unsafe_allow_html=True)
     
-    user, progresso, conquistas, _, _, _, _, _ = get_user_data(usuario_id)
+    user, progresso, conquistas, comprovantes, _, _, _, _, _ = get_user_data(usuario_id)
     
     pontos = progresso[1] if progresso and len(progresso) > 1 else 0
+    tentativas = progresso[11] if progresso and len(progresso) > 11 else 0
+    
+    if tentativas >= 3:
+        st.error("🚫 Você atingiu o limite de tentativas inválidas. Entre em contato com o suporte.")
+        return
     
     st.markdown(f"""
     <div style='background: {card_bg}; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid {border_color}; text-align: center;'>
         <h3 style='color: {text_color};'>📊 Seus Pontos</h3>
         <h1 style='color: {icon_color}; font-size: 48px;'>{pontos}</h1>
         <p style='color: {text_color};'>Continue completando desafios!</p>
+        {f"<p style='color: #ff9800;'>⚠️ Tentativas inválidas: {tentativas}/3</p>" if tentativas > 0 else ""}
     </div>
     """, unsafe_allow_html=True)
     
     st.markdown(f"<h3 style='color: {text_color};'>📋 Desafios Disponíveis</h3>", unsafe_allow_html=True)
+    
+    # Verificar quais desafios já foram completados recentemente
+    conn = sqlite3.connect('ecopiracicaba.db')
+    c = conn.cursor()
+    c.execute("""
+        SELECT tipo, data FROM comprovantes 
+        WHERE usuario_id = ? AND aprovado = 1 
+        ORDER BY data DESC
+    """, (usuario_id,))
+    completados = c.fetchall()
+    conn.close()
+    
+    completados_hoje = [c[0] for c in completados if c[1].startswith(datetime.now().strftime("%d/%m/%Y"))]
     
     for desafio in DESAFIOS_LISTA:
         with st.container():
             col1, col2 = st.columns([4, 1])
             
             with col1:
+                # Verificar se já completou hoje
+                bloqueado = desafio['tipo'] in completados_hoje
+                
                 st.markdown(f"""
-                <div style='background: {card_bg}; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 6px solid {icon_color}; border: 1px solid {border_color};'>
+                <div style='background: {card_bg}; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 6px solid {icon_color}; border: 1px solid {border_color}; opacity: {0.5 if bloqueado else 1};'>
                     <div style='display: flex; align-items: center; gap: 15px;'>
                         <span style='font-size: 40px;'>{desafio['icone']}</span>
                         <div>
                             <h4 style='color: {text_color}; margin: 0;'>{desafio['titulo']}</h4>
                             <p style='color: {text_color}; margin: 5px 0;'>{desafio['descricao']}</p>
-                            <p style='color: {icon_color}; margin: 0;'>Recompensa: +{desafio['pontos']} pontos</p>
+                            <p style='color: {icon_color}; margin: 0;'>Recompensa: {desafio['min_pontos']}-{desafio['max_pontos']} pontos</p>
                             <p style='color: {secondary_text}; font-size: 12px; margin: 5px 0 0 0;'><i class='fas fa-info-circle'></i> {desafio['dica_validacao']}</p>
+                            {f"<p style='color: #ff9800; font-size: 12px;'>⏳ Limite diário atingido</p>" if bloqueado else ""}
                         </div>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
             
             with col2:
-                if st.button(f"📸 Comprovar", key=f"btn_{desafio['id']}"):
-                    st.session_state['desafio_atual'] = desafio
-                    st.session_state['mostrar_upload'] = True
-                    st.rerun()
+                if not bloqueado:
+                    if st.button(f"📸 Comprovar", key=f"btn_{desafio['id']}_{usuario_id}"):
+                        st.session_state['desafio_atual'] = desafio
+                        st.session_state['mostrar_upload'] = True
+                        st.rerun()
+                else:
+                    st.button(f"✅ Concluído", key=f"done_{desafio['id']}_{usuario_id}", disabled=True)
     
     if st.session_state.get('mostrar_upload', False):
         desafio = st.session_state['desafio_atual']
         
         st.markdown("---")
         st.markdown(f"### 📸 Comprovar: {desafio['titulo']}")
-        st.info(f"**Dica:** {desafio['dica_validacao']}")
+        st.info(f"**Dica importante:** {desafio['dica_validacao']}")
+        st.warning("⚠️ Fotos sem metadados, muito escuras ou reutilizadas serão rejeitadas e contarão como tentativa inválida.")
         
         uploaded_file = st.file_uploader(
             "Tire uma foto ou envie um comprovante",
             type=['jpg', 'jpeg', 'png'],
-            key="upload_comprovante"
+            key=f"upload_comprovante_{desafio['id']}_{usuario_id}"
         )
         
         if uploaded_file is not None:
@@ -1072,29 +1311,28 @@ def mostrar_pagina_desafios(usuario_id, text_color, card_bg, icon_color, border_
             
             with col2:
                 st.markdown(f"<span style='color: {text_color};'>**Desafio:** {desafio['titulo']}</span>", unsafe_allow_html=True)
-                st.markdown(f"<span style='color: {text_color};'>**Pontos base:** +{desafio['pontos']}</span>", unsafe_allow_html=True)
+                st.markdown(f"<span style='color: {text_color};'>**Pontos base:** {desafio['min_pontos']}-{desafio['max_pontos']}</span>", unsafe_allow_html=True)
                 
-                if st.button("✅ Enviar para validação", key="confirmar_upload"):
-                    with st.spinner("Validando imagem..."):
+                if st.button("✅ Enviar para validação", key=f"confirmar_upload_{desafio['id']}_{usuario_id}"):
+                    with st.spinner("🔍 Validando imagem... Isso pode levar alguns segundos."):
                         sucesso, mensagem, pontos_ganhos = salvar_comprovante(
                             usuario_id,
                             desafio['tipo'],
                             f"Completou: {desafio['titulo']}",
-                            bytes_data,
-                            desafio['pontos']
+                            bytes_data
                         )
                         
                         if sucesso:
                             st.balloons()
                             st.success(mensagem)
+                            time.sleep(3)
                             st.session_state['mostrar_upload'] = False
                             st.session_state['desafio_atual'] = None
-                            time.sleep(3)
                             st.rerun()
                         else:
                             st.error(mensagem)
             
-            if st.button("❌ Cancelar"):
+            if st.button("❌ Cancelar", key=f"cancelar_upload_{desafio['id']}_{usuario_id}"):
                 st.session_state['mostrar_upload'] = False
                 st.session_state['desafio_atual'] = None
                 st.rerun()
@@ -1240,6 +1478,11 @@ st.markdown(f"""
         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }}
     
+    .stButton button:disabled {{
+        background: #444 !important;
+        opacity: 0.5;
+    }}
+    
     div.stTabs [data-baseweb="tab-list"] button {{
         color: {text_color} !important;
     }}
@@ -1279,6 +1522,22 @@ st.markdown(f"""
         color: {text_color} !important;
         border: 1px solid {border_color} !important;
     }}
+    
+    .stInfo {{
+        background-color: #1a4a6e !important;
+    }}
+    
+    .stWarning {{
+        background-color: #6e4a1a !important;
+    }}
+    
+    .stError {{
+        background-color: #6e1a1a !important;
+    }}
+    
+    .stSuccess {{
+        background-color: #1a6e4a !important;
+    }}
 </style>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -1304,7 +1563,7 @@ with st.sidebar:
             email = st.text_input("E-mail")
             senha = st.text_input("Senha", type="password")
             if st.form_submit_button("Entrar", use_container_width=True):
-                user = fazer_login(email, senha)
+                user, erro = fazer_login(email, senha)
                 if user:
                     st.session_state.usuario_logado = {
                         'id': user[0],
@@ -1312,7 +1571,7 @@ with st.sidebar:
                     }
                     st.rerun()
                 else:
-                    st.error("E-mail ou senha inválidos")
+                    st.error(erro or "E-mail ou senha inválidos")
         
         st.markdown("---")
         st.markdown(f"<h3 style='color: {sidebar_text};'>🆕 Cadastro</h3>", unsafe_allow_html=True)
@@ -1339,33 +1598,45 @@ with st.sidebar:
                     else:
                         st.error(mensagem)
     else:
-        user, progresso, conquistas, _, _, _, _, convites = get_user_data(st.session_state.usuario_logado['id'])
+        result = get_user_data(st.session_state.usuario_logado['id'])
         
-        pontos = progresso[1] if progresso and len(progresso) > 1 else 0
-        nivel = progresso[2] if progresso and len(progresso) > 2 else "🌱 EcoIniciante"
-        streak = progresso[9] if progresso and len(progresso) > 9 else 0
+        if len(result) == 9:
+            user, progresso, conquistas, _, _, _, _, convites, motivo_ban = result
+        else:
+            user, progresso, conquistas, _, _, _, _, convites = result
+            motivo_ban = None
         
-        st.markdown(f"""
-        <div style='text-align: center; padding: 15px; background-color: #2a4a3a; border-radius: 10px;'>
-            <h3 style='color: {sidebar_text};'>{st.session_state.usuario_logado['nome']}</h3>
-            <h4 style='color: {icon_color};'>{nivel}</h4>
-            <h2 style='color: {icon_color};'>{pontos} pts</h2>
-            <div style='height: 8px; background: {border_color}; border-radius: 4px; margin: 10px 0;'>
-                <div style='height: 100%; width: {min(100, (pontos/5000)*100)}%; background: {icon_color}; border-radius: 4px;'></div>
+        if motivo_ban:
+            st.error(f"🚫 {motivo_ban}")
+            if st.button("Sair"):
+                st.session_state.usuario_logado = None
+                st.rerun()
+        else:
+            pontos = progresso[1] if progresso and len(progresso) > 1 else 0
+            nivel = progresso[2] if progresso and len(progresso) > 2 else "🌱 EcoIniciante"
+            streak = progresso[9] if progresso and len(progresso) > 9 else 0
+            
+            st.markdown(f"""
+            <div style='text-align: center; padding: 15px; background-color: #2a4a3a; border-radius: 10px;'>
+                <h3 style='color: {sidebar_text};'>{st.session_state.usuario_logado['nome']}</h3>
+                <h4 style='color: {icon_color};'>{nivel}</h4>
+                <h2 style='color: {icon_color};'>{pontos} pts</h2>
+                <div style='height: 8px; background: {border_color}; border-radius: 4px; margin: 10px 0;'>
+                    <div style='height: 100%; width: {min(100, (pontos/5000)*100)}%; background: {icon_color}; border-radius: 4px;'></div>
+                </div>
+                <div style='display: flex; justify-content: space-around; margin-top: 10px;'>
+                    <div><span style='color: #ff9800;'>🔥 {streak}</span><br><small style='color: {sidebar_text};'>dias</small></div>
+                    <div><span style='color: {icon_color};'>🏅 {len(conquistas)}</span><br><small style='color: {sidebar_text};'>conquistas</small></div>
+                    <div><span style='color: gold;'>🔗 {len(convites)}</span><br><small style='color: {sidebar_text};'>convites</small></div>
+                </div>
             </div>
-            <div style='display: flex; justify-content: space-around; margin-top: 10px;'>
-                <div><span style='color: #ff9800;'>🔥 {streak}</span><br><small style='color: {sidebar_text};'>dias</small></div>
-                <div><span style='color: {icon_color};'>🏅 {len(conquistas)}</span><br><small style='color: {sidebar_text};'>conquistas</small></div>
-                <div><span style='color: gold;'>🔗 {len(convites)}</span><br><small style='color: {sidebar_text};'>convites</small></div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        if st.button("🚪 Sair", use_container_width=True):
-            st.session_state.usuario_logado = None
-            st.rerun()
+            """, unsafe_allow_html=True)
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            if st.button("🚪 Sair", use_container_width=True):
+                st.session_state.usuario_logado = None
+                st.rerun()
 
 if st.session_state.usuario_logado is None:
     mostrar_eventos_destaque(text_color, card_bg, icon_color, border_color, secondary_text)
@@ -1424,8 +1695,15 @@ else:
         
         st.markdown(f"<h2 style='color: {text_color};'>📅 Eventos 2026</h2>", unsafe_allow_html=True)
         
+        # Verificar inscrições do usuário
+        conn = sqlite3.connect('ecopiracicaba.db')
+        c = conn.cursor()
+        c.execute("SELECT evento_id, participou FROM inscricoes WHERE usuario_id = ?", (st.session_state.usuario_logado['id'],))
+        inscricoes_usuario = {row[0]: row[1] for row in c.fetchall()}
+        conn.close()
+        
         for evento in eventos:
-            col1, col2 = st.columns([4, 1])
+            col1, col2, col3 = st.columns([4, 1, 1])
             with col1:
                 st.markdown(f"""
                 <div style='background: {card_bg}; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 6px solid {icon_color}; border: 1px solid {border_color};'>
@@ -1435,18 +1713,43 @@ else:
                     <p style='color: {text_color};'><i class='fas fa-map-marker-alt' style='color: {icon_color};'></i> {evento[5]}</p>
                 </div>
                 """, unsafe_allow_html=True)
+            
             with col2:
-                if evento[7] == 0 or evento[8] < evento[7]:
-                    if st.button(f"📝 Inscrever-se", key=f"insc_{evento[0]}"):
-                        sucesso, mensagem = inscrever_evento(st.session_state.usuario_logado['id'], evento[0])
-                        if sucesso:
-                            st.success(mensagem)
-                            time.sleep(3)
-                            st.rerun()
-                        else:
-                            st.error(mensagem)
+                if evento[0] in inscricoes_usuario:
+                    if inscricoes_usuario[evento[0]] == 1:
+                        st.success("✅ Participou")
+                    else:
+                        st.info("📝 Inscrito")
                 else:
-                    st.info("Esgotado")
+                    if evento[7] == 0 or evento[8] < evento[7]:
+                        if st.button(f"📝 Inscrever", key=f"insc_{evento[0]}_{st.session_state.usuario_logado['id']}"):
+                            sucesso, mensagem = inscrever_evento(st.session_state.usuario_logado['id'], evento[0])
+                            if sucesso:
+                                st.success(mensagem)
+                                time.sleep(3)
+                                st.rerun()
+                            else:
+                                st.error(mensagem)
+                    else:
+                        st.error("❌ Esgotado")
+            
+            with col3:
+                if evento[0] in inscricoes_usuario and inscricoes_usuario[evento[0]] == 0:
+                    if evento[3] == datetime.now().strftime("%d/%m/%Y"):
+                        with st.popover("🔑 Confirmar"):
+                            codigo = st.text_input("Código do evento", key=f"cod_{evento[0]}")
+                            if st.button("Confirmar", key=f"conf_{evento[0]}"):
+                                sucesso, msg = confirmar_presenca_evento(
+                                    st.session_state.usuario_logado['id'], 
+                                    evento[0], 
+                                    codigo
+                                )
+                                if sucesso:
+                                    st.success(msg)
+                                    time.sleep(2)
+                                    st.rerun()
+                                else:
+                                    st.error(msg)
     
     with tab5:
         mostrar_pontos_completos(text_color, card_bg, icon_color, border_color, secondary_text)
