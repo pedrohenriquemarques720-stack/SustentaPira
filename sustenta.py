@@ -21,26 +21,8 @@ st.set_page_config(
 # ========== FUNÇÕES BÁSICAS ==========
 
 def get_theme():
-    try:
-        if 'theme' in st.session_state:
-            return st.session_state.theme
-        theme = st.get_option("theme.base")
-        if theme == "dark":
-            st.session_state.theme = "dark"
-            return "dark"
-        else:
-            st.session_state.theme = "light"
-            return "light"
-    except:
-        st.session_state.theme = "light"
-        return "light"
-
-def toggle_theme():
-    if st.session_state.theme == "light":
-        st.session_state.theme = "dark"
-    else:
-        st.session_state.theme = "light"
-    st.rerun()
+    # Forçar tema escuro sempre
+    return "dark"
 
 def detectar_dispositivo():
     try:
@@ -725,9 +707,9 @@ def mostrar_eventos_destaque(text_color, card_bg, icon_color, border_color, seco
                         <span style='background: {icon_color}; color: white; padding: 3px 10px; border-radius: 50px; font-size: 12px;'>{evento[6].upper()}</span>
                         <h3 style='color: {text_color}; margin: 10px 0 5px 0;'>{evento[1]}</h3>
                         <p style='color: {text_color}; margin: 5px 0; font-size: 14px;'>{evento[2][:100]}...</p>
-                        <p style='margin: 5px 0;'><i class='fas fa-calendar' style='color: {icon_color};'></i> {evento[3]} às {evento[4]}</p>
-                        <p style='margin: 5px 0;'><i class='fas fa-map-marker-alt' style='color: {icon_color};'></i> {evento[5]}</p>
-                        <p style='margin: 5px 0;'><i class='fas fa-building' style='color: {icon_color};'></i> {evento[9]}</p>
+                        <p style='margin: 5px 0; color: {text_color};'><i class='fas fa-calendar' style='color: {icon_color};'></i> {evento[3]} às {evento[4]}</p>
+                        <p style='margin: 5px 0; color: {text_color};'><i class='fas fa-map-marker-alt' style='color: {icon_color};'></i> {evento[5]}</p>
+                        <p style='margin: 5px 0; color: {text_color};'><i class='fas fa-building' style='color: {icon_color};'></i> {evento[9]}</p>
                     </div>
                     <div style='text-align: right; min-width: 120px;'>
                         <p style='color: {secondary_text};'><strong>{evento[8]}/{evento[7] if evento[7] > 0 else '∞'}</strong> inscritos</p>
@@ -768,11 +750,11 @@ def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_
     # Informações básicas
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown(f"**Nome:** {nome}")
-        st.markdown(f"**Email:** {email}")
+        st.markdown(f"<span style='color: {text_color};'>**Nome:** {nome}</span>", unsafe_allow_html=True)
+        st.markdown(f"<span style='color: {text_color};'>**Email:** {email}</span>", unsafe_allow_html=True)
     with col2:
-        st.markdown(f"**Cidade:** {cidade or 'Piracicaba'}")
-        st.markdown(f"**Membro desde:** {data_cadastro}")
+        st.markdown(f"<span style='color: {text_color};'>**Cidade:** {cidade or 'Piracicaba'}</span>", unsafe_allow_html=True)
+        st.markdown(f"<span style='color: {text_color};'>**Membro desde:** {data_cadastro}</span>", unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -820,7 +802,7 @@ def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_
         <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
             <h4 style='color: {text_color};'>📅 Eventos</h4>
             <h2 style='color: {icon_color};'>{eventos}</h2>
-            <small>{len(inscricoes)} inscrições</small>
+            <small style='color: {text_color};'>{len(inscricoes)} inscrições</small>
         </div>
         """, unsafe_allow_html=True)
     
@@ -829,7 +811,7 @@ def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_
         <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
             <h4 style='color: {text_color};'>💡 Dicas</h4>
             <h2 style='color: {icon_color};'>{dicas}</h2>
-            <small>{len(dicas_vistas)} lidas</small>
+            <small style='color: {text_color};'>{len(dicas_vistas)} lidas</small>
         </div>
         """, unsafe_allow_html=True)
     
@@ -838,7 +820,7 @@ def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_
         <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
             <h4 style='color: {text_color};'>📍 Visitas</h4>
             <h2 style='color: {icon_color};'>{pontos_visitados}</h2>
-            <small>{len(visitas)} pontos</small>
+            <small style='color: {text_color};'>{len(visitas)} pontos</small>
         </div>
         """, unsafe_allow_html=True)
     
@@ -847,7 +829,7 @@ def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_
         <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
             <h4 style='color: {text_color};'>♻️ Kg</h4>
             <h2 style='color: {icon_color};'>{kg}</h2>
-            <p>reciclados</p>
+            <p style='color: {text_color};'>reciclados</p>
         </div>
         """, unsafe_allow_html=True)
     
@@ -874,8 +856,8 @@ def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_
             for comp in comprovantes[:5]:
                 st.markdown(f"""
                 <div style='background: {card_bg}; padding: 10px; border-radius: 10px; margin-bottom: 5px; border: 1px solid {border_color};'>
-                    <strong>{comp[2]}</strong> - {comp[3]}<br>
-                    <small>{comp[6]} | {comp[5]} pontos | {'✅ Aprovado' if comp[7] else '⏳ Pendente'}</small>
+                    <strong style='color: {text_color};'>{comp[2]}</strong> - <span style='color: {text_color};'>{comp[3]}</span><br>
+                    <small style='color: {text_color};'>{comp[6]} | {comp[5]} pontos | {'✅ Aprovado' if comp[7] else '⏳ Pendente'}</small>
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -895,8 +877,8 @@ def mostrar_pagina_desafios(usuario_id, text_color, card_bg, icon_color, border_
     <div style='background: {card_bg}; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid {border_color}; text-align: center;'>
         <h3 style='color: {text_color};'>📊 Seus Pontos</h3>
         <div style='display: flex; justify-content: space-around; margin: 20px 0;'>
-            <div><span style='font-size: 36px; color: gold;'>🏆</span><br>{pontos} pts</div>
-            <div><span style='font-size: 36px; color: {icon_color};'>{len(conquistas)}</span><br>conquistas</div>
+            <div><span style='font-size: 36px; color: gold;'>🏆</span><br><span style='color: {text_color};'>{pontos} pts</span></div>
+            <div><span style='font-size: 36px; color: {icon_color};'>{len(conquistas)}</span><br><span style='color: {text_color};'>conquistas</span></div>
         </div>
         <div style='height: 8px; background: {border_color}; border-radius: 4px; margin: 10px 0;'>
             <div style='height: 100%; width: {min(100, (pontos/5000)*100)}%; background: {icon_color}; border-radius: 4px;'></div>
@@ -955,8 +937,8 @@ def mostrar_pagina_desafios(usuario_id, text_color, card_bg, icon_color, border_
                 st.image(uploaded_file, caption="Sua foto", use_container_width=True)
             
             with col2:
-                st.markdown(f"**Desafio:** {desafio['titulo']}")
-                st.markdown(f"**Pontos:** +{desafio['pontos']}")
+                st.markdown(f"<span style='color: {text_color};'>**Desafio:** {desafio['titulo']}</span>", unsafe_allow_html=True)
+                st.markdown(f"<span style='color: {text_color};'>**Pontos:** +{desafio['pontos']}</span>", unsafe_allow_html=True)
                 
                 if st.button("✅ Confirmar e ganhar pontos"):
                     # Salvar comprovante
@@ -1029,7 +1011,7 @@ def mostrar_ranking_completo(text_color, card_bg, icon_color, border_color, seco
         <div style='background: {card_bg}; padding: 12px; border-radius: 10px; margin-bottom: 5px; border: 1px solid {border_color};'>
             <div style='display: flex; justify-content: space-between; align-items: center;'>
                 <div>
-                    <span style='font-size: 16px; font-weight: bold;'>{i}º</span>
+                    <span style='font-size: 16px; font-weight: bold; color: {text_color};'>{i}º</span>
                     <strong style='color: {text_color}; margin-left: 10px;'>{nome}</strong>
                     <span style='color: {secondary_text}; margin-left: 10px;'>{nivel}</span>
                 </div>
@@ -1059,14 +1041,14 @@ def mostrar_pontos_completos(text_color, card_bg, icon_color, border_color, seco
                 <div style='display: flex; justify-content: space-between;'>
                     <div>
                         <h4 style='color: {text_color}; margin: 0 0 5px 0;'>{ponto[1]}</h4>
-                        <p style='margin: 3px 0;'><i class='fas fa-map-pin' style='color: {icon_color};'></i> {ponto[2]}</p>
-                        <p style='margin: 3px 0;'><i class='fas fa-clock' style='color: {icon_color};'></i> {ponto[4]}</p>
-                        <p style='margin: 3px 0;'><i class='fas fa-phone' style='color: {icon_color};'></i> {ponto[5]}</p>
+                        <p style='margin: 3px 0; color: {text_color};'><i class='fas fa-map-pin' style='color: {icon_color};'></i> {ponto[2]}</p>
+                        <p style='margin: 3px 0; color: {text_color};'><i class='fas fa-clock' style='color: {icon_color};'></i> {ponto[4]}</p>
+                        <p style='margin: 3px 0; color: {text_color};'><i class='fas fa-phone' style='color: {icon_color};'></i> {ponto[5]}</p>
                         <p style='margin: 5px 0; font-size: 12px; color: {secondary_text};'>{ponto[7]}</p>
                     </div>
                     <div style='text-align: center;'>
                         <div style='color: gold; font-size: 18px;'>{estrelas}</div>
-                        <p style='margin: 5px 0;'>{ponto[6]}/5.0</p>
+                        <p style='margin: 5px 0; color: {text_color};'>{ponto[6]}/5.0</p>
                         <span style='background: {icon_color}; color: white; padding: 3px 8px; border-radius: 50px; font-size: 11px;'>{ponto[3].upper()}</span>
                     </div>
                 </div>
@@ -1075,32 +1057,19 @@ def mostrar_pontos_completos(text_color, card_bg, icon_color, border_color, seco
 
 # ========== CONFIGURAÇÕES DE TEMA ==========
 
-tema = get_theme()
-dispositivo = detectar_dispositivo()
+# Tema fixo verde escuro
+bg_color = "#0a1f17"
+card_bg = "#1a3329"
+text_color = "#FFFFFF"
+secondary_text = "#E0E0E0"
+border_color = "#2a4a3a"
+icon_color = "#8bc34a"
+gradient_start = "#0a1f17"
+gradient_end = "#1a4a3a"
 
-# Sidebar sempre branca
-sidebar_bg = "#FFFFFF"
-sidebar_text = "#000000"
-
-# Cores do conteúdo principal
-if tema == "dark":
-    bg_color = "#0a1f17"
-    card_bg = "#1a3329"
-    text_color = "#FFFFFF"
-    secondary_text = "#E0E0E0"
-    border_color = "#2a4a3a"
-    icon_color = "#8bc34a"
-    gradient_start = "#0a1f17"
-    gradient_end = "#1a4a3a"
-else:
-    bg_color = "#f0fff5"
-    card_bg = "#FFFFFF"
-    text_color = "#000000"
-    secondary_text = "#2a5e45"
-    border_color = "#c0e0d0"
-    icon_color = "#0f5c3f"
-    gradient_start = "#e8f5e9"
-    gradient_end = "#c8e6c9"
+# Sidebar com fundo escuro e textos brancos
+sidebar_bg = "#1a3329"
+sidebar_text = "#FFFFFF"
 
 # CSS
 st.markdown(f"""
@@ -1109,7 +1078,7 @@ st.markdown(f"""
         background: linear-gradient(135deg, {gradient_start} 0%, {gradient_end} 100%);
     }}
     
-    /* Sidebar fixa branca */
+    /* Sidebar */
     section[data-testid="stSidebar"] {{
         background-color: {sidebar_bg} !important;
         border-right: 2px solid {border_color};
@@ -1124,9 +1093,9 @@ st.markdown(f"""
     }}
     
     section[data-testid="stSidebar"] .stTextInput input {{
-        background-color: #f0f0f0 !important;
+        background-color: #2a4a3a !important;
         color: {sidebar_text} !important;
-        border: 1px solid #cccccc !important;
+        border: 1px solid {border_color} !important;
     }}
     
     section[data-testid="stSidebar"] .stButton button {{
@@ -1136,7 +1105,7 @@ st.markdown(f"""
     }}
     
     section[data-testid="stSidebar"] hr {{
-        border-color: #cccccc !important;
+        border-color: {border_color} !important;
     }}
     
     /* Conteúdo principal */
@@ -1144,10 +1113,11 @@ st.markdown(f"""
         padding: 20px;
     }}
     
-    .stMarkdown, p, h1, h2, h3, h4 {{
+    .stMarkdown, p, h1, h2, h3, h4, h5, h6, span, div:not(.stButton) {{
         color: {text_color} !important;
     }}
     
+    /* Botões */
     .stButton button {{
         background: {icon_color};
         color: white;
@@ -1158,11 +1128,12 @@ st.markdown(f"""
     }}
     
     .stButton button:hover {{
-        background: #1a8c5f;
+        background: #6ba539;
         transform: scale(1.05);
         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }}
     
+    /* Tabs */
     div.stTabs [data-baseweb="tab-list"] button {{
         color: {text_color} !important;
     }}
@@ -1170,6 +1141,18 @@ st.markdown(f"""
     div.stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {{
         background-color: {icon_color} !important;
         color: white !important;
+    }}
+    
+    /* Inputs */
+    .stTextInput input, .stTextArea textarea, .stSelectbox div {{
+        background-color: #2a4a3a !important;
+        color: {text_color} !important;
+        border: 1px solid {border_color} !important;
+    }}
+    
+    /* Labels */
+    .stTextInput label, .stTextArea label, .stSelectbox label {{
+        color: {text_color} !important;
     }}
     
     /* Scrollbars */
@@ -1189,7 +1172,25 @@ st.markdown(f"""
     }}
     
     ::-webkit-scrollbar-thumb:hover {{
-        background: #1a8c5f;
+        background: #6ba539;
+    }}
+    
+    /* Expander */
+    .streamlit-expanderHeader {{
+        color: {text_color} !important;
+        background-color: {card_bg} !important;
+    }}
+    
+    /* Info boxes */
+    .stAlert {{
+        background-color: {card_bg} !important;
+        color: {text_color} !important;
+        border: 1px solid {border_color} !important;
+    }}
+    
+    /* Success/Error messages */
+    .stAlert p {{
+        color: {text_color} !important;
     }}
 </style>
 
@@ -1203,7 +1204,7 @@ if 'usuario_logado' not in st.session_state:
     st.session_state['mostrar_upload'] = False
     st.session_state['desafio_atual'] = None
 
-# Sidebar de login - SEMPRE VISÍVEL
+# Sidebar de login
 with st.sidebar:
     st.markdown(f"<h2 style='color: {sidebar_text}; text-align: center;'>🌿 EcoPiracicaba</h2>", unsafe_allow_html=True)
     st.markdown(f"<p style='color: {sidebar_text}; text-align: center;'>Sustentabilidade em ação</p>", unsafe_allow_html=True)
@@ -1265,17 +1266,17 @@ with st.sidebar:
             streak = 0
         
         st.markdown(f"""
-        <div style='text-align: center; padding: 15px; background-color: #f5f5f5; border-radius: 10px;'>
+        <div style='text-align: center; padding: 15px; background-color: #2a4a3a; border-radius: 10px;'>
             <h3 style='color: {sidebar_text};'>{st.session_state.usuario_logado['nome']}</h3>
             <h4 style='color: {icon_color};'>{nivel}</h4>
             <h2 style='color: {icon_color};'>{pontos} pts</h2>
-            <div style='height: 8px; background: #cccccc; border-radius: 4px; margin: 10px 0;'>
+            <div style='height: 8px; background: {border_color}; border-radius: 4px; margin: 10px 0;'>
                 <div style='height: 100%; width: {min(100, (pontos/5000)*100)}%; background: {icon_color}; border-radius: 4px;'></div>
             </div>
             <div style='display: flex; justify-content: space-around; margin-top: 10px;'>
-                <div><span style='color: #ff9800;'>🔥 {streak}</span><br><small>dias</small></div>
-                <div><span style='color: {icon_color};'>🏅 {len(conquistas)}</span><br><small>conquistas</small></div>
-                <div><span style='color: gold;'>🔗 {len(convites)}</span><br><small>convites</small></div>
+                <div><span style='color: #ff9800;'>🔥 {streak}</span><br><small style='color: {sidebar_text};'>dias</small></div>
+                <div><span style='color: {icon_color};'>🏅 {len(conquistas)}</span><br><small style='color: {sidebar_text};'>conquistas</small></div>
+                <div><span style='color: gold;'>🔗 {len(convites)}</span><br><small style='color: {sidebar_text};'>convites</small></div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1354,10 +1355,10 @@ else:
             with col1:
                 st.markdown(f"""
                 <div style='background: {card_bg}; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 6px solid {icon_color}; border: 1px solid {border_color};'>
-                    <h4>{evento[1]}</h4>
-                    <p>{evento[2]}</p>
-                    <p><i class='fas fa-calendar'></i> {evento[3]} às {evento[4]}</p>
-                    <p><i class='fas fa-map-marker-alt'></i> {evento[5]}</p>
+                    <h4 style='color: {text_color};'>{evento[1]}</h4>
+                    <p style='color: {text_color};'>{evento[2]}</p>
+                    <p style='color: {text_color};'><i class='fas fa-calendar' style='color: {icon_color};'></i> {evento[3]} às {evento[4]}</p>
+                    <p style='color: {text_color};'><i class='fas fa-map-marker-alt' style='color: {icon_color};'></i> {evento[5]}</p>
                 </div>
                 """, unsafe_allow_html=True)
             with col2:
