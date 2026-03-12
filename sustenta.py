@@ -9,6 +9,11 @@ import re
 import hashlib
 import time
 import os
+import json
+from PIL import Image
+import io
+import numpy as np
+from datetime import datetime
 
 # Configuração da página
 st.set_page_config(
@@ -21,7 +26,6 @@ st.set_page_config(
 # ========== FUNÇÕES BÁSICAS ==========
 
 def get_theme():
-    # Forçar tema escuro sempre
     return "dark"
 
 def detectar_dispositivo():
@@ -74,7 +78,10 @@ DESAFIOS_LISTA = [
         "descricao": "Recicle 10kg de materiais recicláveis",
         "pontos": 200,
         "icone": "♻️",
-        "tipo": "reciclagem"
+        "tipo": "reciclagem",
+        "dica_validacao": "Tire foto dos materiais na balança",
+        "limite_diario": 1,
+        "dias_entre_validacoes": 7
     },
     {
         "id": 2,
@@ -82,7 +89,10 @@ DESAFIOS_LISTA = [
         "descricao": "Participe de 1 evento ambiental",
         "pontos": 150,
         "icone": "📅",
-        "tipo": "evento"
+        "tipo": "evento",
+        "dica_validacao": "Tire foto no local do evento com a data visível",
+        "limite_diario": 1,
+        "dias_entre_validacoes": 1
     },
     {
         "id": 3,
@@ -90,7 +100,10 @@ DESAFIOS_LISTA = [
         "descricao": "Plante 1 árvore nativa",
         "pontos": 300,
         "icone": "🌳",
-        "tipo": "plantio"
+        "tipo": "plantio",
+        "dica_validacao": "Tire foto da muda plantada com coordenadas GPS",
+        "limite_diario": 1,
+        "dias_entre_validacoes": 30
     },
     {
         "id": 4,
@@ -98,7 +111,10 @@ DESAFIOS_LISTA = [
         "descricao": "Descarte 5 pilhas em ponto de coleta",
         "pontos": 100,
         "icone": "🔋",
-        "tipo": "pilhas"
+        "tipo": "pilhas",
+        "dica_validacao": "Tire foto das pilhas no ponto de coleta",
+        "limite_diario": 1,
+        "dias_entre_validacoes": 1
     },
     {
         "id": 5,
@@ -106,26 +122,242 @@ DESAFIOS_LISTA = [
         "descricao": "Use bicicleta em vez de carro 3 vezes",
         "pontos": 180,
         "icone": "🚲",
-        "tipo": "mobilidade"
+        "tipo": "mobilidade",
+        "dica_validacao": "Tire foto do aplicativo de tracking de bike",
+        "limite_diario": 1,
+        "dias_entre_validacoes": 1
     }
 ]
+
+# ========== SISTEMA DE VALIDAÇÃO DE FOTOS ==========
+
+def validar_foto(imagem_bytes, tipo_desafio, usuario_id):
+    """
+    Sistema de validação de fotos em múltiplas camadas
+    Retorna: (aprovado, mensagem, pontos_ajustados)
+    """
+    try:
+        # Carregar imagem
+        imagem = Image.open(io.BytesIO(imagem_bytes))
+        
+        # ===== CAMADA 1: VALIDAÇÕES BÁSICAS DA IMAGEM =====
+        
+        # Verificar tamanho mínimo
+        if len(imagem_bytes) < 1024:  # Menos de 1KB
+            return False, "Imagem muito pequena. Tire uma foto de melhor qualidade.", 0
+        
+        # Verificar dimensões mínimas
+        if imagem.width < 300 or imagem.height < 300:
+            return False, "Imagem com resolução muito baixa. Tire uma foto mais nítida.", 0
+        
+        # Verificar se é colorida (não é totalmente preta/branca)
+        img_array = np.array(imagem.convert('L'))
+        if np.std(img_array) < 5:  # Pouca variação de cor
+            return False, "Imagem parece ser muito escura ou uniforme. Tire uma foto mais clara.", 0
+        
+        # ===== CAMADA 2: PREVENÇÃO DE REUSO DE FOTOS =====
+        
+        conn = sqlite3.connect('ecopiracicaba.db')
+        c = conn.cursor()
+        
+        # Gerar hash da imagem para detectar reuso
+        image_hash = hashlib.md5(imagem_bytes).hexdigest()
+        
+        # Verificar se esta imagem já foi usada por alguém
+        c.execute("SELECT id, usuario_id, data FROM comprovantes WHERE imagem_hash = ?", (image_hash,))
+        imagem_existente = c.fetchone()
+        
+        if imagem_existente:
+            if imagem_existente[1] == usuario_id:
+                return False, "Esta foto já foi enviada por você anteriormente. Tire uma nova foto.", 0
+            else:
+                return False, "Esta foto já foi usada por outro usuário. Tire sua própria foto.", 0
+        
+        # ===== CAMADA 3: LIMITE DE TEMPO ENTRE VALIDAÇÕES =====
+        
+        desafio = next((d for d in DESAFIOS_LISTA if d["tipo"] == tipo_desafio), None)
+        if desafio:
+            # Verificar última submissão do mesmo tipo
+            c.execute("""
+                SELECT data FROM comprovantes 
+                WHERE usuario_id = ? AND tipo = ? 
+                ORDER BY data DESC LIMIT 1
+            """, (usuario_id, tipo_desafio))
+            ultima_submissao = c.fetchone()
+            
+            if ultima_submissao:
+                try:
+                    data_ultima = datetime.strptime(ultima_submissao[0].split()[0], "%d/%m/%Y")
+                    hoje = datetime.now()
+                    dias_diferenca = (hoje - data_ultima).days
+                    
+                    if dias_diferenca < desafio["dias_entre_validacoes"]:
+                        dias_restantes = desafio["dias_entre_validacoes"] - dias_diferenca
+                        return False, f"Você precisa aguardar {dias_restantes} dias antes de enviar outro comprovante deste tipo.", 0
+                except:
+                    pass
+        
+        # ===== CAMADA 4: LIMITE DIÁRIO =====
+        
+        hoje_str = datetime.now().strftime("%d/%m/%Y")
+        c.execute("""
+            SELECT COUNT(*) FROM comprovantes 
+            WHERE usuario_id = ? AND data LIKE ? AND tipo = ?
+        """, (usuario_id, f"{hoje_str}%", tipo_desafio))
+        count_hoje = c.fetchone()[0]
+        
+        if desafio and count_hoje >= desafio["limite_diario"]:
+            return False, f"Você já atingiu o limite diário para este tipo de desafio. Tente novamente amanhã.", 0
+        
+        # ===== CAMADA 5: VALIDAÇÃO ESPECÍFICA POR TIPO =====
+        
+        pontos_ajustados = desafio["pontos"] if desafio else 100
+        
+        if tipo_desafio == "reciclagem":
+            # Tentar estimar quantidade de material
+            # Simulação: quanto maior a imagem, mais material (heurística simples)
+            tamanho_arquivo = len(imagem_bytes)
+            if tamanho_arquivo > 500000:  # >500KB
+                pontos_ajustados = 250  # Bônus por foto de qualidade
+            elif tamanho_arquivo < 50000:  # <50KB
+                pontos_ajustados = 150  # Redução por foto suspeita
+        
+        elif tipo_desafio == "evento":
+            # Verificar metadados da foto (data)
+            try:
+                # Extrair metadados EXIF se disponíveis
+                from PIL.ExifTags import TAGS
+                exif_data = {}
+                if hasattr(imagem, '_getexif') and imagem._getexif():
+                    exif = imagem._getexif()
+                    for tag_id, value in exif.items():
+                        tag = TAGS.get(tag_id, tag_id)
+                        exif_data[tag] = value
+                    
+                    # Verificar data da foto
+                    if 'DateTime' in exif_data:
+                        data_foto = exif_data['DateTime']
+                        # Aqui poderia validar se a foto é recente
+                        pass
+            except:
+                pass
+        
+        # ===== CAMADA 6: ANÁLISE DE METADADOS =====
+        
+        # Salvar hash e metadados para análise futura
+        conn.close()
+        
+        return True, "Comprovante validado com sucesso!", pontos_ajustados
+        
+    except Exception as e:
+        print(f"Erro na validação da foto: {e}")
+        return False, "Erro ao processar a imagem. Tente novamente.", 0
+
+# ========== SISTEMA DE VALIDAÇÃO DE EVENTOS ==========
+
+def validar_inscricao_evento(usuario_id, evento_id):
+    """
+    Valida se o usuário pode se inscrever no evento
+    """
+    conn = sqlite3.connect('ecopiracicaba.db')
+    c = conn.cursor()
+    
+    try:
+        # Verificar se evento existe e tem vagas
+        c.execute("SELECT vagas, inscritos, data FROM eventos WHERE id = ?", (evento_id,))
+        evento = c.fetchone()
+        
+        if not evento:
+            return False, "Evento não encontrado."
+        
+        vagas, inscritos, data_evento = evento
+        
+        if vagas > 0 and inscritos >= vagas:
+            return False, "Evento sem vagas disponíveis."
+        
+        # Verificar se já está inscrito
+        c.execute("SELECT id FROM inscricoes WHERE usuario_id = ? AND evento_id = ?", (usuario_id, evento_id))
+        if c.fetchone():
+            return False, "Você já está inscrito neste evento."
+        
+        # Verificar data do evento (não pode ser no passado)
+        try:
+            data_ev = datetime.strptime(data_evento, "%d/%m/%Y")
+            if data_ev < datetime.now():
+                return False, "Este evento já ocorreu."
+        except:
+            pass
+        
+        return True, "Inscrição válida."
+        
+    except Exception as e:
+        print(f"Erro na validação do evento: {e}")
+        return False, "Erro ao validar inscrição."
+    finally:
+        conn.close()
+
+def confirmar_presenca_evento(usuario_id, evento_id):
+    """
+    Confirma presença do usuário no evento e concede pontos
+    """
+    conn = sqlite3.connect('ecopiracicaba.db')
+    c = conn.cursor()
+    
+    try:
+        # Verificar se está inscrito e ainda não participou
+        c.execute("""
+            SELECT id, participou FROM inscricoes 
+            WHERE usuario_id = ? AND evento_id = ?
+        """, (usuario_id, evento_id))
+        inscricao = c.fetchone()
+        
+        if not inscricao:
+            return False, "Você não está inscrito neste evento."
+        
+        if inscricao[1] == 1:
+            return False, "Presença já confirmada anteriormente."
+        
+        # Verificar data do evento (deve ser hoje)
+        c.execute("SELECT data FROM eventos WHERE id = ?", (evento_id,))
+        data_evento = c.fetchone()[0]
+        
+        hoje = datetime.now().strftime("%d/%m/%Y")
+        if data_evento != hoje:
+            return False, "A presença só pode ser confirmada no dia do evento."
+        
+        # Atualizar participação
+        c.execute("UPDATE inscricoes SET participou = 1 WHERE id = ?", (inscricao[0],))
+        
+        # Atualizar contador no progresso
+        c.execute("""
+            UPDATE progresso 
+            SET eventos_participados = eventos_participados + 1 
+            WHERE usuario_id = ?
+        """, (usuario_id,))
+        
+        conn.commit()
+        
+        # Conceder pontos
+        adicionar_pontos(usuario_id, 150, "Participou de evento", "📅", "evento")
+        
+        return True, "Presença confirmada! Pontos concedidos."
+        
+    except Exception as e:
+        print(f"Erro ao confirmar presença: {e}")
+        return False, "Erro ao confirmar presença."
+    finally:
+        conn.close()
 
 # ========== INICIALIZAÇÃO DO BANCO DE DADOS ==========
 
 def init_database():
-    # Define o caminho absoluto para o banco de dados
     db_path = os.path.join(os.path.dirname(__file__), 'ecopiracicaba.db')
-    
-    # Verifica se o banco já existe
     db_exists = os.path.exists(db_path)
     
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
     
-    # NÃO REMOVER TABELAS EXISTENTES - APENAS CRIAR SE NÃO EXISTIREM
-    # As linhas de DROP TABLE foram REMOVIDAS para preservar os dados
-    
-    # Tabela de usuários
+    # Criar tabelas se não existirem
     c.execute('''
         CREATE TABLE IF NOT EXISTS usuarios (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -139,7 +371,6 @@ def init_database():
         )
     ''')
     
-    # Tabela de progresso do usuário
     c.execute('''
         CREATE TABLE IF NOT EXISTS progresso (
             usuario_id INTEGER PRIMARY KEY,
@@ -157,7 +388,6 @@ def init_database():
         )
     ''')
     
-    # Tabela de conquistas
     c.execute('''
         CREATE TABLE IF NOT EXISTS conquistas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -171,7 +401,7 @@ def init_database():
         )
     ''')
     
-    # Tabela de comprovantes (fotos)
+    # Modificar tabela de comprovantes para incluir hash e status de validação
     c.execute('''
         CREATE TABLE IF NOT EXISTS comprovantes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -179,14 +409,17 @@ def init_database():
             tipo TEXT NOT NULL,
             descricao TEXT,
             imagem BLOB,
+            imagem_hash TEXT UNIQUE,
             pontos_ganhos INTEGER DEFAULT 0,
             data TEXT NOT NULL,
             aprovado INTEGER DEFAULT 0,
+            validado_por TEXT,
+            data_validacao TEXT,
+            metadados TEXT,
             FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
         )
     ''')
     
-    # Tabela de eventos
     c.execute('''
         CREATE TABLE IF NOT EXISTS eventos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -199,11 +432,11 @@ def init_database():
             vagas INTEGER,
             inscritos INTEGER DEFAULT 0,
             organizador TEXT,
-            contato TEXT
+            contato TEXT,
+            codigo_confirmacao TEXT
         )
     ''')
     
-    # Tabela de inscrições em eventos
     c.execute('''
         CREATE TABLE IF NOT EXISTS inscricoes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -211,13 +444,14 @@ def init_database():
             evento_id INTEGER,
             data_inscricao TEXT,
             participou INTEGER DEFAULT 0,
+            data_confirmacao TEXT,
+            codigo_confirmacao TEXT,
             UNIQUE(usuario_id, evento_id),
             FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE,
             FOREIGN KEY (evento_id) REFERENCES eventos (id) ON DELETE CASCADE
         )
     ''')
     
-    # Tabela de dicas
     c.execute('''
         CREATE TABLE IF NOT EXISTS dicas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -230,7 +464,6 @@ def init_database():
         )
     ''')
     
-    # Tabela de visualizações de dicas
     c.execute('''
         CREATE TABLE IF NOT EXISTS dicas_vistas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -243,7 +476,6 @@ def init_database():
         )
     ''')
     
-    # Tabela de pontos de coleta
     c.execute('''
         CREATE TABLE IF NOT EXISTS pontos_coleta (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -257,7 +489,6 @@ def init_database():
         )
     ''')
     
-    # Tabela de visitas a pontos
     c.execute('''
         CREATE TABLE IF NOT EXISTS visitas_pontos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -271,7 +502,6 @@ def init_database():
         )
     ''')
     
-    # Tabela de convites
     c.execute('''
         CREATE TABLE IF NOT EXISTS convites (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -286,94 +516,29 @@ def init_database():
         )
     ''')
     
+    # Criar índices para melhor performance
+    c.execute('CREATE INDEX IF NOT EXISTS idx_comprovantes_hash ON comprovantes(imagem_hash)')
+    c.execute('CREATE INDEX IF NOT EXISTS idx_comprovantes_usuario ON comprovantes(usuario_id, tipo, data)')
+    c.execute('CREATE INDEX IF NOT EXISTS idx_inscricoes_evento ON inscricoes(evento_id, participou)')
+    
     conn.commit()
     
-    # SÓ INSERE DADOS INICIAIS SE AS TABELAS ESTIVEREM VAZIAS
-    # Verificar se precisa adicionar admin
+    # Inserir dados iniciais se necessário
     c.execute("SELECT COUNT(*) FROM usuarios")
-    total_usuarios = c.fetchone()[0]
-    
-    if total_usuarios == 0:
-        # Banco novinho - inserir todos os dados iniciais
+    if c.fetchone()[0] == 0:
         try:
             dados_iniciais(conn, c)
             conn.commit()
-            print("Dados iniciais inseridos com sucesso!")
-        except sqlite3.Error as e:
+        except Exception as e:
             print(f"Erro ao inserir dados iniciais: {e}")
-    else:
-        # Já existem usuários, só verificar se precisa adicionar eventos/dicas/pontos
-        # Verificar eventos
-        c.execute("SELECT COUNT(*) FROM eventos")
-        if c.fetchone()[0] == 0:
-            eventos = [
-                ("🌱 Feira de Sustentabilidade", "Feira com produtos orgânicos, artesanato sustentável e startups verdes", "15/03/2026", "09:00", "Engenho Central - Piracicaba", "feira", 1000, "Prefeitura de Piracicaba", "(19) 3403-1100"),
-                ("♻️ Workshop de Reciclagem", "Aprenda técnicas avançadas de reciclagem em casa", "22/03/2026", "14:00", "SENAI Piracicaba", "workshop", 50, "SENAI", "(19) 3412-5000"),
-                ("🌊 Mutirão Rio Piracicaba", "Limpeza das margens do rio com atividades educativas", "05/04/2026", "08:00", "Rua do Porto - Piracicaba", "mutirão", 200, "SOS Rio Piracicaba", "(19) 99765-4321"),
-                ("🌿 Palestra: Compostagem", "Como fazer compostagem doméstica e comunitária", "12/04/2026", "10:00", "Horto Municipal - Piracicaba", "palestra", 100, "Horto Municipal", "(19) 3434-5678"),
-                ("🌍 Dia da Terra", "Celebração com atividades, música e feira verde", "22/04/2026", "09:00", "Parque da Rua do Porto - Piracicaba", "evento", 2000, "ONG Planeta Verde", "(19) 99876-5432"),
-                ("🔋 Descarte de Eletrônicos", "Campanha de coleta de lixo eletrônico", "10/05/2026", "09:00", "Shopping Piracicaba", "campanha", 0, "Green Eletronics", "(19) 3403-3000"),
-                ("🌳 Plantio de Árvores", "Mutirão de plantio de árvores nativas", "05/06/2026", "08:30", "Parque Ecológico - Piracicaba", "mutirão", 300, "SOS Mata Atlântica", "(11) 3262-4088"),
-                ("🚴 Passeio Ciclístico", "Passeio ecológico de bike pela cidade", "20/06/2026", "08:00", "Largo dos Pescadores - Piracicaba", "passeio", 150, "Ciclovida", "(19) 99876-1234"),
-                ("🥕 Feira Orgânica", "Feira de produtos orgânicos e agroecológicos", "10/07/2026", "08:00", "Mercado Municipal - Piracicaba", "feira", 0, "Associação Orgânicos", "(19) 3434-7890"),
-                ("💧 Semana da Água", "Palestras e atividades sobre preservação da água", "15/08/2026", "09:00", "Teatro Municipal - Piracicaba", "evento", 400, "Comitê PCJ", "(19) 3437-2000"),
-                ("🐝 Dia das Abelhas", "Palestra sobre a importância das abelhas", "29/08/2026", "14:00", "ESALQ - Piracicaba", "palestra", 80, "USP", "(19) 3447-8500")
-            ]
-            for e in eventos:
-                c.execute(
-                    "INSERT INTO eventos (titulo, descricao, data, hora, local, tipo, vagas, organizador, contato) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    e
-                )
-            conn.commit()
-            print("Eventos iniciais inseridos!")
-        
-        # Verificar dicas
-        c.execute("SELECT COUNT(*) FROM dicas")
-        if c.fetchone()[0] == 0:
-            dicas = [
-                ("🌱 Compostagem Doméstica", "50% do lixo doméstico pode ser compostado! Faça sua própria composteira com baldes e minhocas californianas.", "resíduos", datetime.now().strftime("%d/%m/%Y"), 0, "Equipe EcoPiracicaba"),
-                ("💧 Economia de Água", "Um banho de 15 minutos gasta 135 litros. Reduza para 5 minutos e economize 90 litros por banho!", "água", datetime.now().strftime("%d/%m/%Y"), 0, "Sabesp"),
-                ("🔋 Pilhas e Baterias", "Uma pilha pode contaminar 20 mil litros de água por até 50 anos. Descarte sempre em pontos de coleta.", "resíduos", datetime.now().strftime("%d/%m/%Y"), 0, "Greenpeace"),
-                ("🌳 Plante uma Árvore", "Uma árvore adulta absorve até 150kg de CO2 por ano. Plante árvores nativas como ipê e pitanga.", "natureza", datetime.now().strftime("%d/%m/%Y"), 0, "SOS Mata Atlântica"),
-                ("🛍️ Sacolas Retornáveis", "Uma sacola plástica leva 400 anos para se decompor. Use sempre sacolas retornáveis nas compras.", "plástico", datetime.now().strftime("%d/%m/%Y"), 0, "WWF"),
-                ("🥗 Alimentação Orgânica", "Alimentos orgânicos são mais saudáveis e não contaminam o solo com agrotóxicos.", "alimentação", datetime.now().strftime("%d/%m/%Y"), 0, "Feira Orgânica")
-            ]
-            for d in dicas:
-                c.execute(
-                    "INSERT INTO dicas (titulo, conteudo, categoria, data_publicacao, likes, autor) VALUES (?, ?, ?, ?, ?, ?)",
-                    d
-                )
-            conn.commit()
-            print("Dicas iniciais inseridas!")
-        
-        # Verificar pontos de coleta
-        c.execute("SELECT COUNT(*) FROM pontos_coleta")
-        if c.fetchone()[0] == 0:
-            pontos = [
-                ("Ecoponto Centro", "Av. Rui Barbosa, 800 - Centro", "geral", "Seg-Sex 8h-17h, Sáb 8h-12h", "(19) 3403-1100", 4.5, "Recebe todos os tipos de recicláveis, eletrônicos e óleo de cozinha"),
-                ("Shopping Piracicaba", "Av. Limeira, 700 - Areão", "pilhas", "Seg-Sáb 10h-22h, Dom 14h-20h", "(19) 3432-4545", 4.8, "Ponto de coleta de pilhas e baterias no piso G1"),
-                ("Coopervidros", "R. Treze de Maio, 300 - Centro", "vidros", "Seg-Sex 8h-17h", "(19) 3421-1234", 4.2, "Cooperativa especializada em reciclagem de vidros"),
-                ("CDI Eletrônicos", "R. do Porto, 234 - Centro", "eletronicos", "Seg-Sex 9h-18h, Sáb 9h-12h", "(19) 3433-5678", 4.7, "Centro de Descarte de Eletrônicos - computadores, celulares e pilhas"),
-                ("Ecoponto Paulicéia", "R. Javari, 150 - Paulicéia", "geral", "Ter-Sáb 8h-16h", "(19) 3403-2200", 4.3, "Ecoponto completo com coleta de óleo e recicláveis"),
-                ("Unimed Sede", "R. Voluntários, 450 - Centro", "pilhas", "Seg-Sex 7h-19h", "(19) 3432-9000", 4.6, "Coleta de pilhas e baterias na recepção"),
-                ("Esalq/USP", "Av. Pádua Dias, 11 - Agronomia", "eletronicos", "Seg-Sex 8h-17h", "(19) 3447-8500", 4.9, "Campus da ESALQ com pontos de coleta de eletrônicos"),
-                ("Horto Municipal", "Av. Maurílio Biagi, 1500 - Santa Cecília", "organicos", "Seg-Sex 8h-16h", "(19) 3434-5678", 4.3, "Recebimento de podas e resíduos orgânicos")
-            ]
-            for p in pontos:
-                c.execute(
-                    "INSERT INTO pontos_coleta (nome, endereco, categoria, horario, telefone, avaliacao, descricao) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    p
-                )
-            conn.commit()
-            print("Pontos de coleta iniciais inseridos!")
     
     conn.close()
 
 def dados_iniciais(conn, c):
-    """Insere dados iniciais no banco (apenas para banco novo)"""
-    
-    # ===== USUÁRIO ADMIN =====
+    """Insere dados iniciais no banco"""
     data_atual = datetime.now().strftime("%d/%m/%Y")
+    
+    # Admin
     c.execute(
         "INSERT INTO usuarios (nome, email, senha, data_cadastro) VALUES (?, ?, ?, ?)",
         ("Administrador", "admin@ecopiracicaba.com", "eco2026", data_atual)
@@ -384,7 +549,7 @@ def dados_iniciais(conn, c):
         (admin_id, 1000, get_nivel(1000), data_atual)
     )
     
-    # ===== USUÁRIOS DE EXEMPLO =====
+    # Usuários exemplo
     usuarios_exemplo = [
         ("João Silva", "joao@email.com", "123456", 350),
         ("Maria Santos", "maria@email.com", "123456", 520),
@@ -397,40 +562,31 @@ def dados_iniciais(conn, c):
             (nome, email, senha, data_atual)
         )
         user_id = c.lastrowid
-        nivel = get_nivel(pontos)
         c.execute(
             "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
-            (user_id, pontos, nivel, data_atual)
+            (user_id, pontos, get_nivel(pontos), data_atual)
         )
     
-    # ===== EVENTOS 2026 - PIRACICABA =====
+    # Eventos com código de confirmação
     eventos = [
-        ("🌱 Feira de Sustentabilidade", "Feira com produtos orgânicos, artesanato sustentável e startups verdes", "15/03/2026", "09:00", "Engenho Central - Piracicaba", "feira", 1000, "Prefeitura de Piracicaba", "(19) 3403-1100"),
-        ("♻️ Workshop de Reciclagem", "Aprenda técnicas avançadas de reciclagem em casa", "22/03/2026", "14:00", "SENAI Piracicaba", "workshop", 50, "SENAI", "(19) 3412-5000"),
-        ("🌊 Mutirão Rio Piracicaba", "Limpeza das margens do rio com atividades educativas", "05/04/2026", "08:00", "Rua do Porto - Piracicaba", "mutirão", 200, "SOS Rio Piracicaba", "(19) 99765-4321"),
-        ("🌿 Palestra: Compostagem", "Como fazer compostagem doméstica e comunitária", "12/04/2026", "10:00", "Horto Municipal - Piracicaba", "palestra", 100, "Horto Municipal", "(19) 3434-5678"),
-        ("🌍 Dia da Terra", "Celebração com atividades, música e feira verde", "22/04/2026", "09:00", "Parque da Rua do Porto - Piracicaba", "evento", 2000, "ONG Planeta Verde", "(19) 99876-5432"),
-        ("🔋 Descarte de Eletrônicos", "Campanha de coleta de lixo eletrônico", "10/05/2026", "09:00", "Shopping Piracicaba", "campanha", 0, "Green Eletronics", "(19) 3403-3000"),
-        ("🌳 Plantio de Árvores", "Mutirão de plantio de árvores nativas", "05/06/2026", "08:30", "Parque Ecológico - Piracicaba", "mutirão", 300, "SOS Mata Atlântica", "(11) 3262-4088"),
-        ("🚴 Passeio Ciclístico", "Passeio ecológico de bike pela cidade", "20/06/2026", "08:00", "Largo dos Pescadores - Piracicaba", "passeio", 150, "Ciclovida", "(19) 99876-1234"),
-        ("🥕 Feira Orgânica", "Feira de produtos orgânicos e agroecológicos", "10/07/2026", "08:00", "Mercado Municipal - Piracicaba", "feira", 0, "Associação Orgânicos", "(19) 3434-7890"),
-        ("💧 Semana da Água", "Palestras e atividades sobre preservação da água", "15/08/2026", "09:00", "Teatro Municipal - Piracicaba", "evento", 400, "Comitê PCJ", "(19) 3437-2000"),
-        ("🐝 Dia das Abelhas", "Palestra sobre a importância das abelhas", "29/08/2026", "14:00", "ESALQ - Piracicaba", "palestra", 80, "USP", "(19) 3447-8500")
+        ("🌱 Feira de Sustentabilidade", "Feira com produtos orgânicos, artesanato sustentável e startups verdes", "15/03/2026", "09:00", "Engenho Central - Piracicaba", "feira", 1000, "Prefeitura de Piracicaba", "(19) 3403-1100", "FEIRA2026"),
+        ("♻️ Workshop de Reciclagem", "Aprenda técnicas avançadas de reciclagem em casa", "22/03/2026", "14:00", "SENAI Piracicaba", "workshop", 50, "SENAI", "(19) 3412-5000", "WORKSHOP01"),
+        ("🌊 Mutirão Rio Piracicaba", "Limpeza das margens do rio com atividades educativas", "05/04/2026", "08:00", "Rua do Porto - Piracicaba", "mutirão", 200, "SOS Rio Piracicaba", "(19) 99765-4321", "MUTIRAO01"),
+        ("🌿 Palestra: Compostagem", "Como fazer compostagem doméstica e comunitária", "12/04/2026", "10:00", "Horto Municipal - Piracicaba", "palestra", 100, "Horto Municipal", "(19) 3434-5678", "PALESTRA01"),
+        ("🌍 Dia da Terra", "Celebração com atividades, música e feira verde", "22/04/2026", "09:00", "Parque da Rua do Porto - Piracicaba", "evento", 2000, "ONG Planeta Verde", "(19) 99876-5432", "DIATERRA")
     ]
+    
     for e in eventos:
         c.execute(
-            "INSERT INTO eventos (titulo, descricao, data, hora, local, tipo, vagas, organizador, contato) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO eventos (titulo, descricao, data, hora, local, tipo, vagas, organizador, contato, codigo_confirmacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             e
         )
     
-    # ===== DICAS AMBIENTAIS =====
+    # Dicas
     dicas = [
-        ("🌱 Compostagem Doméstica", "50% do lixo doméstico pode ser compostado! Faça sua própria composteira com baldes e minhocas californianas.", "resíduos", datetime.now().strftime("%d/%m/%Y"), 0, "Equipe EcoPiracicaba"),
-        ("💧 Economia de Água", "Um banho de 15 minutos gasta 135 litros. Reduza para 5 minutos e economize 90 litros por banho!", "água", datetime.now().strftime("%d/%m/%Y"), 0, "Sabesp"),
-        ("🔋 Pilhas e Baterias", "Uma pilha pode contaminar 20 mil litros de água por até 50 anos. Descarte sempre em pontos de coleta.", "resíduos", datetime.now().strftime("%d/%m/%Y"), 0, "Greenpeace"),
-        ("🌳 Plante uma Árvore", "Uma árvore adulta absorve até 150kg de CO2 por ano. Plante árvores nativas como ipê e pitanga.", "natureza", datetime.now().strftime("%d/%m/%Y"), 0, "SOS Mata Atlântica"),
-        ("🛍️ Sacolas Retornáveis", "Uma sacola plástica leva 400 anos para se decompor. Use sempre sacolas retornáveis nas compras.", "plástico", datetime.now().strftime("%d/%m/%Y"), 0, "WWF"),
-        ("🥗 Alimentação Orgânica", "Alimentos orgânicos são mais saudáveis e não contaminam o solo com agrotóxicos.", "alimentação", datetime.now().strftime("%d/%m/%Y"), 0, "Feira Orgânica")
+        ("🌱 Compostagem Doméstica", "50% do lixo doméstico pode ser compostado! Faça sua própria composteira com baldes e minhocas californianas.", "resíduos", data_atual, 0, "Equipe EcoPiracicaba"),
+        ("💧 Economia de Água", "Um banho de 15 minutos gasta 135 litros. Reduza para 5 minutos e economize 90 litros por banho!", "água", data_atual, 0, "Sabesp"),
+        ("🔋 Pilhas e Baterias", "Uma pilha pode contaminar 20 mil litros de água por até 50 anos. Descarte sempre em pontos de coleta.", "resíduos", data_atual, 0, "Greenpeace")
     ]
     for d in dicas:
         c.execute(
@@ -438,16 +594,10 @@ def dados_iniciais(conn, c):
             d
         )
     
-    # ===== PONTOS DE COLETA EM PIRACICABA =====
+    # Pontos de coleta
     pontos = [
         ("Ecoponto Centro", "Av. Rui Barbosa, 800 - Centro", "geral", "Seg-Sex 8h-17h, Sáb 8h-12h", "(19) 3403-1100", 4.5, "Recebe todos os tipos de recicláveis, eletrônicos e óleo de cozinha"),
-        ("Shopping Piracicaba", "Av. Limeira, 700 - Areão", "pilhas", "Seg-Sáb 10h-22h, Dom 14h-20h", "(19) 3432-4545", 4.8, "Ponto de coleta de pilhas e baterias no piso G1"),
-        ("Coopervidros", "R. Treze de Maio, 300 - Centro", "vidros", "Seg-Sex 8h-17h", "(19) 3421-1234", 4.2, "Cooperativa especializada em reciclagem de vidros"),
-        ("CDI Eletrônicos", "R. do Porto, 234 - Centro", "eletronicos", "Seg-Sex 9h-18h, Sáb 9h-12h", "(19) 3433-5678", 4.7, "Centro de Descarte de Eletrônicos - computadores, celulares e pilhas"),
-        ("Ecoponto Paulicéia", "R. Javari, 150 - Paulicéia", "geral", "Ter-Sáb 8h-16h", "(19) 3403-2200", 4.3, "Ecoponto completo com coleta de óleo e recicláveis"),
-        ("Unimed Sede", "R. Voluntários, 450 - Centro", "pilhas", "Seg-Sex 7h-19h", "(19) 3432-9000", 4.6, "Coleta de pilhas e baterias na recepção"),
-        ("Esalq/USP", "Av. Pádua Dias, 11 - Agronomia", "eletronicos", "Seg-Sex 8h-17h", "(19) 3447-8500", 4.9, "Campus da ESALQ com pontos de coleta de eletrônicos"),
-        ("Horto Municipal", "Av. Maurílio Biagi, 1500 - Santa Cecília", "organicos", "Seg-Sex 8h-16h", "(19) 3434-5678", 4.3, "Recebimento de podas e resíduos orgânicos")
+        ("Shopping Piracicaba", "Av. Limeira, 700 - Areão", "pilhas", "Seg-Sáb 10h-22h, Dom 14h-20h", "(19) 3432-4545", 4.8, "Ponto de coleta de pilhas e baterias no piso G1")
     ]
     for p in pontos:
         c.execute(
@@ -455,45 +605,35 @@ def dados_iniciais(conn, c):
             p
         )
 
-# Inicializar banco
 init_database()
 
 # ========== FUNÇÕES DE PROGRESSO ==========
 
 def get_user_data(user_id):
-    """Busca dados completos do usuário"""
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     
-    # Dados do usuário
     c.execute("SELECT nome, email, cidade, data_cadastro FROM usuarios WHERE id = ?", (user_id,))
     user = c.fetchone()
     
-    # Progresso
     c.execute("SELECT * FROM progresso WHERE usuario_id = ?", (user_id,))
     progresso = c.fetchone()
     
-    # Conquistas
     c.execute("SELECT * FROM conquistas WHERE usuario_id = ? ORDER BY data DESC LIMIT 10", (user_id,))
     conquistas = c.fetchall()
     
-    # Comprovantes
     c.execute("SELECT * FROM comprovantes WHERE usuario_id = ? ORDER BY data DESC", (user_id,))
     comprovantes = c.fetchall()
     
-    # Inscrições em eventos
     c.execute("SELECT evento_id FROM inscricoes WHERE usuario_id = ?", (user_id,))
     inscricoes = c.fetchall()
     
-    # Dicas vistas
     c.execute("SELECT dica_id FROM dicas_vistas WHERE usuario_id = ?", (user_id,))
     dicas_vistas = c.fetchall()
     
-    # Visitas a pontos
     c.execute("SELECT ponto_id FROM visitas_pontos WHERE usuario_id = ?", (user_id,))
     visitas = c.fetchall()
     
-    # Convites
     c.execute("SELECT codigo FROM convites WHERE usuario_id = ? AND usado = 0", (user_id,))
     convites = c.fetchall()
     
@@ -502,7 +642,6 @@ def get_user_data(user_id):
     return user, progresso, conquistas, comprovantes, inscricoes, dicas_vistas, visitas, convites
 
 def criar_usuario(nome, email, senha):
-    """Cria um novo usuário no banco"""
     conn = None
     try:
         conn = sqlite3.connect('ecopiracicaba.db')
@@ -510,27 +649,22 @@ def criar_usuario(nome, email, senha):
         
         data_atual = datetime.now().strftime("%d/%m/%Y")
         
-        # Verificar se email já existe
         c.execute("SELECT id FROM usuarios WHERE email = ?", (email,))
         if c.fetchone():
             return False, None, "Este e-mail já está cadastrado!"
         
-        # Inserir usuário
         c.execute(
             "INSERT INTO usuarios (nome, email, senha, data_cadastro) VALUES (?, ?, ?, ?)",
             (nome, email, senha, data_atual)
         )
         
-        # Pegar ID do usuário
         user_id = c.lastrowid
         
-        # Inserir progresso
         c.execute(
             "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
             (user_id, 0, "🌱 EcoIniciante", data_atual)
         )
         
-        # Gerar código de convite para o usuário
         codigo = hashlib.md5(f"{user_id}{time.time()}{random.random()}".encode()).hexdigest()[:8].upper()
         c.execute(
             "INSERT INTO convites (usuario_id, codigo, data_criacao) VALUES (?, ?, ?)",
@@ -539,32 +673,26 @@ def criar_usuario(nome, email, senha):
         
         conn.commit()
         return True, user_id, "Conta criada com sucesso!"
-    except sqlite3.IntegrityError as e:
-        return False, None, "Erro ao criar conta. Tente novamente."
     except Exception as e:
-        print(f"Erro inesperado: {e}")
-        return False, None, "Erro ao criar conta. Tente novamente."
+        print(f"Erro: {e}")
+        return False, None, "Erro ao criar conta."
     finally:
         if conn:
             conn.close()
 
 def fazer_login(email, senha):
-    """Faz login do usuário"""
     conn = None
     try:
         conn = sqlite3.connect('ecopiracicaba.db')
         c = conn.cursor()
         
-        # Buscar usuário com email e senha
         c.execute("SELECT id, nome FROM usuarios WHERE email = ? AND senha = ?", (email, senha))
         user = c.fetchone()
         
         if user:
-            # Atualizar último acesso
             data_atual = datetime.now().strftime("%d/%m/%Y %H:%M")
             c.execute("UPDATE usuarios SET ultimo_acesso = ? WHERE id = ?", (data_atual, user[0]))
             
-            # Atualizar streak
             c.execute("SELECT ultima_atividade FROM progresso WHERE usuario_id = ?", (user[0],))
             resultado = c.fetchone()
             
@@ -582,8 +710,7 @@ def fazer_login(email, senha):
             
             conn.commit()
             return user
-        else:
-            return None
+        return None
     except Exception as e:
         print(f"Erro no login: {e}")
         return None
@@ -592,25 +719,21 @@ def fazer_login(email, senha):
             conn.close()
 
 def adicionar_pontos(usuario_id, pontos, descricao, icone="✨", tipo="geral"):
-    """Adiciona pontos ao usuário"""
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     
     data_atual = datetime.now().strftime("%d/%m/%Y %H:%M")
     
-    # Registrar conquista
     c.execute(
         "INSERT INTO conquistas (usuario_id, tipo, pontos, data, descricao, icone) VALUES (?, ?, ?, ?, ?, ?)",
         (usuario_id, tipo, pontos, data_atual, descricao, icone)
     )
     
-    # Atualizar progresso
     c.execute("SELECT total_pontos FROM progresso WHERE usuario_id = ?", (usuario_id,))
     resultado = c.fetchone()
     
     if resultado:
-        pontos_atuais = resultado[0]
-        novos_pontos = pontos_atuais + pontos
+        novos_pontos = resultado[0] + pontos
         novo_nivel = get_nivel(novos_pontos)
         
         c.execute(
@@ -622,23 +745,43 @@ def adicionar_pontos(usuario_id, pontos, descricao, icone="✨", tipo="geral"):
     conn.close()
     return True
 
-def salvar_comprovante(usuario_id, tipo, descricao, imagem_bytes, pontos):
-    """Salva um comprovante de ação (foto)"""
+def salvar_comprovante(usuario_id, tipo, descricao, imagem_bytes, pontos_sugeridos):
+    """Salva comprovante com validação"""
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     
     data_atual = datetime.now().strftime("%d/%m/%Y %H:%M")
+    image_hash = hashlib.md5(imagem_bytes).hexdigest()
+    
+    # Validar a foto
+    aprovado, mensagem, pontos_ajustados = validar_foto(imagem_bytes, tipo, usuario_id)
+    
+    if not aprovado:
+        conn.close()
+        return False, mensagem, 0
+    
+    # Salvar metadados básicos
+    metadados = json.dumps({
+        "tamanho": len(imagem_bytes),
+        "data_envio": data_atual
+    })
     
     c.execute(
-        "INSERT INTO comprovantes (usuario_id, tipo, descricao, imagem, pontos_ganhos, data) VALUES (?, ?, ?, ?, ?, ?)",
-        (usuario_id, tipo, descricao, imagem_bytes, pontos, data_atual)
+        """INSERT INTO comprovantes 
+           (usuario_id, tipo, descricao, imagem, imagem_hash, pontos_ganhos, data, aprovado, metadados) 
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        (usuario_id, tipo, descricao, imagem_bytes, image_hash, pontos_ajustados, data_atual, 1, metadados)
     )
     
     conn.commit()
     conn.close()
+    
+    # Adicionar pontos automaticamente (aprovado)
+    adicionar_pontos(usuario_id, pontos_ajustados, f"Completou: {descricao}", "📸", tipo)
+    
+    return True, f"Comprovante validado! Você ganhou {pontos_ajustados} pontos.", pontos_ajustados
 
 def get_ranking():
-    """Busca ranking de usuários"""
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     
@@ -656,28 +799,41 @@ def get_ranking():
     return ranking
 
 def inscrever_evento(usuario_id, evento_id):
-    """Inscreve usuário em um evento"""
+    """Inscreve usuário em evento com validação"""
+    valido, mensagem = validar_inscricao_evento(usuario_id, evento_id)
+    
+    if not valido:
+        return False, mensagem
+    
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     
     try:
         data_atual = datetime.now().strftime("%d/%m/%Y %H:%M")
+        
+        # Gerar código de confirmação único
+        codigo = hashlib.md5(f"{usuario_id}{evento_id}{time.time()}".encode()).hexdigest()[:8].upper()
+        
         c.execute(
-            "INSERT INTO inscricoes (usuario_id, evento_id, data_inscricao) VALUES (?, ?, ?)",
-            (usuario_id, evento_id, data_atual)
+            """INSERT INTO inscricoes 
+               (usuario_id, evento_id, data_inscricao, codigo_confirmacao) 
+               VALUES (?, ?, ?, ?)""",
+            (usuario_id, evento_id, data_atual, codigo)
         )
+        
         c.execute("UPDATE eventos SET inscritos = inscritos + 1 WHERE id = ?", (evento_id,))
         conn.commit()
-        return True
-    except sqlite3.IntegrityError:
-        return False
+        
+        return True, f"Inscrição realizada! Seu código: {codigo}"
+    except Exception as e:
+        print(f"Erro na inscrição: {e}")
+        return False, "Erro ao realizar inscrição."
     finally:
         conn.close()
 
 # ========== COMPONENTES DE INTERFACE ==========
 
 def mostrar_eventos_destaque(text_color, card_bg, icon_color, border_color, secondary_text):
-    """Mostra eventos em destaque na página inicial"""
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     c.execute("SELECT * FROM eventos ORDER BY data LIMIT 6")
@@ -687,12 +843,10 @@ def mostrar_eventos_destaque(text_color, card_bg, icon_color, border_color, seco
     st.markdown(f"<h1 style='text-align: center; color: {text_color}; margin-bottom: 30px;'>🌿 EcoPiracicaba 2026</h1>", unsafe_allow_html=True)
     st.markdown(f"<h2 style='text-align: center; color: {secondary_text}; margin-bottom: 40px;'>Eventos em Piracicaba</h2>", unsafe_allow_html=True)
     
-    # Layout em grid de 2 colunas
     col1, col2 = st.columns(2)
     
     for i, evento in enumerate(eventos):
         with col1 if i % 2 == 0 else col2:
-            # Calcular disponibilidade
             vagas_text = f"{evento[8]}/{evento[7]}" if evento[7] > 0 else "Sem limite"
             disponibilidade = (evento[8] / evento[7] * 100) if evento[7] > 0 else 0
             
@@ -705,21 +859,18 @@ def mostrar_eventos_destaque(text_color, card_bg, icon_color, border_color, seco
                         <p style='color: {text_color}; margin: 5px 0; font-size: 14px;'>{evento[2][:100]}...</p>
                         <p style='margin: 5px 0; color: {text_color};'><i class='fas fa-calendar' style='color: {icon_color};'></i> {evento[3]} às {evento[4]}</p>
                         <p style='margin: 5px 0; color: {text_color};'><i class='fas fa-map-marker-alt' style='color: {icon_color};'></i> {evento[5]}</p>
-                        <p style='margin: 5px 0; color: {text_color};'><i class='fas fa-building' style='color: {icon_color};'></i> {evento[9]}</p>
                     </div>
                     <div style='text-align: right; min-width: 120px;'>
                         <p style='color: {secondary_text};'><strong>{evento[8]}/{evento[7] if evento[7] > 0 else '∞'}</strong> inscritos</p>
                         <div style='height: 6px; background: {border_color}; border-radius: 3px; margin: 10px 0;'>
                             <div style='height: 100%; width: {disponibilidade}%; background: {icon_color}; border-radius: 3px;'></div>
                         </div>
-                        <p style='color: {icon_color}; font-size: 12px;'>{vagas_text}</p>
                     </div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
 
 def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_color, secondary_text):
-    """Mostra perfil completo com estatísticas"""
     user, progresso, conquistas, comprovantes, inscricoes, dicas_vistas, visitas, convites = get_user_data(usuario_id)
     
     if not user or not progresso:
@@ -728,22 +879,18 @@ def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_
     
     nome, email, cidade, data_cadastro = user
     
-    # Dados do progresso - com verificação de tamanho
     pontos = progresso[1] if len(progresso) > 1 else 0
     nivel = progresso[2] if len(progresso) > 2 else "🌱 EcoIniciante"
     eventos = progresso[3] if len(progresso) > 3 else 0
     dicas = progresso[4] if len(progresso) > 4 else 0
     pontos_visitados = progresso[5] if len(progresso) > 5 else 0
     kg = progresso[6] if len(progresso) > 6 else 0
-    arvores = progresso[7] if len(progresso) > 7 else 0
-    amigos = progresso[8] if len(progresso) > 8 else 0
     streak = progresso[9] if len(progresso) > 9 else 0
     
     proximo = get_proximo_nivel(pontos)
     
     st.markdown(f"<h2 style='color: {text_color};'>👤 Meu Perfil</h2>", unsafe_allow_html=True)
     
-    # Informações básicas
     col1, col2 = st.columns(2)
     with col1:
         st.markdown(f"<span style='color: {text_color};'>**Nome:** {nome}</span>", unsafe_allow_html=True)
@@ -754,7 +901,6 @@ def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_
     
     st.markdown("---")
     
-    # Cards principais
     col1, col2, col3 = st.columns(3)
     
     with col1:
@@ -788,8 +934,8 @@ def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_
         </div>
         """, unsafe_allow_html=True)
     
-    # Estatísticas detalhadas
-    st.markdown(f"<h3 style='color: {text_color};'>📊 Estatísticas Detalhadas</h3>", unsafe_allow_html=True)
+    # Estatísticas
+    st.markdown(f"<h3 style='color: {text_color};'>📊 Estatísticas</h3>", unsafe_allow_html=True)
     
     col1, col2, col3, col4 = st.columns(4)
     
@@ -829,61 +975,33 @@ def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_
         </div>
         """, unsafe_allow_html=True)
     
-    # Conquistas recentes
-    if conquistas:
-        st.markdown(f"<h3 style='color: {text_color};'>🏅 Conquistas Recentes</h3>", unsafe_allow_html=True)
-        
-        cols = st.columns(3)
-        for i, conquista in enumerate(conquistas[:6]):
-            with cols[i % 3]:
-                icone = conquista[6] if len(conquista) > 6 else '✨'
-                st.markdown(f"""
-                <div style='background: {card_bg}; padding: 10px; border-radius: 10px; text-align: center; margin-bottom: 10px; border: 1px solid {border_color};'>
-                    <span style='font-size: 30px;'>{icone}</span>
-                    <h4 style='color: {text_color}; font-size: 14px;'>{conquista[5][:30]}</h4>
-                    <p style='color: {text_color};'><small>{conquista[4][:10] if conquista[4] else ''}</small></p>
-                    <span style='color: {icon_color};'>+{conquista[3]} pts</span>
-                </div>
-                """, unsafe_allow_html=True)
-    
     # Histórico de comprovantes
     if comprovantes:
         with st.expander("📸 Histórico de Comprovantes"):
             for comp in comprovantes[:5]:
+                status = "✅ Aprovado" if comp[7] else "⏳ Pendente"
                 st.markdown(f"""
                 <div style='background: {card_bg}; padding: 10px; border-radius: 10px; margin-bottom: 5px; border: 1px solid {border_color};'>
-                    <strong style='color: {text_color};'>{comp[2]}</strong> - <span style='color: {text_color};'>{comp[3]}</span><br>
-                    <small style='color: {text_color};'>{comp[6]} | {comp[5]} pontos | {'✅ Aprovado' if comp[7] else '⏳ Pendente'}</small>
+                    <strong style='color: {text_color};'>{comp[2]}</strong><br>
+                    <small style='color: {text_color};'>{comp[6]} | {comp[5]} pontos | {status}</small>
                 </div>
                 """, unsafe_allow_html=True)
 
 def mostrar_pagina_desafios(usuario_id, text_color, card_bg, icon_color, border_color, secondary_text):
-    """Página de desafios com comprovação por foto"""
     st.markdown(f"<h2 style='color: {text_color};'>🎯 Desafios Ambientais</h2>", unsafe_allow_html=True)
     
-    # Progresso do usuário
     user, progresso, conquistas, _, _, _, _, _ = get_user_data(usuario_id)
     
-    if progresso and len(progresso) > 1:
-        pontos = progresso[1]
-    else:
-        pontos = 0
+    pontos = progresso[1] if progresso and len(progresso) > 1 else 0
     
     st.markdown(f"""
     <div style='background: {card_bg}; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid {border_color}; text-align: center;'>
         <h3 style='color: {text_color};'>📊 Seus Pontos</h3>
-        <div style='display: flex; justify-content: space-around; margin: 20px 0;'>
-            <div><span style='font-size: 36px; color: gold;'>🏆</span><br><span style='color: {text_color};'>{pontos} pts</span></div>
-            <div><span style='font-size: 36px; color: {icon_color};'>{len(conquistas)}</span><br><span style='color: {text_color};'>conquistas</span></div>
-        </div>
-        <div style='height: 8px; background: {border_color}; border-radius: 4px; margin: 10px 0;'>
-            <div style='height: 100%; width: {min(100, (pontos/5000)*100)}%; background: {icon_color}; border-radius: 4px;'></div>
-        </div>
+        <h1 style='color: {icon_color}; font-size: 48px;'>{pontos}</h1>
         <p style='color: {text_color};'>Continue completando desafios!</p>
     </div>
     """, unsafe_allow_html=True)
     
-    # Lista de desafios
     st.markdown(f"<h3 style='color: {text_color};'>📋 Desafios Disponíveis</h3>", unsafe_allow_html=True)
     
     for desafio in DESAFIOS_LISTA:
@@ -899,6 +1017,7 @@ def mostrar_pagina_desafios(usuario_id, text_color, card_bg, icon_color, border_
                             <h4 style='color: {text_color}; margin: 0;'>{desafio['titulo']}</h4>
                             <p style='color: {text_color}; margin: 5px 0;'>{desafio['descricao']}</p>
                             <p style='color: {icon_color}; margin: 0;'>Recompensa: +{desafio['pontos']} pontos</p>
+                            <p style='color: {secondary_text}; font-size: 12px; margin: 5px 0 0 0;'><i class='fas fa-info-circle'></i> {desafio['dica_validacao']}</p>
                         </div>
                     </div>
                 </div>
@@ -910,12 +1029,12 @@ def mostrar_pagina_desafios(usuario_id, text_color, card_bg, icon_color, border_
                     st.session_state['mostrar_upload'] = True
                     st.rerun()
     
-    # Modal de upload de foto
     if st.session_state.get('mostrar_upload', False):
         desafio = st.session_state['desafio_atual']
         
         st.markdown("---")
         st.markdown(f"### 📸 Comprovar: {desafio['titulo']}")
+        st.info(f"**Dica:** {desafio['dica_validacao']}")
         
         uploaded_file = st.file_uploader(
             "Tire uma foto ou envie um comprovante",
@@ -924,7 +1043,6 @@ def mostrar_pagina_desafios(usuario_id, text_color, card_bg, icon_color, border_
         )
         
         if uploaded_file is not None:
-            # Converter para bytes
             bytes_data = uploaded_file.getvalue()
             
             col1, col2 = st.columns(2)
@@ -934,35 +1052,27 @@ def mostrar_pagina_desafios(usuario_id, text_color, card_bg, icon_color, border_
             
             with col2:
                 st.markdown(f"<span style='color: {text_color};'>**Desafio:** {desafio['titulo']}</span>", unsafe_allow_html=True)
-                st.markdown(f"<span style='color: {text_color};'>**Pontos:** +{desafio['pontos']}</span>", unsafe_allow_html=True)
+                st.markdown(f"<span style='color: {text_color};'>**Pontos base:** +{desafio['pontos']}</span>", unsafe_allow_html=True)
                 
-                if st.button("✅ Confirmar e ganhar pontos"):
-                    # Salvar comprovante
-                    salvar_comprovante(
-                        usuario_id,
-                        desafio['tipo'],
-                        f"Completou: {desafio['titulo']}",
-                        bytes_data,
-                        desafio['pontos']
-                    )
-                    
-                    # Adicionar pontos
-                    adicionar_pontos(
-                        usuario_id,
-                        desafio['pontos'],
-                        f"Completou: {desafio['titulo']}",
-                        desafio['icone'],
-                        desafio['tipo']
-                    )
-                    
-                    st.balloons()
-                    st.success(f"Parabéns! Você ganhou {desafio['pontos']} pontos!")
-                    
-                    # Limpar estado
-                    st.session_state['mostrar_upload'] = False
-                    st.session_state['desafio_atual'] = None
-                    time.sleep(2)
-                    st.rerun()
+                if st.button("✅ Enviar para validação", key="confirmar_upload"):
+                    with st.spinner("Validando imagem..."):
+                        sucesso, mensagem, pontos_ganhos = salvar_comprovante(
+                            usuario_id,
+                            desafio['tipo'],
+                            f"Completou: {desafio['titulo']}",
+                            bytes_data,
+                            desafio['pontos']
+                        )
+                        
+                        if sucesso:
+                            st.balloons()
+                            st.success(mensagem)
+                            st.session_state['mostrar_upload'] = False
+                            st.session_state['desafio_atual'] = None
+                            time.sleep(3)
+                            st.rerun()
+                        else:
+                            st.error(mensagem)
             
             if st.button("❌ Cancelar"):
                 st.session_state['mostrar_upload'] = False
@@ -970,7 +1080,6 @@ def mostrar_pagina_desafios(usuario_id, text_color, card_bg, icon_color, border_
                 st.rerun()
 
 def mostrar_ranking_completo(text_color, card_bg, icon_color, border_color, secondary_text):
-    """Mostra ranking completo"""
     ranking = get_ranking()
     
     st.markdown(f"<h2 style='color: {text_color};'>🏆 Ranking EcoCidadãos</h2>", unsafe_allow_html=True)
@@ -979,7 +1088,6 @@ def mostrar_ranking_completo(text_color, card_bg, icon_color, border_color, seco
         st.info("Nenhum usuário no ranking ainda.")
         return
     
-    # Destaque para o top 3
     for i, (nome, pontos, nivel) in enumerate(ranking[:3]):
         medalha = "🥇" if i == 0 else "🥈" if i == 1 else "🥉"
         cor_medalha = "#ffd700" if i == 0 else "#c0c0c0" if i == 1 else "#cd7f32"
@@ -1001,7 +1109,6 @@ def mostrar_ranking_completo(text_color, card_bg, icon_color, border_color, seco
         </div>
         """, unsafe_allow_html=True)
     
-    # Restante do ranking
     for i, (nome, pontos, nivel) in enumerate(ranking[3:], start=4):
         st.markdown(f"""
         <div style='background: {card_bg}; padding: 12px; border-radius: 10px; margin-bottom: 5px; border: 1px solid {border_color};'>
@@ -1019,7 +1126,6 @@ def mostrar_ranking_completo(text_color, card_bg, icon_color, border_color, seco
         """, unsafe_allow_html=True)
 
 def mostrar_pontos_completos(text_color, card_bg, icon_color, border_color, secondary_text):
-    """Mostra pontos de coleta"""
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     c.execute("SELECT * FROM pontos_coleta ORDER BY avaliacao DESC")
@@ -1040,7 +1146,6 @@ def mostrar_pontos_completos(text_color, card_bg, icon_color, border_color, seco
                         <p style='margin: 3px 0; color: {text_color};'><i class='fas fa-map-pin' style='color: {icon_color};'></i> {ponto[2]}</p>
                         <p style='margin: 3px 0; color: {text_color};'><i class='fas fa-clock' style='color: {icon_color};'></i> {ponto[4]}</p>
                         <p style='margin: 3px 0; color: {text_color};'><i class='fas fa-phone' style='color: {icon_color};'></i> {ponto[5]}</p>
-                        <p style='margin: 5px 0; font-size: 12px; color: {secondary_text};'>{ponto[7]}</p>
                     </div>
                     <div style='text-align: center;'>
                         <div style='color: gold; font-size: 18px;'>{estrelas}</div>
@@ -1053,7 +1158,6 @@ def mostrar_pontos_completos(text_color, card_bg, icon_color, border_color, seco
 
 # ========== CONFIGURAÇÕES DE TEMA ==========
 
-# Tema fixo verde escuro
 bg_color = "#0a1f17"
 card_bg = "#1a3329"
 text_color = "#FFFFFF"
@@ -1063,18 +1167,15 @@ icon_color = "#8bc34a"
 gradient_start = "#0a1f17"
 gradient_end = "#1a4a3a"
 
-# Sidebar com fundo escuro e textos brancos
 sidebar_bg = "#1a3329"
 sidebar_text = "#FFFFFF"
 
-# CSS
 st.markdown(f"""
 <style>
     .stApp {{
         background: linear-gradient(135deg, {gradient_start} 0%, {gradient_end} 100%);
     }}
     
-    /* Sidebar */
     section[data-testid="stSidebar"] {{
         background-color: {sidebar_bg} !important;
         border-right: 2px solid {border_color};
@@ -1100,20 +1201,10 @@ st.markdown(f"""
         border: none !important;
     }}
     
-    section[data-testid="stSidebar"] hr {{
-        border-color: {border_color} !important;
-    }}
-    
-    /* Conteúdo principal */
-    .main-content {{
-        padding: 20px;
-    }}
-    
     .stMarkdown, p, h1, h2, h3, h4, h5, h6, span, div:not(.stButton) {{
         color: {text_color} !important;
     }}
     
-    /* Botões */
     .stButton button {{
         background: {icon_color};
         color: white;
@@ -1129,7 +1220,6 @@ st.markdown(f"""
         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }}
     
-    /* Tabs */
     div.stTabs [data-baseweb="tab-list"] button {{
         color: {text_color} !important;
     }}
@@ -1139,19 +1229,16 @@ st.markdown(f"""
         color: white !important;
     }}
     
-    /* Inputs */
     .stTextInput input, .stTextArea textarea, .stSelectbox div {{
         background-color: #2a4a3a !important;
         color: {text_color} !important;
         border: 1px solid {border_color} !important;
     }}
     
-    /* Labels */
     .stTextInput label, .stTextArea label, .stSelectbox label {{
         color: {text_color} !important;
     }}
     
-    /* Scrollbars */
     ::-webkit-scrollbar {{
         width: 8px;
         height: 8px;
@@ -1167,26 +1254,10 @@ st.markdown(f"""
         border-radius: 10px;
     }}
     
-    ::-webkit-scrollbar-thumb:hover {{
-        background: #6ba539;
-    }}
-    
-    /* Expander */
-    .streamlit-expanderHeader {{
-        color: {text_color} !important;
-        background-color: {card_bg} !important;
-    }}
-    
-    /* Info boxes */
     .stAlert {{
         background-color: {card_bg} !important;
         color: {text_color} !important;
         border: 1px solid {border_color} !important;
-    }}
-    
-    /* Success/Error messages */
-    .stAlert p {{
-        color: {text_color} !important;
     }}
 </style>
 
@@ -1200,7 +1271,6 @@ if 'usuario_logado' not in st.session_state:
     st.session_state['mostrar_upload'] = False
     st.session_state['desafio_atual'] = None
 
-# Sidebar de login
 with st.sidebar:
     st.markdown(f"<h2 style='color: {sidebar_text}; text-align: center;'>🌿 EcoPiracicaba</h2>", unsafe_allow_html=True)
     st.markdown(f"<p style='color: {sidebar_text}; text-align: center;'>Sustentabilidade em ação</p>", unsafe_allow_html=True)
@@ -1249,17 +1319,11 @@ with st.sidebar:
                     else:
                         st.error(mensagem)
     else:
-        # Sidebar do usuário logado
         user, progresso, conquistas, _, _, _, _, convites = get_user_data(st.session_state.usuario_logado['id'])
         
-        if progresso and len(progresso) > 1:
-            pontos = progresso[1]
-            nivel = progresso[2] if len(progresso) > 2 else "🌱 EcoIniciante"
-            streak = progresso[9] if len(progresso) > 9 else 0
-        else:
-            pontos = 0
-            nivel = "🌱 EcoIniciante"
-            streak = 0
+        pontos = progresso[1] if progresso and len(progresso) > 1 else 0
+        nivel = progresso[2] if progresso and len(progresso) > 2 else "🌱 EcoIniciante"
+        streak = progresso[9] if progresso and len(progresso) > 9 else 0
         
         st.markdown(f"""
         <div style='text-align: center; padding: 15px; background-color: #2a4a3a; border-radius: 10px;'>
@@ -1283,12 +1347,9 @@ with st.sidebar:
             st.session_state.usuario_logado = None
             st.rerun()
 
-# Conteúdo principal
 if st.session_state.usuario_logado is None:
-    # Página inicial com eventos em destaque
     mostrar_eventos_destaque(text_color, card_bg, icon_color, border_color, secondary_text)
     
-    # Rodapé com informações
     st.markdown("---")
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -1317,8 +1378,6 @@ if st.session_state.usuario_logado is None:
         """, unsafe_allow_html=True)
 
 else:
-    # Usuário logado - mostrar conteúdo completo
-    # Tabs principais
     tab1, tab2, tab3, tab4, tab5 = st.tabs(["🎯 Desafios", "👤 Perfil", "🏆 Ranking", "📅 Eventos", "📍 Pontos"])
     
     with tab1:
@@ -1337,7 +1396,6 @@ else:
         mostrar_ranking_completo(text_color, card_bg, icon_color, border_color, secondary_text)
     
     with tab4:
-        # Para usuários logados, mostrar eventos com opção de inscrição
         conn = sqlite3.connect('ecopiracicaba.db')
         c = conn.cursor()
         c.execute("SELECT * FROM eventos ORDER BY data")
@@ -1360,11 +1418,13 @@ else:
             with col2:
                 if evento[7] == 0 or evento[8] < evento[7]:
                     if st.button(f"📝 Inscrever-se", key=f"insc_{evento[0]}"):
-                        if inscrever_evento(st.session_state.usuario_logado['id'], evento[0]):
-                            st.success("Inscrição realizada!")
+                        sucesso, mensagem = inscrever_evento(st.session_state.usuario_logado['id'], evento[0])
+                        if sucesso:
+                            st.success(mensagem)
+                            time.sleep(3)
                             st.rerun()
                         else:
-                            st.warning("Você já está inscrito neste evento.")
+                            st.error(mensagem)
                 else:
                     st.info("Esgotado")
     
