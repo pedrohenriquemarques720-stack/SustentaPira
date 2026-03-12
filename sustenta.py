@@ -169,8 +169,10 @@ def validar_foto(imagem_bytes, tipo_desafio, usuario_id):
         
         if imagem_existente:
             if imagem_existente[1] == usuario_id:
+                conn.close()
                 return False, "Esta foto já foi enviada por você anteriormente. Tire uma nova foto.", 0
             else:
+                conn.close()
                 return False, "Esta foto já foi usada por outro usuário. Tire sua própria foto.", 0
         
         # ===== CAMADA 3: LIMITE DE TEMPO ENTRE VALIDAÇÕES =====
@@ -193,6 +195,7 @@ def validar_foto(imagem_bytes, tipo_desafio, usuario_id):
                     
                     if dias_diferenca < desafio["dias_entre_validacoes"]:
                         dias_restantes = desafio["dias_entre_validacoes"] - dias_diferenca
+                        conn.close()
                         return False, f"Você precisa aguardar {dias_restantes} dias antes de enviar outro comprovante deste tipo.", 0
                 except:
                     pass
@@ -207,6 +210,7 @@ def validar_foto(imagem_bytes, tipo_desafio, usuario_id):
         count_hoje = c.fetchone()[0]
         
         if desafio and count_hoje >= desafio["limite_diario"]:
+            conn.close()
             return False, f"Você já atingiu o limite diário para este tipo de desafio. Tente novamente amanhã.", 0
         
         # ===== CAMADA 5: VALIDAÇÃO ESPECÍFICA POR TIPO =====
@@ -242,11 +246,7 @@ def validar_foto(imagem_bytes, tipo_desafio, usuario_id):
             except:
                 pass
         
-        # ===== CAMADA 6: ANÁLISE DE METADADOS =====
-        
-        # Salvar hash e metadados para análise futura
         conn.close()
-        
         return True, "Comprovante validado com sucesso!", pontos_ajustados
         
     except Exception as e:
@@ -268,33 +268,37 @@ def validar_inscricao_evento(usuario_id, evento_id):
         evento = c.fetchone()
         
         if not evento:
+            conn.close()
             return False, "Evento não encontrado."
         
         vagas, inscritos, data_evento = evento
         
         if vagas > 0 and inscritos >= vagas:
+            conn.close()
             return False, "Evento sem vagas disponíveis."
         
         # Verificar se já está inscrito
         c.execute("SELECT id FROM inscricoes WHERE usuario_id = ? AND evento_id = ?", (usuario_id, evento_id))
         if c.fetchone():
+            conn.close()
             return False, "Você já está inscrito neste evento."
         
         # Verificar data do evento (não pode ser no passado)
         try:
             data_ev = datetime.strptime(data_evento, "%d/%m/%Y")
             if data_ev < datetime.now():
+                conn.close()
                 return False, "Este evento já ocorreu."
         except:
             pass
         
+        conn.close()
         return True, "Inscrição válida."
         
     except Exception as e:
         print(f"Erro na validação do evento: {e}")
-        return False, "Erro ao validar inscrição."
-    finally:
         conn.close()
+        return False, "Erro ao validar inscrição."
 
 def confirmar_presenca_evento(usuario_id, evento_id):
     """
@@ -312,9 +316,11 @@ def confirmar_presenca_evento(usuario_id, evento_id):
         inscricao = c.fetchone()
         
         if not inscricao:
+            conn.close()
             return False, "Você não está inscrito neste evento."
         
         if inscricao[1] == 1:
+            conn.close()
             return False, "Presença já confirmada anteriormente."
         
         # Verificar data do evento (deve ser hoje)
@@ -323,6 +329,7 @@ def confirmar_presenca_evento(usuario_id, evento_id):
         
         hoje = datetime.now().strftime("%d/%m/%Y")
         if data_evento != hoje:
+            conn.close()
             return False, "A presença só pode ser confirmada no dia do evento."
         
         # Atualizar participação
@@ -336,6 +343,7 @@ def confirmar_presenca_evento(usuario_id, evento_id):
         """, (usuario_id,))
         
         conn.commit()
+        conn.close()
         
         # Conceder pontos
         adicionar_pontos(usuario_id, 150, "Participou de evento", "📅", "evento")
@@ -344,9 +352,8 @@ def confirmar_presenca_evento(usuario_id, evento_id):
         
     except Exception as e:
         print(f"Erro ao confirmar presença: {e}")
-        return False, "Erro ao confirmar presença."
-    finally:
         conn.close()
+        return False, "Erro ao confirmar presença."
 
 # ========== INICIALIZAÇÃO DO BANCO DE DADOS ==========
 
@@ -409,7 +416,7 @@ def init_database():
             tipo TEXT NOT NULL,
             descricao TEXT,
             imagem BLOB,
-            imagem_hash TEXT UNIQUE,
+            imagem_hash TEXT,
             pontos_ganhos INTEGER DEFAULT 0,
             data TEXT NOT NULL,
             aprovado INTEGER DEFAULT 0,
@@ -516,10 +523,18 @@ def init_database():
         )
     ''')
     
-    # Criar índices para melhor performance
-    c.execute('CREATE INDEX IF NOT EXISTS idx_comprovantes_hash ON comprovantes(imagem_hash)')
-    c.execute('CREATE INDEX IF NOT EXISTS idx_comprovantes_usuario ON comprovantes(usuario_id, tipo, data)')
-    c.execute('CREATE INDEX IF NOT EXISTS idx_inscricoes_evento ON inscricoes(evento_id, participou)')
+    conn.commit()
+    
+    # Criar índices para melhor performance - SOMENTE SE A COLUNA EXISTIR
+    try:
+        c.execute('CREATE INDEX IF NOT EXISTS idx_comprovantes_usuario ON comprovantes(usuario_id, tipo, data)')
+    except:
+        pass
+    
+    try:
+        c.execute('CREATE INDEX IF NOT EXISTS idx_inscricoes_evento ON inscricoes(evento_id, participou)')
+    except:
+        pass
     
     conn.commit()
     
@@ -766,20 +781,25 @@ def salvar_comprovante(usuario_id, tipo, descricao, imagem_bytes, pontos_sugerid
         "data_envio": data_atual
     })
     
-    c.execute(
-        """INSERT INTO comprovantes 
-           (usuario_id, tipo, descricao, imagem, imagem_hash, pontos_ganhos, data, aprovado, metadados) 
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-        (usuario_id, tipo, descricao, imagem_bytes, image_hash, pontos_ajustados, data_atual, 1, metadados)
-    )
-    
-    conn.commit()
-    conn.close()
-    
-    # Adicionar pontos automaticamente (aprovado)
-    adicionar_pontos(usuario_id, pontos_ajustados, f"Completou: {descricao}", "📸", tipo)
-    
-    return True, f"Comprovante validado! Você ganhou {pontos_ajustados} pontos.", pontos_ajustados
+    try:
+        c.execute(
+            """INSERT INTO comprovantes 
+               (usuario_id, tipo, descricao, imagem, imagem_hash, pontos_ganhos, data, aprovado, metadados) 
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (usuario_id, tipo, descricao, imagem_bytes, image_hash, pontos_ajustados, data_atual, 1, metadados)
+        )
+        
+        conn.commit()
+        conn.close()
+        
+        # Adicionar pontos automaticamente (aprovado)
+        adicionar_pontos(usuario_id, pontos_ajustados, f"Completou: {descricao}", "📸", tipo)
+        
+        return True, f"Comprovante validado! Você ganhou {pontos_ajustados} pontos.", pontos_ajustados
+    except Exception as e:
+        print(f"Erro ao salvar comprovante: {e}")
+        conn.close()
+        return False, "Erro ao salvar comprovante.", 0
 
 def get_ranking():
     conn = sqlite3.connect('ecopiracicaba.db')
@@ -823,13 +843,13 @@ def inscrever_evento(usuario_id, evento_id):
         
         c.execute("UPDATE eventos SET inscritos = inscritos + 1 WHERE id = ?", (evento_id,))
         conn.commit()
+        conn.close()
         
         return True, f"Inscrição realizada! Seu código: {codigo}"
     except Exception as e:
         print(f"Erro na inscrição: {e}")
-        return False, "Erro ao realizar inscrição."
-    finally:
         conn.close()
+        return False, "Erro ao realizar inscrição."
 
 # ========== COMPONENTES DE INTERFACE ==========
 
