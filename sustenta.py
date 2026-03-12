@@ -122,195 +122,188 @@ def init_database():
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
     
-    # Só recria as tabelas se o banco não existir
-    if not db_exists:
-        # Tabela de usuários
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS usuarios (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                nome TEXT NOT NULL,
-                email TEXT UNIQUE NOT NULL,
-                senha TEXT NOT NULL,
-                avatar TEXT,
-                cidade TEXT DEFAULT 'Piracicaba',
-                data_cadastro TEXT,
-                ultimo_acesso TEXT
-            )
-        ''')
-        
-        # Tabela de progresso do usuário
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS progresso (
-                usuario_id INTEGER PRIMARY KEY,
-                total_pontos INTEGER DEFAULT 0,
-                nivel TEXT DEFAULT '🌱 EcoIniciante',
-                eventos_participados INTEGER DEFAULT 0,
-                dicas_vistas INTEGER DEFAULT 0,
-                pontos_visitados INTEGER DEFAULT 0,
-                kg_reciclados REAL DEFAULT 0,
-                arvores_plantadas INTEGER DEFAULT 0,
-                amigos_convidados INTEGER DEFAULT 0,
-                streak_dias INTEGER DEFAULT 0,
-                ultima_atividade TEXT,
-                FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
-            )
-        ''')
-        
-        # Tabela de conquistas
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS conquistas (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                usuario_id INTEGER,
-                tipo TEXT NOT NULL,
-                pontos INTEGER NOT NULL,
-                data TEXT NOT NULL,
-                descricao TEXT,
-                icone TEXT,
-                FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
-            )
-        ''')
-        
-        # Tabela de comprovantes (fotos)
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS comprovantes (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                usuario_id INTEGER NOT NULL,
-                tipo TEXT NOT NULL,
-                descricao TEXT,
-                imagem BLOB,
-                pontos_ganhos INTEGER DEFAULT 0,
-                data TEXT NOT NULL,
-                aprovado INTEGER DEFAULT 0,
-                FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
-            )
-        ''')
-        
-        # Tabela de eventos
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS eventos (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                titulo TEXT NOT NULL,
-                descricao TEXT,
-                data TEXT,
-                hora TEXT,
-                local TEXT,
-                tipo TEXT,
-                vagas INTEGER,
-                inscritos INTEGER DEFAULT 0,
-                organizador TEXT,
-                contato TEXT
-            )
-        ''')
-        
-        # Tabela de inscrições em eventos
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS inscricoes (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                usuario_id INTEGER,
-                evento_id INTEGER,
-                data_inscricao TEXT,
-                participou INTEGER DEFAULT 0,
-                UNIQUE(usuario_id, evento_id),
-                FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE,
-                FOREIGN KEY (evento_id) REFERENCES eventos (id) ON DELETE CASCADE
-            )
-        ''')
-        
-        # Tabela de dicas
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS dicas (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                titulo TEXT NOT NULL,
-                conteudo TEXT,
-                categoria TEXT,
-                data_publicacao TEXT,
-                likes INTEGER DEFAULT 0,
-                autor TEXT
-            )
-        ''')
-        
-        # Tabela de visualizações de dicas
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS dicas_vistas (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                usuario_id INTEGER,
-                dica_id INTEGER,
-                data_vista TEXT,
-                UNIQUE(usuario_id, dica_id),
-                FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE,
-                FOREIGN KEY (dica_id) REFERENCES dicas (id) ON DELETE CASCADE
-            )
-        ''')
-        
-        # Tabela de pontos de coleta
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS pontos_coleta (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                nome TEXT NOT NULL,
-                endereco TEXT,
-                categoria TEXT,
-                horario TEXT,
-                telefone TEXT,
-                avaliacao REAL DEFAULT 0,
-                descricao TEXT
-            )
-        ''')
-        
-        # Tabela de visitas a pontos
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS visitas_pontos (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                usuario_id INTEGER,
-                ponto_id INTEGER,
-                data_visita TEXT,
-                quantidade REAL DEFAULT 0,
-                UNIQUE(usuario_id, ponto_id, data_visita),
-                FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE,
-                FOREIGN KEY (ponto_id) REFERENCES pontos_coleta (id) ON DELETE CASCADE
-            )
-        ''')
-        
-        # Tabela de convites
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS convites (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                usuario_id INTEGER,
-                codigo TEXT UNIQUE,
-                usado INTEGER DEFAULT 0,
-                usado_por INTEGER,
-                data_criacao TEXT,
-                data_uso TEXT,
-                FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE,
-                FOREIGN KEY (usado_por) REFERENCES usuarios (id) ON DELETE CASCADE
-            )
-        ''')
-        
-        conn.commit()
-        
-        # Inserir dados iniciais apenas se o banco foi criado agora
+    # NÃO REMOVER TABELAS EXISTENTES - APENAS CRIAR SE NÃO EXISTIREM
+    # As linhas de DROP TABLE foram REMOVIDAS para preservar os dados
+    
+    # Tabela de usuários
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS usuarios (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            senha TEXT NOT NULL,
+            avatar TEXT,
+            cidade TEXT DEFAULT 'Piracicaba',
+            data_cadastro TEXT,
+            ultimo_acesso TEXT
+        )
+    ''')
+    
+    # Tabela de progresso do usuário
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS progresso (
+            usuario_id INTEGER PRIMARY KEY,
+            total_pontos INTEGER DEFAULT 0,
+            nivel TEXT DEFAULT '🌱 EcoIniciante',
+            eventos_participados INTEGER DEFAULT 0,
+            dicas_vistas INTEGER DEFAULT 0,
+            pontos_visitados INTEGER DEFAULT 0,
+            kg_reciclados REAL DEFAULT 0,
+            arvores_plantadas INTEGER DEFAULT 0,
+            amigos_convidados INTEGER DEFAULT 0,
+            streak_dias INTEGER DEFAULT 0,
+            ultima_atividade TEXT,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
+        )
+    ''')
+    
+    # Tabela de conquistas
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS conquistas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER,
+            tipo TEXT NOT NULL,
+            pontos INTEGER NOT NULL,
+            data TEXT NOT NULL,
+            descricao TEXT,
+            icone TEXT,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
+        )
+    ''')
+    
+    # Tabela de comprovantes (fotos)
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS comprovantes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER NOT NULL,
+            tipo TEXT NOT NULL,
+            descricao TEXT,
+            imagem BLOB,
+            pontos_ganhos INTEGER DEFAULT 0,
+            data TEXT NOT NULL,
+            aprovado INTEGER DEFAULT 0,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
+        )
+    ''')
+    
+    # Tabela de eventos
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS eventos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            titulo TEXT NOT NULL,
+            descricao TEXT,
+            data TEXT,
+            hora TEXT,
+            local TEXT,
+            tipo TEXT,
+            vagas INTEGER,
+            inscritos INTEGER DEFAULT 0,
+            organizador TEXT,
+            contato TEXT
+        )
+    ''')
+    
+    # Tabela de inscrições em eventos
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS inscricoes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER,
+            evento_id INTEGER,
+            data_inscricao TEXT,
+            participou INTEGER DEFAULT 0,
+            UNIQUE(usuario_id, evento_id),
+            FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE,
+            FOREIGN KEY (evento_id) REFERENCES eventos (id) ON DELETE CASCADE
+        )
+    ''')
+    
+    # Tabela de dicas
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS dicas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            titulo TEXT NOT NULL,
+            conteudo TEXT,
+            categoria TEXT,
+            data_publicacao TEXT,
+            likes INTEGER DEFAULT 0,
+            autor TEXT
+        )
+    ''')
+    
+    # Tabela de visualizações de dicas
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS dicas_vistas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER,
+            dica_id INTEGER,
+            data_vista TEXT,
+            UNIQUE(usuario_id, dica_id),
+            FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE,
+            FOREIGN KEY (dica_id) REFERENCES dicas (id) ON DELETE CASCADE
+        )
+    ''')
+    
+    # Tabela de pontos de coleta
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS pontos_coleta (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL,
+            endereco TEXT,
+            categoria TEXT,
+            horario TEXT,
+            telefone TEXT,
+            avaliacao REAL DEFAULT 0,
+            descricao TEXT
+        )
+    ''')
+    
+    # Tabela de visitas a pontos
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS visitas_pontos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER,
+            ponto_id INTEGER,
+            data_visita TEXT,
+            quantidade REAL DEFAULT 0,
+            UNIQUE(usuario_id, ponto_id, data_visita),
+            FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE,
+            FOREIGN KEY (ponto_id) REFERENCES pontos_coleta (id) ON DELETE CASCADE
+        )
+    ''')
+    
+    # Tabela de convites
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS convites (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER,
+            codigo TEXT UNIQUE,
+            usado INTEGER DEFAULT 0,
+            usado_por INTEGER,
+            data_criacao TEXT,
+            data_uso TEXT,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE,
+            FOREIGN KEY (usado_por) REFERENCES usuarios (id) ON DELETE CASCADE
+        )
+    ''')
+    
+    conn.commit()
+    
+    # SÓ INSERE DADOS INICIAIS SE AS TABELAS ESTIVEREM VAZIAS
+    # Verificar se precisa adicionar admin
+    c.execute("SELECT COUNT(*) FROM usuarios")
+    total_usuarios = c.fetchone()[0]
+    
+    if total_usuarios == 0:
+        # Banco novinho - inserir todos os dados iniciais
         try:
             dados_iniciais(conn, c)
             conn.commit()
+            print("Dados iniciais inseridos com sucesso!")
         except sqlite3.Error as e:
-            st.error(f"Erro ao inserir dados iniciais: {e}")
+            print(f"Erro ao inserir dados iniciais: {e}")
     else:
-        # Verificar se precisa adicionar dados iniciais (admin e eventos)
-        c.execute("SELECT COUNT(*) FROM usuarios WHERE email = 'admin@ecopiracicaba.com'")
-        if c.fetchone()[0] == 0:
-            # Adicionar apenas o admin se não existir
-            data_atual = datetime.now().strftime("%d/%m/%Y")
-            c.execute(
-                "INSERT INTO usuarios (nome, email, senha, data_cadastro) VALUES (?, ?, ?, ?)",
-                ("Administrador", "admin@ecopiracicaba.com", "eco2026", data_atual)
-            )
-            admin_id = c.lastrowid
-            c.execute(
-                "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
-                (admin_id, 1000, get_nivel(1000), data_atual)
-            )
-            conn.commit()
-        
-        # Verificar se precisa adicionar eventos
+        # Já existem usuários, só verificar se precisa adicionar eventos/dicas/pontos
+        # Verificar eventos
         c.execute("SELECT COUNT(*) FROM eventos")
         if c.fetchone()[0] == 0:
             eventos = [
@@ -332,8 +325,9 @@ def init_database():
                     e
                 )
             conn.commit()
+            print("Eventos iniciais inseridos!")
         
-        # Verificar se precisa adicionar dicas
+        # Verificar dicas
         c.execute("SELECT COUNT(*) FROM dicas")
         if c.fetchone()[0] == 0:
             dicas = [
@@ -350,8 +344,9 @@ def init_database():
                     d
                 )
             conn.commit()
+            print("Dicas iniciais inseridas!")
         
-        # Verificar se precisa adicionar pontos de coleta
+        # Verificar pontos de coleta
         c.execute("SELECT COUNT(*) FROM pontos_coleta")
         if c.fetchone()[0] == 0:
             pontos = [
@@ -370,11 +365,12 @@ def init_database():
                     p
                 )
             conn.commit()
+            print("Pontos de coleta iniciais inseridos!")
     
     conn.close()
 
 def dados_iniciais(conn, c):
-    """Insere dados iniciais no banco"""
+    """Insere dados iniciais no banco (apenas para banco novo)"""
     
     # ===== USUÁRIO ADMIN =====
     data_atual = datetime.now().strftime("%d/%m/%Y")
