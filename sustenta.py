@@ -524,8 +524,31 @@ def get_user_data(user_id):
         return None, None, None, None, None, None, None, None, banido[1]
     
     # Dados do usuário
-    c.execute("SELECT nome, email, telefone, cidade, data_cadastro FROM usuarios WHERE id = ?", (user_id,))
+    def get_user_data(user_id):
+    """Busca dados completos do usuário"""
+    conn = sqlite3.connect('ecopiracicaba.db')
+    c = conn.cursor()
+    
+    # Verificar se usuário está banido
+    c.execute("SELECT banido, motivo_ban FROM usuarios WHERE id = ?", (user_id,))
+    banido = c.fetchone()
+    if banido and banido[0] == 1:
+        conn.close()
+        return None, None, None, None, None, None, None, None, banido[1]
+    
+    # CORREÇÃO: Removido 'telefone' da consulta
+    c.execute("SELECT nome, email, cidade, data_cadastro FROM usuarios WHERE id = ?", (user_id,))
     user = c.fetchone()
+    
+    # Adicionar telefone como None para manter compatibilidade
+    if user:
+        user = (user[0], user[1], "", user[2], user[3])  # nome, email, telefone="", cidade, data_cadastro
+    
+    # Progresso
+    c.execute("SELECT * FROM progresso WHERE usuario_id = ?", (user_id,))
+    progresso = c.fetchone()
+    
+    # ... resto da função permanece igual
     
     # Progresso
     c.execute("SELECT * FROM progresso WHERE usuario_id = ?", (user_id,))
