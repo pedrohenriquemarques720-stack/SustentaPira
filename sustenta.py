@@ -1032,7 +1032,7 @@ def mostrar_pagina_desafios(usuario_id, text_color, card_bg, icon_color, border_
             with col1:
                 bloqueado = desafio['tipo'] in completados_hoje
                 st.markdown(f"""
-                <div style='background: {card_bg}; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 6px solid {icon_color}; border: 1px solid {border_color; opacity: {0.5 if bloqueado else 1};'>
+                <div style='background: {card_bg}; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 6px solid {icon_color}; border: 1px solid {border_color}; opacity: {0.5 if bloqueado else 1};'>
                     <div style='display: flex; align-items: center; gap: 15px;'>
                         <span style='font-size: 40px;'>{desafio['icone']}</span>
                         <div>
