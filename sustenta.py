@@ -517,19 +517,34 @@ def get_user_data(user_id):
     c = conn.cursor()
     
     # Verificar se usuário está banido
+    def get_user_data(user_id):
+    """Busca dados completos do usuário - CORRIGIDO"""
+    conn = sqlite3.connect('ecopiracicaba.db')
+    c = conn.cursor()
+    
+    # Verificar se usuário está banido
     c.execute("SELECT banido, motivo_ban FROM usuarios WHERE id = ?", (user_id,))
     banido = c.fetchone()
     if banido and banido[0] == 1:
         conn.close()
         return None, None, None, None, None, None, None, None, banido[1]
     
-    # Dados do usuário - CORREÇÃO: removido 'telefone' da consulta
+    # Dados do usuário - CORREÇÃO: usar os campos que existem
     c.execute("SELECT nome, email, cidade, data_cadastro FROM usuarios WHERE id = ?", (user_id,))
     user = c.fetchone()
     
-    # Adicionar telefone como string vazia para manter compatibilidade
+    # Adicionar telefone como string vazia se não existir
     if user:
-        user = (user[0], user[1], "", user[2], user[3])  # nome, email, telefone="", cidade, data_cadastro
+        # Verificar se a coluna telefone existe
+        try:
+            c.execute("SELECT telefone FROM usuarios WHERE id = ?", (user_id,))
+            telefone = c.fetchone()
+            if telefone and telefone[0]:
+                user = (user[0], user[1], telefone[0], user[2], user[3])
+            else:
+                user = (user[0], user[1], "", user[2], user[3])
+        except:
+            user = (user[0], user[1], "", user[2], user[3])
     
     # Progresso
     c.execute("SELECT * FROM progresso WHERE usuario_id = ?", (user_id,))
@@ -558,6 +573,10 @@ def get_user_data(user_id):
     # Convites
     c.execute("SELECT codigo FROM convites WHERE usuario_id = ? AND usado = 0", (user_id,))
     convites = c.fetchall()
+    
+    conn.close()
+    
+    return user, progresso, conquistas, comprovantes, inscricoes, dicas_vistas, visitas, convites, None
     
     conn.close()
     
