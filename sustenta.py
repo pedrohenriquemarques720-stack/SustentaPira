@@ -534,7 +534,7 @@ def dados_iniciais(conn, c):
             (user_id, pontos, get_nivel(pontos), data_atual)
         )
     
-    # ===== EVENTOS 2026 - PIRACICABA (MEGA EXPANDIDO) =====
+    # ===== EVENTOS 2026 - PIRACICABA =====
     eventos = [
         # JANEIRO 2026
         ("🌱 1º Mutirão de Limpeza 2026", "Inicie o ano contribuindo com a limpeza das margens do Rio Piracicaba. Haverá café da manhã comunitário e distribuição de mudas.", "10/01/2026", "08:00", "Rua do Porto", "Rua do Porto - Centro", "mutirão", 150, "SOS Rio Piracicaba", "(19) 99765-4321", "JANLIMPEZA", 200),
@@ -622,7 +622,7 @@ def dados_iniciais(conn, c):
             e
         )
     
-    # ===== PONTOS DE COLETA EM PIRACICABA (MEGA EXPANDIDO POR CATEGORIA) =====
+    # ===== PONTOS DE COLETA EM PIRACICABA =====
     
     # 1. PONTOS GERAIS (Ecopontos)
     pontos_gerais = [
@@ -1168,337 +1168,238 @@ def inscrever_evento(usuario_id, evento_id, nome, email, telefone):
         print(f"Erro na inscrição: {e}")
         return False, "Erro ao realizar inscrição."
 
-# ========== COMPONENTES DE INTERFACE PROFISSIONAL ==========
+# ========== CONFIGURAÇÕES DE TEMA ==========
 
-def aplicar_estilo_profissional():
-    """Aplica CSS profissional ao app"""
-    st.markdown("""
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        * {
-            font-family: 'Inter', sans-serif;
-        }
-        
-        /* Cards modernos */
-        .card-moderno {
-            background: linear-gradient(145deg, #1a3329 0%, #1f4035 100%);
-            border-radius: 20px;
-            padding: 25px;
-            border: 1px solid rgba(139, 195, 74, 0.2);
-            box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .card-moderno:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 25px 50px -12px rgba(139, 195, 74, 0.3);
-            border-color: rgba(139, 195, 74, 0.5);
-        }
-        
-        /* Badges e tags */
-        .badge {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 50px;
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-        
-        .badge-sucesso {
-            background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
-            color: white;
-        }
-        
-        .badge-info {
-            background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
-            color: white;
-        }
-        
-        .badge-warning {
-            background: linear-gradient(135deg, #ff8f00 0%, #ff6f00 100%);
-            color: white;
-        }
-        
-        /* Gradientes animados */
-        @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        
-        .gradiente-animado {
-            background: linear-gradient(-45deg, #8bc34a, #4caf50, #2e7d32, #1b5e20);
-            background-size: 400% 400%;
-            animation: gradient 15s ease infinite;
-        }
-        
-        /* Estatísticas com ícones flutuantes */
-        .stat-card {
-            text-align: center;
-            padding: 20px;
-            border-radius: 15px;
-            background: rgba(26, 51, 41, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(139, 195, 74, 0.2);
-        }
-        
-        .stat-number {
-            font-size: 36px;
-            font-weight: 700;
-            color: #8bc34a;
-            margin: 10px 0;
-        }
-        
-        .stat-label {
-            font-size: 14px;
-            color: #e0e0e0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        /* Botões com efeitos */
-        .btn-profissional {
-            background: linear-gradient(135deg, #8bc34a 0%, #4caf50 100%);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 50px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(139, 195, 74, 0.3);
-        }
-        
-        .btn-profissional:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(139, 195, 74, 0.5);
-        }
-        
-        .btn-profissional:active {
-            transform: translateY(0);
-        }
-        
-        /* Títulos com linha decorativa */
-        .titulo-secao {
-            font-size: 28px;
-            font-weight: 700;
-            color: white;
-            position: relative;
-            padding-bottom: 15px;
-            margin-bottom: 30px;
-        }
-        
-        .titulo-secao:after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 60px;
-            height: 4px;
-            background: linear-gradient(90deg, #8bc34a, #4caf50);
-            border-radius: 2px;
-        }
-        
-        .titulo-secao.centered:after {
-            left: 50%;
-            transform: translateX(-50%);
-        }
-        
-        /* Grid de cards responsivo */
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            padding: 20px 0;
-        }
-        
-        /* Animações de entrada */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .animate-fadeInUp {
-            animation: fadeInUp 0.6s ease forwards;
-        }
-        
-        /* Scrollbar personalizada */
-        ::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #1a3329;
-            border-radius: 10px;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #8bc34a, #4caf50);
-            border-radius: 10px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, #4caf50, #2e7d32);
-        }
-        
-        /* Toast notifications */
-        .toast {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 25px;
-            border-radius: 10px;
-            background: #1a3329;
-            border-left: 4px solid #8bc34a;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            z-index: 9999;
-            animation: slideIn 0.3s ease;
-        }
-        
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        
-        /* Loading spinner */
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(139, 195, 74, 0.3);
-            border-top-color: #8bc34a;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        /* Tooltips personalizados */
-        [data-tooltip] {
-            position: relative;
-            cursor: help;
-        }
-        
-        [data-tooltip]:before {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 5px 10px;
-            background: #1a3329;
-            color: white;
-            border-radius: 5px;
-            font-size: 12px;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            border: 1px solid #8bc34a;
-        }
-        
-        [data-tooltip]:hover:before {
-            opacity: 1;
-        }
-        
-        /* Progresso circular */
-        .progress-circle {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: conic-gradient(#8bc34a 0deg, #2e7d32 0deg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-        
-        .progress-circle-inner {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            background: #1a3329;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            font-weight: 700;
-            color: white;
-        }
-        
-        /* Dividers decorativos */
-        .divider {
-            width: 100%;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, #8bc34a, transparent);
-            margin: 30px 0;
-        }
-        
-        .divider-vertical {
-            width: 1px;
-            height: 50px;
-            background: linear-gradient(180deg, transparent, #8bc34a, transparent);
-            margin: 0 20px;
-        }
-        
-        /* Alertas estilizados */
-        .alert {
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin: 15px 0;
-            border-left: 4px solid;
-            background: rgba(26, 51, 41, 0.9);
-            backdrop-filter: blur(10px);
-        }
-        
-        .alert-success {
-            border-left-color: #8bc34a;
-        }
-        
-        .alert-info {
-            border-left-color: #2196f3;
-        }
-        
-        .alert-warning {
-            border-left-color: #ff9800;
-        }
-        
-        .alert-error {
-            border-left-color: #f44336;
-        }
-    </style>
-    """, unsafe_allow_html=True)
+bg_color = "#0a1f17"
+card_bg = "#1a3329"
+text_color = "#FFFFFF"
+secondary_text = "#E0E0E0"
+border_color = "#2a4a3a"
+icon_color = "#8bc34a"
+gradient_start = "#0a1f17"
+gradient_end = "#1a4a3a"
 
-def mostrar_login_cadastro_profissional():
-    """Mostra formulários de login e cadastro profissional"""
+# CSS Global
+st.markdown(f"""
+<style>
+    @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css');
+    
+    .stApp {{
+        background: linear-gradient(135deg, {gradient_start} 0%, {gradient_end} 100%);
+    }}
+    
+    /* Esconder sidebar */
+    section[data-testid="stSidebar"] {{
+        display: none !important;
+    }}
+    
+    /* Textos gerais */
+    .stMarkdown, p, h1, h2, h3, h4, h5, h6, span, div, label {{
+        color: {text_color} !important;
+    }}
+    
+    /* Inputs */
+    .stTextInput input, .stTextArea textarea, .stSelectbox div {{
+        background-color: #2a4a3a !important;
+        color: {text_color} !important;
+        border: 1px solid {border_color} !important;
+        border-radius: 10px;
+    }}
+    
+    .stTextInput label, .stTextArea label, .stSelectbox label {{
+        color: {text_color} !important;
+    }}
+    
+    /* Botões */
+    .stButton button {{
+        background: {icon_color};
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 10px 20px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }}
+    
+    .stButton button:hover {{
+        background: #6ba539;
+        transform: scale(1.05);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }}
+    
+    .stButton button:disabled {{
+        background: #444 !important;
+        opacity: 0.5;
+    }}
+    
+    /* Tabs */
+    div.stTabs [data-baseweb="tab-list"] button {{
+        color: {text_color} !important;
+    }}
+    
+    div.stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {{
+        background-color: {icon_color} !important;
+        color: white !important;
+        border-radius: 50px 50px 0 0;
+    }}
+    
+    /* Cards */
+    .card-verde {{
+        background: {card_bg};
+        padding: 20px;
+        border-radius: 15px;
+        border: 1px solid {border_color};
+        border-left: 6px solid {icon_color};
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-bottom: 15px;
+    }}
+    
+    .card-desafio {{
+        background: {card_bg};
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid {border_color};
+        margin-bottom: 10px;
+    }}
+    
+    /* Badges */
+    .badge {{
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 50px;
+        font-size: 12px;
+        font-weight: 600;
+        color: white;
+    }}
+    
+    .badge-verde {{
+        background: {icon_color};
+    }}
+    
+    .badge-info {{
+        background: #2196f3;
+    }}
+    
+    .badge-aviso {{
+        background: #ff9800;
+    }}
+    
+    /* Estatísticas */
+    .stat-card {{
+        background: {card_bg};
+        padding: 20px;
+        border-radius: 15px;
+        text-align: center;
+        border: 1px solid {border_color};
+    }}
+    
+    .stat-number {{
+        color: {icon_color};
+        font-size: 48px;
+        font-weight: 700;
+        margin: 10px 0;
+    }}
+    
+    .stat-label {{
+        color: {secondary_text};
+        font-size: 14px;
+        text-transform: uppercase;
+    }}
+    
+    /* Progresso */
+    .progress-bar {{
+        height: 8px;
+        background: {border_color};
+        border-radius: 4px;
+        margin: 10px 0;
+    }}
+    
+    .progress-fill {{
+        height: 100%;
+        background: {icon_color};
+        border-radius: 4px;
+    }}
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar {{
+        width: 8px;
+        height: 8px;
+    }}
+    
+    ::-webkit-scrollbar-track {{
+        background: {border_color};
+        border-radius: 10px;
+    }}
+    
+    ::-webkit-scrollbar-thumb {{
+        background: {icon_color};
+        border-radius: 10px;
+    }}
+    
+    ::-webkit-scrollbar-thumb:hover {{
+        background: #6ba539;
+    }}
+    
+    /* Alertas */
+    .stAlert {{
+        background-color: {card_bg} !important;
+        color: {text_color} !important;
+        border: 1px solid {border_color} !important;
+    }}
+    
+    /* Expander */
+    .streamlit-expanderHeader {{
+        color: {text_color} !important;
+        background-color: {card_bg} !important;
+        border: 1px solid {border_color} !important;
+        border-radius: 10px;
+    }}
+    
+    /* Títulos */
+    .titulo-principal {{
+        font-size: 48px;
+        font-weight: 700;
+        color: {text_color};
+        text-align: center;
+        margin-bottom: 10px;
+    }}
+    
+    .subtitulo {{
+        color: {icon_color};
+        font-size: 18px;
+        text-align: center;
+        margin-bottom: 30px;
+    }}
+    
+    /* Ícones */
+    .fas, .far, .fab {{
+        color: {icon_color};
+        margin-right: 5px;
+    }}
+</style>
+""", unsafe_allow_html=True)
+
+# ========== INTERFACE PRINCIPAL ==========
+
+if 'usuario_logado' not in st.session_state:
+    st.session_state.usuario_logado = None
+    st.session_state['mostrar_upload'] = False
+    st.session_state['desafio_atual'] = None
+    st.session_state['mostrar_inscricao'] = False
+    st.session_state['evento_atual'] = None
+
+# ========== COMPONENTES DE INTERFACE ==========
+
+def mostrar_login_cadastro():
+    """Mostra formulários de login e cadastro"""
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
         st.markdown("""
-        <div class='card-moderno animate-fadeInUp' style='text-align: center; margin-bottom: 30px;'>
+        <div class='card-verde' style='text-align: center;'>
             <h1 style='font-size: 48px; margin-bottom: 10px;'>🌿</h1>
-            <h1 style='font-size: 32px; font-weight: 700; margin: 0;'>EcoPiracicaba</h1>
-            <p style='color: #8bc34a; font-size: 16px; margin: 5px 0 20px 0;'>Sustentabilidade em ação</p>
-            <div class='divider'></div>
+            <h1 class='titulo-principal'>EcoPiracicaba</h1>
+            <p class='subtitulo'>Sustentabilidade em ação</p>
         </div>
         """, unsafe_allow_html=True)
         
@@ -1523,7 +1424,7 @@ def mostrar_login_cadastro_profissional():
                         else:
                             st.error(erro)
                 with col_b:
-                    st.markdown("<br><small style='color: #8bc34a;'>Esqueceu a senha?</small>", unsafe_allow_html=True)
+                    st.markdown("<br><small style='color: #8bc34a;'><i class='fas fa-key'></i> Esqueceu a senha?</small>", unsafe_allow_html=True)
         
         with tab_cadastro:
             with st.form("cadastro_form"):
@@ -1534,7 +1435,7 @@ def mostrar_login_cadastro_profissional():
                 senha = st.text_input("Senha", type="password", placeholder="••••••••")
                 confirmar_senha = st.text_input("Confirmar senha", type="password", placeholder="••••••••")
                 
-                st.markdown("<small style='color: #e0e0e0;'>Ao criar uma conta, você concorda com nossos Termos de Uso e Política de Privacidade.</small>", unsafe_allow_html=True)
+                st.markdown("<small style='color: #e0e0e0;'><i class='fas fa-shield-alt'></i> Ao criar uma conta, você concorda com nossos Termos de Uso e Política de Privacidade.</small>", unsafe_allow_html=True)
                 st.markdown("<br>", unsafe_allow_html=True)
                 
                 if st.form_submit_button("Criar conta", use_container_width=True):
@@ -1553,12 +1454,10 @@ def mostrar_login_cadastro_profissional():
                             st.balloons()
                         else:
                             st.error(mensagem)
-        
-        st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
-def mostrar_info_usuario_profissional():
-    """Mostra informações do usuário logado profissional"""
-    col1, col2, col3 = st.columns([1, 3, 1])
+def mostrar_info_usuario():
+    """Mostra informações do usuário logado"""
+    col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
         result = get_user_data(st.session_state.usuario_logado['id'])
@@ -1581,7 +1480,6 @@ def mostrar_info_usuario_profissional():
         streak = progresso[9] if progresso and len(progresso) > 9 else 0
         desafios = progresso[13] if progresso and len(progresso) > 13 else 0
         
-        # Calcular porcentagem para próximo nível
         proximo = get_proximo_nivel(pontos)
         porcentagem = min(100, (pontos / 5000) * 100) if pontos < 5000 else 100
         
@@ -1589,78 +1487,64 @@ def mostrar_info_usuario_profissional():
         
         with col_a:
             st.markdown(f"""
-            <div class='card-moderno' style='padding: 20px;'>
-                <div style='display: flex; align-items: center; gap: 15px;'>
-                    <div style='font-size: 40px;'>{'🔥' if streak > 0 else '✨'}</div>
-                    <div>
-                        <h3 style='margin: 0;'>{streak}</h3>
-                        <p style='margin: 0; color: #e0e0e0;'>dias de streak</p>
-                    </div>
-                </div>
+            <div class='stat-card'>
+                <i class='fas fa-fire' style='font-size: 30px; color: #ff9800;'></i>
+                <div class='stat-number'>{streak}</div>
+                <div class='stat-label'>Dias de streak</div>
             </div>
             """, unsafe_allow_html=True)
         
         with col_b:
             st.markdown(f"""
-            <div class='card-moderno' style='padding: 20px;'>
-                <div style='display: flex; align-items: center; gap: 15px;'>
-                    <div style='font-size: 40px;'>🏆</div>
-                    <div>
-                        <h3 style='margin: 0;'>{desafios}</h3>
-                        <p style='margin: 0; color: #e0e0e0;'>desafios</p>
-                    </div>
-                </div>
+            <div class='stat-card'>
+                <i class='fas fa-trophy' style='font-size: 30px; color: {icon_color};'></i>
+                <div class='stat-number'>{desafios}</div>
+                <div class='stat-label'>Desafios</div>
             </div>
             """, unsafe_allow_html=True)
         
         with col_c:
             st.markdown(f"""
-            <div class='card-moderno' style='padding: 20px;'>
-                <div style='display: flex; align-items: center; gap: 15px;'>
-                    <div style='font-size: 40px;'>🔔</div>
-                    <div>
-                        <h3 style='margin: 0;'>{notificacoes}</h3>
-                        <p style='margin: 0; color: #e0e0e0;'>notificações</p>
-                    </div>
-                </div>
+            <div class='stat-card'>
+                <i class='fas fa-bell' style='font-size: 30px; color: {icon_color};'></i>
+                <div class='stat-number'>{notificacoes}</div>
+                <div class='stat-label'>Notificações</div>
             </div>
             """, unsafe_allow_html=True)
         
         st.markdown(f"""
-        <div class='card-moderno' style='margin-top: 20px;'>
-            <div style='display: flex; align-items: center; justify-content: space-between;'>
+        <div class='card-verde'>
+            <div style='display: flex; justify-content: space-between; align-items: center;'>
                 <div>
-                    <h2 style='margin: 0;'>{st.session_state.usuario_logado['nome']}</h2>
-                    <p style='color: #8bc34a; margin: 5px 0;'>{nivel}</p>
+                    <h2><i class='fas fa-user-circle'></i> {st.session_state.usuario_logado['nome']}</h2>
+                    <p style='color: {icon_color};'><i class='fas fa-star'></i> {nivel}</p>
                 </div>
                 <div style='text-align: right;'>
-                    <h1 style='color: #8bc34a; font-size: 48px; margin: 0;'>{pontos}</h1>
-                    <p style='margin: 0;'>pontos totais</p>
+                    <h1 style='color: {icon_color}; font-size: 48px;'>{pontos}</h1>
+                    <p>pontos totais</p>
                 </div>
             </div>
-            <div style='height: 8px; background: #2a4a3a; border-radius: 4px; margin: 20px 0 10px 0;'>
-                <div style='height: 100%; width: {porcentagem}%; background: linear-gradient(90deg, #8bc34a, #4caf50); border-radius: 4px;'></div>
+            <div class='progress-bar'>
+                <div class='progress-fill' style='width: {porcentagem}%;'></div>
             </div>
-            <p style='text-align: right; margin: 0; color: #e0e0e0;'>{proximo} pontos para o próximo nível</p>
+            <p style='text-align: right;'><i class='fas fa-arrow-right'></i> {proximo} pontos para o próximo nível</p>
         </div>
         """, unsafe_allow_html=True)
         
         if st.button("🚪 Sair", use_container_width=True):
             st.session_state.usuario_logado = None
             st.rerun()
-        
-        st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
-def mostrar_eventos_destaque_profissional(text_color, card_bg, icon_color, border_color, secondary_text):
-    """Mostra eventos em destaque profissional"""
+def mostrar_eventos_destaque():
+    """Mostra eventos em destaque na página inicial"""
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     c.execute("SELECT * FROM eventos ORDER BY data LIMIT 6")
     eventos = c.fetchall()
     conn.close()
     
-    st.markdown("<h1 class='titulo-secao centered' style='text-align: center;'>🌿 EcoPiracicaba 2026</h1>", unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align: center; color: #8bc34a; margin-bottom: 40px;'>Eventos em Piracicaba</h2>", unsafe_allow_html=True)
+    st.markdown("<h1 class='titulo-principal'>🌿 EcoPiracicaba 2026</h1>", unsafe_allow_html=True)
+    st.markdown("<p class='subtitulo'><i class='fas fa-calendar-alt'></i> Eventos em Piracicaba</p>", unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     
@@ -1669,37 +1553,173 @@ def mostrar_eventos_destaque_profissional(text_color, card_bg, icon_color, borde
             tipo_evento = evento[6]
             vagas = evento[7]
             inscritos = evento[8]
-            disponibilidade = (inscritos / vagas * 100) if vagas > 0 else 0
             vagas_restantes = vagas - inscritos if vagas > 0 else "∞"
             
             st.markdown(f"""
-            <div class='card-moderno animate-fadeInUp' style='margin-bottom: 20px; animation-delay: {i * 0.1}s;'>
-                <div style='display: flex; justify-content: space-between; align-items: start;'>
-                    <div style='flex: 1;'>
-                        <span class='badge badge-info'>{tipo_evento.upper()}</span>
-                        <h3 style='margin: 15px 0 10px 0;'>{evento[1]}</h3>
-                        <p style='color: #e0e0e0; font-size: 14px; margin-bottom: 15px;'>{evento[2][:120]}...</p>
-                        <div style='display: flex; gap: 20px; flex-wrap: wrap;'>
-                            <p style='margin: 0;'><i class='fas fa-calendar' style='color: {icon_color};'></i> {evento[3]} às {evento[4]}</p>
-                            <p style='margin: 0;'><i class='fas fa-map-marker-alt' style='color: {icon_color};'></i> {evento[5]}</p>
-                        </div>
+            <div class='card-verde'>
+                <div style='display: flex; justify-content: space-between;'>
+                    <div>
+                        <span class='badge badge-verde'><i class='fas fa-tag'></i> {tipo_evento.upper()}</span>
+                        <h3>{evento[1]}</h3>
+                        <p>{evento[2][:100]}...</p>
+                        <p><i class='fas fa-calendar'></i> {evento[3]} às {evento[4]}</p>
+                        <p><i class='fas fa-map-marker-alt'></i> {evento[5]}</p>
+                        <p><i class='fas fa-users'></i> {inscritos}/{vagas if vagas > 0 else '∞'} inscritos</p>
                     </div>
-                    <div style='text-align: center; min-width: 120px;'>
-                        <div class='progress-circle' style='background: conic-gradient(#8bc34a {disponibilidade}deg, #2a4a3a 0deg);'>
-                            <div class='progress-circle-inner'>
-                                <span>{int(disponibilidade)}%</span>
-                            </div>
-                        </div>
-                        <p style='margin: 10px 0 0 0;'><strong>{inscritos}/{vagas if vagas > 0 else '∞'}</strong> inscritos</p>
-                        <span class='badge badge-success'>{vagas_restantes} vagas</span>
-                        <p style='margin-top: 10px; color: {icon_color};'><i class='fas fa-star'></i> +{evento[12] if len(evento) > 12 else 150} pontos</p>
+                    <div style='text-align: center; min-width: 100px;'>
+                        <div class='badge badge-verde' style='font-size: 16px;'>{vagas_restantes} vagas</div>
+                        <p style='margin-top: 10px; color: {icon_color};'><i class='fas fa-star'></i> +{evento[12] if len(evento) > 12 else 150} pts</p>
                     </div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
 
-def mostrar_perfil_completo_profissional(usuario_id, text_color, card_bg, icon_color, border_color, secondary_text):
-    """Mostra perfil completo profissional"""
+def mostrar_pagina_desafios(usuario_id):
+    """Página de desafios com upload de arquivo"""
+    st.markdown("<h1 class='titulo-principal'><i class='fas fa-bullseye'></i> Desafios Ambientais</h1>", unsafe_allow_html=True)
+    
+    result = get_user_data(usuario_id)
+    progresso = result[1] if result[1] else None
+    
+    pontos = progresso[1] if progresso and len(progresso) > 1 else 0
+    streak = progresso[9] if progresso and len(progresso) > 9 else 0
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown(f"""
+        <div class='stat-card'>
+            <i class='fas fa-star' style='font-size: 30px; color: {icon_color};'></i>
+            <div class='stat-number'>{pontos}</div>
+            <div class='stat-label'>Pontos totais</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+        <div class='stat-card'>
+            <i class='fas fa-fire' style='font-size: 30px; color: #ff9800;'></i>
+            <div class='stat-number'>{streak}</div>
+            <div class='stat-label'>Dias de streak</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        conquistas_count = len(result[2]) if result[2] else 0
+        st.markdown(f"""
+        <div class='stat-card'>
+            <i class='fas fa-trophy' style='font-size: 30px; color: {icon_color};'></i>
+            <div class='stat-number'>{conquistas_count}</div>
+            <div class='stat-label'>Conquistas</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("<h2 style='margin: 30px 0 20px;'><i class='fas fa-list'></i> Desafios Disponíveis</h2>", unsafe_allow_html=True)
+    
+    # Verificar desafios completados hoje
+    conn = sqlite3.connect('ecopiracicaba.db')
+    c = conn.cursor()
+    c.execute("""
+        SELECT tipo FROM comprovantes 
+        WHERE usuario_id = ? AND data LIKE ? 
+        ORDER BY data DESC
+    """, (usuario_id, f"{datetime.now().strftime('%d/%m/%Y')}%"))
+    completados_hoje = [row[0] for row in c.fetchall()]
+    conn.close()
+    
+    for desafio in DESAFIOS_LISTA:
+        with st.container():
+            col1, col2 = st.columns([5, 1])
+            
+            with col1:
+                bloqueado = desafio['tipo'] in completados_hoje
+                opacidade = "0.5" if bloqueado else "1"
+                st.markdown(f"""
+                <div class='card-desafio' style='opacity: {opacidade};'>
+                    <div style='display: flex; align-items: center; gap: 20px;'>
+                        <div style='font-size: 40px;'>{desafio['icone']}</div>
+                        <div style='flex: 1;'>
+                            <h3 style='margin: 0;'>{desafio['titulo']}</h3>
+                            <p style='color: {secondary_text}; margin: 5px 0;'>{desafio['descricao']}</p>
+                            <div style='display: flex; gap: 10px; flex-wrap: wrap;'>
+                                <span class='badge badge-verde'><i class='fas fa-star'></i> +{desafio['pontos']} pontos</span>
+                                <span class='badge badge-info'><i class='fas fa-info-circle'></i> {desafio['dica_validacao']}</span>
+                                {f"<span class='badge badge-aviso'><i class='fas fa-clock'></i> Limite diário</span>" if bloqueado else ""}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                if not bloqueado:
+                    if st.button(f"📸 Comprovar", key=f"btn_{desafio['id']}_{usuario_id}", use_container_width=True):
+                        st.session_state['desafio_atual'] = desafio
+                        st.session_state['mostrar_upload'] = True
+                        st.rerun()
+                else:
+                    st.button(f"✅ Concluído", key=f"done_{desafio['id']}_{usuario_id}", disabled=True, use_container_width=True)
+    
+    # Modal de upload de foto
+    if st.session_state.get('mostrar_upload', False):
+        desafio = st.session_state['desafio_atual']
+        
+        st.markdown("---")
+        st.markdown(f"<h2><i class='fas fa-camera'></i> Comprovar: {desafio['titulo']}</h2>", unsafe_allow_html=True)
+        
+        with st.container():
+            st.info(f"<i class='fas fa-lightbulb'></i> **Dica:** {desafio['dica_validacao']}", unsafe_allow_html=True)
+            
+            uploaded_file = st.file_uploader(
+                "Escolha uma foto ou imagem do comprovante",
+                type=['jpg', 'jpeg', 'png'],
+                key=f"upload_comprovante_{desafio['id']}_{usuario_id}"
+            )
+            
+            if uploaded_file is not None:
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.image(uploaded_file, caption="Prévia da imagem", use_container_width=True)
+                
+                with col2:
+                    st.markdown(f"""
+                    <div class='card-verde'>
+                        <h4><i class='fas fa-clipboard-list'></i> Resumo</h4>
+                        <p><i class='fas fa-tag'></i> <strong>Desafio:</strong> {desafio['titulo']}</p>
+                        <p><i class='fas fa-star'></i> <strong>Pontos:</strong> +{desafio['pontos']}</p>
+                        <p><i class='fas fa-file'></i> <strong>Arquivo:</strong> {uploaded_file.name}</p>
+                        <p><i class='fas fa-weight'></i> <strong>Tamanho:</strong> {len(uploaded_file.getvalue()) / 1024:.1f} KB</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    if st.button("✅ Confirmar e enviar", key=f"confirmar_upload_{desafio['id']}_{usuario_id}", use_container_width=True):
+                        with st.spinner("Validando imagem..."):
+                            bytes_data = uploaded_file.getvalue()
+                            sucesso, mensagem, pontos_ganhos = salvar_comprovante(
+                                usuario_id,
+                                desafio['tipo'],
+                                f"Completou: {desafio['titulo']}",
+                                bytes_data
+                            )
+                            
+                            if sucesso:
+                                st.balloons()
+                                st.success(mensagem)
+                                time.sleep(2)
+                                st.session_state['mostrar_upload'] = False
+                                st.session_state['desafio_atual'] = None
+                                st.rerun()
+                            else:
+                                st.error(mensagem)
+            
+            if st.button("❌ Cancelar", key=f"cancelar_upload_{desafio['id']}_{usuario_id}", use_container_width=True):
+                st.session_state['mostrar_upload'] = False
+                st.session_state['desafio_atual'] = None
+                st.rerun()
+
+def mostrar_perfil_completo(usuario_id):
+    """Mostra perfil completo com estatísticas"""
     result = get_user_data(usuario_id)
     
     if len(result) == 10:
@@ -1710,9 +1730,6 @@ def mostrar_perfil_completo_profissional(usuario_id, text_color, card_bg, icon_c
     
     if motivo_ban:
         st.error(f"🚫 Usuário banido: {motivo_ban}")
-        if st.button("Sair"):
-            st.session_state.usuario_logado = None
-            st.rerun()
         return
     
     if not user or not progresso:
@@ -1733,52 +1750,46 @@ def mostrar_perfil_completo_profissional(usuario_id, text_color, card_bg, icon_c
     proximo = get_proximo_nivel(pontos)
     porcentagem = min(100, (pontos / 5000) * 100) if pontos < 5000 else 100
     
-    st.markdown("<h1 class='titulo-secao'>👤 Meu Perfil</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 class='titulo-principal'><i class='fas fa-user-circle'></i> Meu Perfil</h1>", unsafe_allow_html=True)
     
     col1, col2 = st.columns([2, 1])
     
     with col1:
         st.markdown(f"""
-        <div class='card-moderno'>
-            <div style='display: flex; align-items: center; gap: 30px; margin-bottom: 20px;'>
-                <div style='width: 80px; height: 80px; background: linear-gradient(135deg, #8bc34a, #4caf50); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px;'>
+        <div class='card-verde'>
+            <div style='display: flex; align-items: center; gap: 30px;'>
+                <div style='width: 80px; height: 80px; background: {icon_color}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px;'>
                     👤
                 </div>
                 <div>
-                    <h2 style='margin: 0;'>{nome}</h2>
-                    <p style='color: #8bc34a; margin: 5px 0;'>{nivel}</p>
-                    <p style='margin: 0; color: #e0e0e0;'><i class='fas fa-envelope'></i> {email}</p>
+                    <h2>{nome}</h2>
+                    <p style='color: {icon_color};'><i class='fas fa-star'></i> {nivel}</p>
+                    <p><i class='fas fa-envelope'></i> {email}</p>
                 </div>
             </div>
-            <div class='divider'></div>
-            <div style='display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;'>
-                <div>
-                    <p><i class='fas fa-phone' style='color: {icon_color};'></i> {telefone or 'Não informado'}</p>
-                    <p><i class='fas fa-map-marker-alt' style='color: {icon_color};'></i> {cidade or 'Piracicaba'}</p>
-                </div>
-                <div>
-                    <p><i class='fas fa-calendar-alt' style='color: {icon_color};'></i> Membro desde {data_cadastro}</p>
-                    <p><i class='fas fa-fire' style='color: #ff9800;'></i> Streak de {streak} dias</p>
-                </div>
+            <hr style='border-color: {border_color};'>
+            <div style='display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;'>
+                <p><i class='fas fa-phone'></i> {telefone or 'Não informado'}</p>
+                <p><i class='fas fa-map-marker-alt'></i> {cidade or 'Piracicaba'}</p>
+                <p><i class='fas fa-calendar-alt'></i> Membro desde {data_cadastro}</p>
+                <p><i class='fas fa-fire' style='color: #ff9800;'></i> Streak de {streak} dias</p>
             </div>
         </div>
         """, unsafe_allow_html=True)
     
     with col2:
         st.markdown(f"""
-        <div class='card-moderno' style='text-align: center;'>
-            <div class='progress-circle' style='margin: 0 auto 20px; background: conic-gradient(#8bc34a {porcentagem}deg, #2a4a3a 0deg);'>
-                <div class='progress-circle-inner'>
-                    <span>{int(porcentagem)}%</span>
-                </div>
+        <div class='stat-card'>
+            <div class='progress-bar'>
+                <div class='progress-fill' style='width: {porcentagem}%;'></div>
             </div>
-            <h2 style='color: #8bc34a; margin: 10px 0;'>{pontos}</h2>
-            <p style='color: #e0e0e0;'>pontos totais</p>
-            <p style='margin-top: 10px;'>{proximo} para próximo nível</p>
+            <div class='stat-number'>{pontos}</div>
+            <div class='stat-label'>Pontos totais</div>
+            <p style='margin-top: 10px;'><i class='fas fa-arrow-right'></i> {proximo} para o próximo nível</p>
         </div>
         """, unsafe_allow_html=True)
     
-    st.markdown("<h2 class='titulo-secao' style='margin-top: 30px;'>📊 Estatísticas Detalhadas</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='margin: 30px 0 20px;'><i class='fas fa-chart-bar'></i> Estatísticas Detalhadas</h2>", unsafe_allow_html=True)
     
     col1, col2, col3, col4 = st.columns(4)
     
@@ -1827,218 +1838,76 @@ def mostrar_perfil_completo_profissional(usuario_id, text_color, card_bg, icon_c
             for comp in comprovantes[:10]:
                 status = "✅ Aprovado" if comp[7] else "⏳ Pendente"
                 st.markdown(f"""
-                <div style='background: {card_bg}; padding: 10px; border-radius: 10px; margin-bottom: 5px; border: 1px solid {border_color};'>
+                <div class='card-desafio'>
                     <strong>{comp[2]}</strong><br>
                     <small>{comp[6]} | {comp[5]} pontos | {status}</small>
                 </div>
                 """, unsafe_allow_html=True)
 
-def mostrar_pagina_desafios_profissional(usuario_id, text_color, card_bg, icon_color, border_color, secondary_text):
-    """Página de desafios profissional"""
-    st.markdown("<h1 class='titulo-secao'>🎯 Desafios Ambientais</h1>", unsafe_allow_html=True)
-    
-    result = get_user_data(usuario_id)
-    progresso = result[1] if result[1] else None
-    
-    pontos = progresso[1] if progresso and len(progresso) > 1 else 0
-    streak = progresso[9] if progresso and len(progresso) > 9 else 0
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.markdown(f"""
-        <div class='stat-card'>
-            <div class='stat-number'>{pontos}</div>
-            <div class='stat-label'>Pontos totais</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown(f"""
-        <div class='stat-card'>
-            <div class='stat-number'>🔥 {streak}</div>
-            <div class='stat-label'>Dias de streak</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col3:
-        conquistas_count = len(result[2]) if result[2] else 0
-        st.markdown(f"""
-        <div class='stat-card'>
-            <div class='stat-number'>🏆 {conquistas_count}</div>
-            <div class='stat-label'>Conquistas</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("<h2 class='titulo-secao' style='margin-top: 30px;'>📋 Desafios Disponíveis</h2>", unsafe_allow_html=True)
-    
-    # Verificar desafios completados hoje
-    conn = sqlite3.connect('ecopiracicaba.db')
-    c = conn.cursor()
-    c.execute("""
-        SELECT tipo FROM comprovantes 
-        WHERE usuario_id = ? AND data LIKE ? 
-        ORDER BY data DESC
-    """, (usuario_id, f"{datetime.now().strftime('%d/%m/%Y')}%"))
-    completados_hoje = [row[0] for row in c.fetchall()]
-    conn.close()
-    
-    for i, desafio in enumerate(DESAFIOS_LISTA):
-        with st.container():
-            col1, col2 = st.columns([5, 1])
-            
-            with col1:
-                bloqueado = desafio['tipo'] in completados_hoje
-                st.markdown(f"""
-                <div class='card-moderno' style='margin-bottom: 15px; opacity: {0.7 if bloqueado else 1};'>
-                    <div style='display: flex; align-items: center; gap: 20px;'>
-                        <div style='font-size: 48px;'>{desafio['icone']}</div>
-                        <div style='flex: 1;'>
-                            <h3 style='margin: 0;'>{desafio['titulo']}</h3>
-                            <p style='color: #e0e0e0; margin: 5px 0;'>{desafio['descricao']}</p>
-                            <div style='display: flex; gap: 20px; margin-top: 10px;'>
-                                <span class='badge badge-success'>+{desafio['pontos']} pontos</span>
-                                <span class='badge badge-info'><i class='fas fa-info-circle'></i> {desafio['dica_validacao']}</span>
-                                {f"<span class='badge badge-warning'>⏳ Limite diário atingido</span>" if bloqueado else ""}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with col2:
-                if not bloqueado:
-                    if st.button(f"📸 Comprovar", key=f"btn_{desafio['id']}_{usuario_id}", use_container_width=True):
-                        st.session_state['desafio_atual'] = desafio
-                        st.session_state['mostrar_upload'] = True
-                        st.rerun()
-                else:
-                    st.button(f"✅ Concluído", key=f"done_{desafio['id']}_{usuario_id}", disabled=True, use_container_width=True)
-    
-    # Modal de upload de foto
-    if st.session_state.get('mostrar_upload', False):
-        desafio = st.session_state['desafio_atual']
-        
-        st.markdown("---")
-        st.markdown(f"<h2 class='titulo-secao'>📸 Comprovar: {desafio['titulo']}</h2>", unsafe_allow_html=True)
-        
-        with st.container():
-            st.info(f"**Dica para validação:** {desafio['dica_validacao']}")
-            
-            uploaded_file = st.file_uploader(
-                "Escolha uma foto ou imagem do comprovante",
-                type=['jpg', 'jpeg', 'png'],
-                key=f"upload_comprovante_{desafio['id']}_{usuario_id}"
-            )
-            
-            if uploaded_file is not None:
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.image(uploaded_file, caption="Prévia da imagem", use_container_width=True)
-                
-                with col2:
-                    st.markdown(f"""
-                    <div class='card-moderno'>
-                        <h4>Resumo</h4>
-                        <p><strong>Desafio:</strong> {desafio['titulo']}</p>
-                        <p><strong>Pontos:</strong> +{desafio['pontos']}</p>
-                        <p><strong>Arquivo:</strong> {uploaded_file.name}</p>
-                        <p><strong>Tamanho:</strong> {len(uploaded_file.getvalue()) / 1024:.1f} KB</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    
-                    if st.button("✅ Confirmar e enviar", key=f"confirmar_upload_{desafio['id']}_{usuario_id}", use_container_width=True):
-                        with st.spinner("Validando imagem..."):
-                            bytes_data = uploaded_file.getvalue()
-                            sucesso, mensagem, pontos_ganhos = salvar_comprovante(
-                                usuario_id,
-                                desafio['tipo'],
-                                f"Completou: {desafio['titulo']}",
-                                bytes_data
-                            )
-                            
-                            if sucesso:
-                                st.balloons()
-                                st.success(mensagem)
-                                time.sleep(2)
-                                st.session_state['mostrar_upload'] = False
-                                st.session_state['desafio_atual'] = None
-                                st.rerun()
-                            else:
-                                st.error(mensagem)
-            
-            if st.button("❌ Cancelar", key=f"cancelar_upload_{desafio['id']}_{usuario_id}", use_container_width=True):
-                st.session_state['mostrar_upload'] = False
-                st.session_state['desafio_atual'] = None
-                st.rerun()
-
-def mostrar_ranking_completo_profissional(text_color, card_bg, icon_color, border_color, secondary_text):
-    """Mostra ranking completo profissional"""
+def mostrar_ranking_completo():
+    """Mostra ranking completo"""
     ranking = get_ranking()
     
-    st.markdown("<h1 class='titulo-secao'>🏆 Ranking EcoCidadãos</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 class='titulo-principal'><i class='fas fa-trophy'></i> Ranking EcoCidadãos</h1>", unsafe_allow_html=True)
     
     if not ranking:
         st.info("Nenhum usuário no ranking ainda.")
         return
     
-    # Top 3 em destaque
-    st.markdown("<h2 style='margin-bottom: 20px;'>Pódio</h2>", unsafe_allow_html=True)
+    # Top 3
+    st.markdown("<h2 style='margin-bottom: 20px;'><i class='fas fa-medal'></i> Pódio</h2>", unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns(3)
     
     for i, (nome, pontos, nivel, streak) in enumerate(ranking[:3]):
         medalha = "🥇" if i == 0 else "🥈" if i == 1 else "🥉"
-        cor_medalha = "#ffd700" if i == 0 else "#c0c0c0" if i == 1 else "#cd7f32"
+        cor_borda = "#ffd700" if i == 0 else "#c0c0c0" if i == 1 else "#cd7f32"
         
         col = col1 if i == 0 else col2 if i == 1 else col3
         
         with col:
             st.markdown(f"""
-            <div class='card-moderno' style='text-align: center; border: 2px solid {cor_medalha};'>
-                <div style='font-size: 64px;'>{medalha}</div>
-                <h3 style='margin: 10px 0;'>{nome}</h3>
-                <p style='color: #8bc34a;'>{nivel}</p>
+            <div class='card-verde' style='border: 2px solid {cor_borda}; text-align: center;'>
+                <div style='font-size: 48px;'>{medalha}</div>
+                <h3>{nome}</h3>
+                <p style='color: {icon_color};'>{nivel}</p>
                 <div style='font-size: 32px; color: {icon_color};'>{pontos}</div>
                 <p>pontos</p>
-                <div style='display: flex; justify-content: center; gap: 10px; margin-top: 10px;'>
-                    <span class='badge badge-info'><i class='fas fa-fire'></i> {streak} dias</span>
-                </div>
+                <span class='badge badge-info'><i class='fas fa-fire'></i> {streak} dias</span>
             </div>
             """, unsafe_allow_html=True)
     
     # Restante do ranking
-    st.markdown("<h2 style='margin: 30px 0 20px;'>Classificação Geral</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='margin: 30px 0 20px;'><i class='fas fa-list-ol'></i> Classificação Geral</h2>", unsafe_allow_html=True)
     
     for i, (nome, pontos, nivel, streak) in enumerate(ranking[3:], start=4):
         st.markdown(f"""
-        <div class='card-moderno' style='padding: 15px; margin-bottom: 10px;'>
+        <div class='card-desafio'>
             <div style='display: flex; justify-content: space-between; align-items: center;'>
                 <div style='display: flex; align-items: center; gap: 20px;'>
-                    <span style='font-size: 24px; font-weight: 700; color: #8bc34a;'>{i}º</span>
+                    <span style='font-size: 20px; font-weight: 700; color: {icon_color};'>{i}º</span>
                     <div>
-                        <strong style='font-size: 18px;'>{nome}</strong>
-                        <p style='margin: 0; color: #e0e0e0;'>{nivel}</p>
+                        <strong>{nome}</strong>
+                        <p style='margin: 0; color: {secondary_text};'>{nivel}</p>
                     </div>
                 </div>
                 <div style='display: flex; align-items: center; gap: 20px;'>
                     <span class='badge badge-info'><i class='fas fa-fire'></i> {streak}</span>
-                    <span style='font-size: 20px; color: {icon_color};'>{pontos} pts</span>
+                    <span style='font-size: 18px; color: {icon_color};'>{pontos} pts</span>
                 </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
-def mostrar_pontos_completos_profissional(text_color, card_bg, icon_color, border_color, secondary_text):
-    """Mostra pontos de coleta profissional"""
+def mostrar_pontos_completos():
+    """Mostra pontos de coleta"""
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     c.execute("SELECT * FROM pontos_coleta ORDER BY categoria, nome")
     pontos = c.fetchall()
     conn.close()
     
-    st.markdown("<h1 class='titulo-secao'>📍 Pontos de Coleta em Piracicaba</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 class='titulo-principal'><i class='fas fa-map-marker-alt'></i> Pontos de Coleta em Piracicaba</h1>", unsafe_allow_html=True)
     st.markdown("<p style='color: #e0e0e0; margin-bottom: 30px;'>Encontre o ponto mais próximo para descartar cada tipo de resíduo</p>", unsafe_allow_html=True)
     
     # Agrupar por categoria
@@ -2049,7 +1918,7 @@ def mostrar_pontos_completos_profissional(text_color, card_bg, icon_color, borde
             categorias[categoria] = []
         categorias[categoria].append(ponto)
     
-    # Dicionário de ícones por categoria
+    # Ícones por categoria
     icones_categoria = {
         'geral': '🗑️',
         'pilhas': '🔋',
@@ -2094,7 +1963,7 @@ def mostrar_pontos_completos_profissional(text_color, card_bg, icon_color, borde
         </div>
         """, unsafe_allow_html=True)
     
-    st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
+    st.markdown("---")
     
     # Mostrar pontos por categoria em expanders
     for categoria, pontos_cat in sorted(categorias.items()):
@@ -2105,55 +1974,26 @@ def mostrar_pontos_completos_profissional(text_color, card_bg, icon_color, borde
                 with cols[i % 2]:
                     estrelas = "★" * int(ponto[6]) + "☆" * (5 - int(ponto[6]))
                     st.markdown(f"""
-                    <div class='card-moderno' style='padding: 15px; margin-bottom: 10px;'>
+                    <div class='card-desafio'>
                         <h4 style='margin: 0 0 10px 0;'>{ponto[1]}</h4>
-                        <p style='margin: 5px 0;'><i class='fas fa-map-pin' style='color: {icon_color};'></i> {ponto[2]}</p>
-                        <p style='margin: 5px 0;'><i class='fas fa-clock' style='color: {icon_color};'></i> {ponto[4]}</p>
-                        <p style='margin: 5px 0;'><i class='fas fa-phone' style='color: {icon_color};'></i> {ponto[5]}</p>
-                        <p style='margin: 5px 0; color: #e0e0e0; font-size: 12px;'>{ponto[7]}</p>
-                        <div style='display: flex; justify-content: space-between; align-items: center; margin-top: 10px;'>
-                            <div style='color: gold; font-size: 14px;'>{estrelas}</div>
+                        <p><i class='fas fa-map-pin'></i> {ponto[2]}</p>
+                        <p><i class='fas fa-clock'></i> {ponto[4]}</p>
+                        <p><i class='fas fa-phone'></i> {ponto[5]}</p>
+                        <p style='color: {secondary_text}; font-size: 12px;'>{ponto[7]}</p>
+                        <div style='display: flex; justify-content: space-between; align-items: center;'>
+                            <div style='color: gold;'>{estrelas}</div>
                             <span class='badge badge-info'>{ponto[6]}/5.0</span>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
 
-# ========== CONFIGURAÇÕES DE TEMA ==========
-
-bg_color = "#0a1f17"
-card_bg = "#1a3329"
-text_color = "#FFFFFF"
-secondary_text = "#E0E0E0"
-border_color = "#2a4a3a"
-icon_color = "#8bc34a"
-gradient_start = "#0a1f17"
-gradient_end = "#1a4a3a"
-
-# Aplicar estilo profissional
-aplicar_estilo_profissional()
-
 # ========== INTERFACE PRINCIPAL ==========
 
-if 'usuario_logado' not in st.session_state:
-    st.session_state.usuario_logado = None
-    st.session_state['mostrar_upload'] = False
-    st.session_state['desafio_atual'] = None
-    st.session_state['mostrar_inscricao'] = False
-    st.session_state['evento_atual'] = None
-
-# Mostrar login/cadastro ou info do usuário no topo
 if st.session_state.usuario_logado is None:
-    mostrar_login_cadastro_profissional()
-else:
-    mostrar_info_usuario_profissional()
-
-# Conteúdo principal
-if st.session_state.usuario_logado is None:
-    # Página inicial com eventos em destaque
-    mostrar_eventos_destaque_profissional(text_color, card_bg, icon_color, border_color, secondary_text)
+    mostrar_login_cadastro()
+    mostrar_eventos_destaque()
     
-    st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
-    
+    st.markdown("---")
     col1, col2, col3 = st.columns(3)
     with col1:
         st.markdown("""
@@ -2181,23 +2021,18 @@ if st.session_state.usuario_logado is None:
         """, unsafe_allow_html=True)
 
 else:
-    # Usuário logado - mostrar conteúdo completo com tabs
+    mostrar_info_usuario()
+    
     tab1, tab2, tab3, tab4, tab5 = st.tabs(["🎯 Desafios", "👤 Perfil", "🏆 Ranking", "📅 Eventos", "📍 Pontos"])
     
     with tab1:
-        mostrar_pagina_desafios_profissional(
-            st.session_state.usuario_logado['id'],
-            text_color, card_bg, icon_color, border_color, secondary_text
-        )
+        mostrar_pagina_desafios(st.session_state.usuario_logado['id'])
     
     with tab2:
-        mostrar_perfil_completo_profissional(
-            st.session_state.usuario_logado['id'],
-            text_color, card_bg, icon_color, border_color, secondary_text
-        )
+        mostrar_perfil_completo(st.session_state.usuario_logado['id'])
     
     with tab3:
-        mostrar_ranking_completo_profissional(text_color, card_bg, icon_color, border_color, secondary_text)
+        mostrar_ranking_completo()
     
     with tab4:
         conn = sqlite3.connect('ecopiracicaba.db')
@@ -2206,40 +2041,8 @@ else:
         eventos = c.fetchall()
         conn.close()
         
-        st.markdown(f"<h1 class='titulo-secao'>📅 Eventos 2026 - Piracicaba</h1>", unsafe_allow_html=True)
+        st.markdown(f"<h1 class='titulo-principal'><i class='fas fa-calendar-alt'></i> Eventos 2026 - Piracicaba</h1>", unsafe_allow_html=True)
         st.markdown(f"<p style='color: #e0e0e0; margin-bottom: 30px;'>Participe dos eventos e ganhe pontos extras! Total de {len(eventos)} eventos durante o ano.</p>", unsafe_allow_html=True)
-        
-        # Estatísticas dos eventos
-        total_eventos = len(eventos)
-        eventos_com_vagas = sum(1 for e in eventos if e[7] == 0 or e[8] < e[7])
-        total_pontos = sum(e[12] for e in eventos if len(e) > 12)
-        
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.markdown(f"""
-            <div class='stat-card'>
-                <div class='stat-number'>{total_eventos}</div>
-                <div class='stat-label'>Eventos em 2026</div>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col2:
-            st.markdown(f"""
-            <div class='stat-card'>
-                <div class='stat-number'>{eventos_com_vagas}</div>
-                <div class='stat-label'>Com vagas disponíveis</div>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col3:
-            st.markdown(f"""
-            <div class='stat-card'>
-                <div class='stat-number'>+{total_pontos}</div>
-                <div class='stat-label'>Pontos totais</div>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
         
         # Verificar inscrições do usuário
         conn = sqlite3.connect('ecopiracicaba.db')
@@ -2248,7 +2051,7 @@ else:
         inscricoes_usuario = {row[0]: row[1] for row in c.fetchall()}
         conn.close()
         
-        # Buscar dados do usuário para pré-preencher formulário
+        # Buscar dados do usuário
         user_data = get_user_data(st.session_state.usuario_logado['id'])[0]
         if user_data:
             nome_usuario, email_usuario, telefone_usuario, cidade_usuario, data_cadastro = user_data
@@ -2276,15 +2079,13 @@ else:
                     with col1:
                         pontos_evento = evento[12] if len(evento) > 12 else 150
                         st.markdown(f"""
-                        <div class='card-moderno' style='margin-bottom: 15px;'>
-                            <h3 style='margin: 0 0 5px 0;'>{evento[1]}</h3>
-                            <p style='color: #e0e0e0; font-size: 14px; margin: 5px 0;'>{evento[2]}</p>
-                            <div style='display: flex; gap: 20px; flex-wrap: wrap; margin: 10px 0;'>
-                                <p style='margin: 0;'><i class='fas fa-calendar' style='color: {icon_color};'></i> {evento[3]} às {evento[4]}</p>
-                                <p style='margin: 0;'><i class='fas fa-map-marker-alt' style='color: {icon_color};'></i> {evento[5]}</p>
-                                <p style='margin: 0;'><i class='fas fa-building' style='color: {icon_color};'></i> {evento[9]}</p>
-                            </div>
-                            <span class='badge badge-success'><i class='fas fa-star'></i> +{pontos_evento} pontos</span>
+                        <div class='card-verde'>
+                            <h3>{evento[1]}</h3>
+                            <p style='color: {secondary_text};'>{evento[2]}</p>
+                            <p><i class='fas fa-calendar'></i> {evento[3]} às {evento[4]}</p>
+                            <p><i class='fas fa-map-marker-alt'></i> {evento[5]}</p>
+                            <p><i class='fas fa-building'></i> {evento[9]}</p>
+                            <span class='badge badge-verde'><i class='fas fa-star'></i> +{pontos_evento} pontos</span>
                         </div>
                         """, unsafe_allow_html=True)
                     
@@ -2304,7 +2105,7 @@ else:
                                 st.error("❌ Esgotado")
     
     with tab5:
-        mostrar_pontos_completos_profissional(text_color, card_bg, icon_color, border_color, secondary_text)
+        mostrar_pontos_completos()
 
 # Modal de inscrição em evento
 if st.session_state.get('mostrar_inscricao', False) and st.session_state['evento_atual']:
@@ -2312,23 +2113,21 @@ if st.session_state.get('mostrar_inscricao', False) and st.session_state['evento
     
     with st.container():
         st.markdown("---")
-        st.markdown(f"<h2 class='titulo-secao'>📝 Ficha de Inscrição</h2>", unsafe_allow_html=True)
+        st.markdown(f"<h2><i class='fas fa-clipboard-list'></i> Ficha de Inscrição</h2>", unsafe_allow_html=True)
         
         col1, col2 = st.columns([3, 2])
         
         with col1:
             pontos_evento = evento[12] if len(evento) > 12 else 150
             st.markdown(f"""
-            <div class='card-moderno'>
+            <div class='card-verde'>
                 <h3>{evento[1]}</h3>
-                <p style='color: #e0e0e0;'>{evento[2]}</p>
-                <div style='margin: 15px 0;'>
-                    <p><i class='fas fa-calendar' style='color: {icon_color};'></i> <strong>Data:</strong> {evento[3]} às {evento[4]}</p>
-                    <p><i class='fas fa-map-marker-alt' style='color: {icon_color};'></i> <strong>Local:</strong> {evento[5]}</p>
-                    <p><i class='fas fa-building' style='color: {icon_color};'></i> <strong>Organizador:</strong> {evento[9]}</p>
-                    <p><i class='fas fa-phone' style='color: {icon_color};'></i> <strong>Contato:</strong> {evento[10]}</p>
-                </div>
-                <span class='badge badge-success'><i class='fas fa-star'></i> Pontos ao participar: +{pontos_evento}</span>
+                <p>{evento[2]}</p>
+                <p><i class='fas fa-calendar'></i> <strong>Data:</strong> {evento[3]} às {evento[4]}</p>
+                <p><i class='fas fa-map-marker-alt'></i> <strong>Local:</strong> {evento[5]}</p>
+                <p><i class='fas fa-building'></i> <strong>Organizador:</strong> {evento[9]}</p>
+                <p><i class='fas fa-phone'></i> <strong>Contato:</strong> {evento[10]}</p>
+                <span class='badge badge-verde'><i class='fas fa-star'></i> Pontos: +{pontos_evento}</span>
             </div>
             """, unsafe_allow_html=True)
         
@@ -2340,7 +2139,7 @@ if st.session_state.get('mostrar_inscricao', False) and st.session_state['evento
                 email_inscricao = st.text_input("E-mail *", value=email_usuario if 'email_usuario' in locals() else "")
                 telefone_inscricao = st.text_input("Telefone *", value=telefone_usuario if 'telefone_usuario' in locals() else "")
                 
-                st.markdown("<small style='color: #e0e0e0;'>* Campos obrigatórios</small>", unsafe_allow_html=True)
+                st.markdown("<small style='color: #e0e0e0;'><i class='fas fa-asterisk'></i> Campos obrigatórios</small>", unsafe_allow_html=True)
                 st.markdown("<br>", unsafe_allow_html=True)
                 
                 col_a, col_b = st.columns(2)
