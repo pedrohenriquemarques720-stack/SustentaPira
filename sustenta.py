@@ -525,7 +525,6 @@ def get_user_data(user_id):
     
     # Dados do usuário
     def get_user_data(user_id):
-    """Busca dados completos do usuário"""
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     
