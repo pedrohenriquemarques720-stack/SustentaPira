@@ -523,22 +523,21 @@ def get_user_data(user_id):
         conn.close()
         return None, None, None, None, None, None, None, None, banido[1]
     
-    # Dados do usuário - CORREÇÃO: usar os campos que existem
+    # Dados do usuário - usar os campos que existem
     c.execute("SELECT nome, email, cidade, data_cadastro FROM usuarios WHERE id = ?", (user_id,))
     user = c.fetchone()
     
     # Adicionar telefone como string vazia se não existir
+    telefone = ""
     if user:
-        # Verificar se a coluna telefone existe
         try:
             c.execute("SELECT telefone FROM usuarios WHERE id = ?", (user_id,))
-            telefone = c.fetchone()
-            if telefone and telefone[0]:
-                user = (user[0], user[1], telefone[0], user[2], user[3])
-            else:
-                user = (user[0], user[1], "", user[2], user[3])
+            telefone_result = c.fetchone()
+            if telefone_result and telefone_result[0]:
+                telefone = telefone_result[0]
         except:
-            user = (user[0], user[1], "", user[2], user[3])
+            telefone = ""
+        user = (user[0], user[1], telefone, user[2], user[3])
     
     # Progresso
     c.execute("SELECT * FROM progresso WHERE usuario_id = ?", (user_id,))
@@ -567,30 +566,6 @@ def get_user_data(user_id):
     # Convites
     c.execute("SELECT codigo FROM convites WHERE usuario_id = ? AND usado = 0", (user_id,))
     convites = c.fetchall()
-    
-    conn.close()
-    
-    return user, progresso, conquistas, comprovantes, inscricoes, dicas_vistas, visitas, convites, None
-    
-    # Inscrições em eventos
-    c.execute("SELECT evento_id FROM inscricoes WHERE usuario_id = ?", (user_id,))
-    inscricoes = c.fetchall()
-    
-    # Dicas vistas
-    c.execute("SELECT dica_id FROM dicas_vistas WHERE usuario_id = ?", (user_id,))
-    dicas_vistas = c.fetchall()
-    
-    # Visitas a pontos
-    c.execute("SELECT ponto_id FROM visitas_pontos WHERE usuario_id = ?", (user_id,))
-    visitas = c.fetchall()
-    
-    # Convites
-    c.execute("SELECT codigo FROM convites WHERE usuario_id = ? AND usado = 0", (user_id,))
-    convites = c.fetchall()
-    
-    conn.close()
-    
-    return user, progresso, conquistas, comprovantes, inscricoes, dicas_vistas, visitas, convites, None
     
     conn.close()
     
@@ -1240,7 +1215,7 @@ def mostrar_pontos_completos(text_color, card_bg, icon_color, border_color, seco
         """, unsafe_allow_html=True)
     
     with col3:
-        avaliacao_media = sum([p[6] for p in pontos]) / len(pontos)
+        avaliacao_media = sum([p[6] for p in pontos]) / len(pontos) if pontos else 0
         estrelas = "★" * int(avaliacao_media) + "☆" * (5 - int(avaliacao_media))
         st.markdown(f"""
         <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
@@ -1579,12 +1554,13 @@ else:
             """, unsafe_allow_html=True)
         
         with col3:
+            total_pontos = sum(e[12] for e in eventos if len(e) > 12)
             st.markdown(f"""
-        <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
-            <h3 style='color: {icon_color}; font-size: 32px;'>+{sum(e[12] for e in eventos if len(e) > 12)}</h3>
-            <p style='color: {text_color};'>Pontos totais</p>
-        </div>
-        """, unsafe_allow_html=True)
+            <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
+                <h3 style='color: {icon_color}; font-size: 32px;'>+{total_pontos}</h3>
+                <p style='color: {text_color};'>Pontos totais</p>
+            </div>
+            """, unsafe_allow_html=True)
         
         st.markdown("---")
         
@@ -1621,6 +1597,7 @@ else:
                 for evento in eventos_mes:
                     col1, col2 = st.columns([4, 1])
                     with col1:
+                        pontos_evento = evento[12] if len(evento) > 12 else 150
                         st.markdown(f"""
                         <div style='background: {card_bg}; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 6px solid {icon_color}; border: 1px solid {border_color};'>
                             <h4 style='color: {text_color}; margin: 0 0 5px 0;'>{evento[1]}</h4>
@@ -1628,7 +1605,7 @@ else:
                             <p style='margin: 5px 0; color: {text_color};'><i class='fas fa-calendar' style='color: {icon_color};'></i> {evento[3]} às {evento[4]}</p>
                             <p style='margin: 5px 0; color: {text_color};'><i class='fas fa-map-marker-alt' style='color: {icon_color};'></i> {evento[5]}</p>
                             <p style='margin: 5px 0; color: {text_color};'><i class='fas fa-building' style='color: {icon_color};'></i> {evento[9]}</p>
-                            <p style='margin: 5px 0; color: {icon_color};'><i class='fas fa-star'></i> +{evento[12]} pontos</p>
+                            <p style='margin: 5px 0; color: {icon_color};'><i class='fas fa-star'></i> +{pontos_evento} pontos</p>
                         </div>
                         """, unsafe_allow_html=True)
                     
@@ -1661,6 +1638,7 @@ if st.session_state.get('mostrar_inscricao', False) and st.session_state['evento
         col1, col2 = st.columns([3, 2])
         
         with col1:
+            pontos_evento = evento[12] if len(evento) > 12 else 150
             st.markdown(f"""
             <div style='background: {card_bg}; padding: 20px; border-radius: 15px; border: 1px solid {border_color}; margin-bottom: 20px;'>
                 <h4 style='color: {text_color};'>{evento[1]}</h4>
@@ -1669,7 +1647,7 @@ if st.session_state.get('mostrar_inscricao', False) and st.session_state['evento
                 <p style='margin: 5px 0; color: {text_color};'><i class='fas fa-map-marker-alt' style='color: {icon_color};'></i> <strong>Local:</strong> {evento[5]}</p>
                 <p style='margin: 5px 0; color: {text_color};'><i class='fas fa-building' style='color: {icon_color};'></i> <strong>Organizador:</strong> {evento[9]}</p>
                 <p style='margin: 5px 0; color: {text_color};'><i class='fas fa-phone' style='color: {icon_color};'></i> <strong>Contato:</strong> {evento[10]}</p>
-                <p style='margin: 5px 0; color: {icon_color};'><i class='fas fa-star'></i> <strong>Pontos ao participar:</strong> +{evento[12]}</p>
+                <p style='margin: 5px 0; color: {icon_color};'><i class='fas fa-star'></i> <strong>Pontos ao participar:</strong> +{pontos_evento}</p>
             </div>
             """, unsafe_allow_html=True)
         
