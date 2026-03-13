@@ -389,7 +389,7 @@ def dados_iniciais(conn, c):
     # ===== EVENTOS 2026 - PIRACICABA (AMPLIADOS) =====
     eventos = [
         # Eventos existentes
-                ("🌱 Feira de Sustentabilidade", "Feira com produtos orgânicos, artesanato sustentável e startups verdes. Haverá palestras, oficinas e food trucks com comida saudável.", "15/03/2026", "09:00", "Engenho Central", "Av. Maurice Allain, 454 - Engenho Central", "feira", 1000, "Prefeitura de Piracicaba", "(19) 3403-1100", "FEIRA2026", 150),
+        ("🌱 Feira de Sustentabilidade", "Feira com produtos orgânicos, artesanato sustentável e startups verdes. Haverá palestras, oficinas e food trucks com comida saudável.", "15/03/2026", "09:00", "Engenho Central", "Av. Maurice Allain, 454 - Engenho Central", "feira", 1000, "Prefeitura de Piracicaba", "(19) 3403-1100", "FEIRA2026", 150),
         ("♻️ Workshop de Reciclagem", "Aprenda técnicas avançadas de reciclagem em casa. Transforme materiais recicláveis em objetos úteis.", "22/03/2026", "14:00", "SENAI Piracicaba", "Av. Luiz Ralph Benatti, 500 - Vila Industrial", "workshop", 50, "SENAI", "(19) 3412-5000", "WORKSHOP01", 150),
         ("🌊 Mutirão Rio Piracicaba", "Limpeza das margens do rio com atividades educativas e distribuição de mudas.", "05/04/2026", "08:00", "Rua do Porto", "Rua do Porto - Centro", "mutirão", 200, "SOS Rio Piracicaba", "(19) 99765-4321", "MUTIRAO01", 200),
         ("🌿 Semana da Água 2026", "Palestras, oficinas e atividades sobre preservação dos recursos hídricos. Com participação de especialistas da USP.", "22/03/2026", "09:00", "ESALQ/USP", "Av. Pádua Dias, 11 - São Dimas", "palestra", 300, "ESALQ/USP", "(19) 3447-8500", "AGUA2026", 180),
@@ -843,23 +843,6 @@ def mostrar_eventos_destaque(text_color, card_bg, icon_color, border_color, seco
     
     for i, evento in enumerate(eventos):
         with col1 if i % 2 == 0 else col2:
-            disponibilidade = (evento[8] / evento[7] * 100) if evento[7] > 0 else 0
-            
-            def mostrar_eventos_destaque(text_color, card_bg, icon_color, border_color, secondary_text):
-    """Mostra eventos em destaque na página inicial"""
-    conn = sqlite3.connect('ecopiracicaba.db')
-    c = conn.cursor()
-    c.execute("SELECT * FROM eventos ORDER BY data LIMIT 6")
-    eventos = c.fetchall()
-    conn.close()
-    
-    st.markdown(f"<h1 style='text-align: center; color: {text_color}; margin-bottom: 30px;'>🌿 EcoPiracicaba 2026</h1>", unsafe_allow_html=True)
-    st.markdown(f"<h2 style='text-align: center; color: {secondary_text}; margin-bottom: 40px;'>Eventos em Piracicaba</h2>", unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
-    
-    for i, evento in enumerate(eventos):
-        with col1 if i % 2 == 0 else col2:
             # CORREÇÃO: evento[6] é o tipo, evento[7] são as vagas
             tipo_evento = evento[6]  # tipo está no índice 6
             vagas = evento[7]         # vagas no índice 7
@@ -887,6 +870,32 @@ def mostrar_eventos_destaque(text_color, card_bg, icon_color, border_color, seco
                 </div>
             </div>
             """, unsafe_allow_html=True)
+
+def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_color, secondary_text):
+    """Mostra perfil completo com estatísticas"""
+    result = get_user_data(usuario_id)
+    
+    if len(result) == 9:
+        user, progresso, conquistas, comprovantes, inscricoes, dicas_vistas, visitas, convites, motivo_ban = result
+    else:
+        user, progresso, conquistas, comprovantes, inscricoes, dicas_vistas, visitas, convites = result
+        motivo_ban = None
+    
+    if motivo_ban:
+        st.error(f"🚫 Usuário banido: {motivo_ban}")
+        if st.button("Sair"):
+            st.session_state.usuario_logado = None
+            st.rerun()
+        return
+    
+    if not user or not progresso:
+        st.error("Erro ao carregar perfil")
+        return
+    
+    nome, email, telefone, cidade, data_cadastro = user
+    
+    pontos = progresso[1] if len(progresso) > 1 else 0
+    nivel = progresso[2] if len(progresso) > 2 else "🌱 EcoIniciante"
     eventos = progresso[3] if len(progresso) > 3 else 0
     dicas = progresso[4] if len(progresso) > 4 else 0
     pontos_visitados = progresso[5] if len(progresso) > 5 else 0
@@ -1553,7 +1562,7 @@ else:
         # Buscar dados do usuário para pré-preencher formulário
         user_data = get_user_data(st.session_state.usuario_logado['id'])[0]
         if user_data:
-            nome_usuario, email_usuario, telefone_usuario, _, _ = user_data
+            nome_usuario, email_usuario, telefone_usuario, cidade_usuario, data_cadastro = user_data
         
         # Agrupar eventos por mês
         eventos_por_mes = {}
