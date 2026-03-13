@@ -17,7 +17,7 @@ import shutil
 
 # Configuração da página
 st.set_page_config(
-    page_title="SustentaPira
+    page_title="SustentaPira"
     page_icon="🌿",
     layout="wide",
     initial_sidebar_state="collapsed"
