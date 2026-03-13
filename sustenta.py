@@ -386,35 +386,84 @@ def dados_iniciais(conn, c):
             (user_id, pontos, get_nivel(pontos), data_atual)
         )
     
-    # ===== EVENTOS 2026 - PIRACICABA (AMPLIADOS) =====
+    # ===== EVENTOS 2026 - PIRACICABA (MEGA EXPANDIDO) =====
     eventos = [
-        # Eventos existentes
+        # JANEIRO 2026
+        ("🌱 1º Mutirão de Limpeza 2026", "Inicie o ano contribuindo com a limpeza das margens do Rio Piracicaba. Haverá café da manhã comunitário e distribuição de mudas.", "10/01/2026", "08:00", "Rua do Porto", "Rua do Porto - Centro", "mutirão", 150, "SOS Rio Piracicaba", "(19) 99765-4321", "JANLIMPEZA", 200),
+        ("♻️ Oficina de Reciclagem de Papel", "Aprenda a fazer papel reciclado artesanal. Traga papéis usados.", "17/01/2026", "14:00", "SENAI", "Av. Luiz Ralph Benatti, 500 - Vila Industrial", "oficina", 30, "SENAI", "(19) 3412-5000", "JANPAPEL", 150),
+        ("🌿 Palestra: Agricultura Urbana", "Como cultivar alimentos em pequenos espaços na cidade.", "24/01/2026", "10:00", "Horto Municipal", "Av. Maurílio Biagi, 1500 - Santa Cecília", "palestra", 80, "Horto Municipal", "(19) 3434-5678", "JANAGRIC", 120),
+        ("🚴 Pedal do Sol Nascente", "Passeio ciclístico ao amanhecer para celebrar o início do ano.", "31/01/2026", "06:00", "Largo dos Pescadores", "Rua do Porto - Centro", "passeio", 200, "Ciclovida", "(19) 99876-1234", "JANPEDAL", 180),
+        
+        # FEVEREIRO 2026
+        ("🌊 Expedição Rio Piracicaba - Verão", "Passeio de barco educativo com biólogos, observação de aves e plantas aquáticas.", "07/02/2026", "09:00", "Rua do Porto", "Rua do Porto - Centro", "passeio", 60, "Comitê PCJ", "(19) 3437-2000", "FEVEXPED", 200),
+        ("🌱 Feira de Orgânicos Especial", "Edição de verão da feira orgânica com produtos sazonais e food trucks saudáveis.", "14/02/2026", "08:00", "Mercado Municipal", "Praça Dr. Alfredo Stead, 100 - Centro", "feira", 0, "Associação Orgânicos", "(19) 3434-7890", "FEVFEIRA", 120),
+        ("♻️ Workshop de Compostagem para Apartamentos", "Técnicas de compostagem para quem mora em apartamento, com minhocas e composteiras compactas.", "21/02/2026", "15:00", "SESC", "Rua Ipiranga, 155 - Centro", "workshop", 40, "SESC", "(19) 3437-9292", "FEVCOMP", 180),
+        ("🌿 Trilha Ecológica Noturna", "Trilha guiada no Parque Ecológico para observação de animais noturnos.", "28/02/2026", "19:00", "Parque Ecológico", "Av. Dr. Paulo de Moraes, 2000 - Santa Terezinha", "trilha", 50, "Parque Ecológico", "(19) 3434-1234", "FEVTRILHA", 200),
+        
+        # MARÇO 2026
         ("🌱 Feira de Sustentabilidade", "Feira com produtos orgânicos, artesanato sustentável e startups verdes. Haverá palestras, oficinas e food trucks com comida saudável.", "15/03/2026", "09:00", "Engenho Central", "Av. Maurice Allain, 454 - Engenho Central", "feira", 1000, "Prefeitura de Piracicaba", "(19) 3403-1100", "FEIRA2026", 150),
         ("♻️ Workshop de Reciclagem", "Aprenda técnicas avançadas de reciclagem em casa. Transforme materiais recicláveis em objetos úteis.", "22/03/2026", "14:00", "SENAI Piracicaba", "Av. Luiz Ralph Benatti, 500 - Vila Industrial", "workshop", 50, "SENAI", "(19) 3412-5000", "WORKSHOP01", 150),
         ("🌊 Mutirão Rio Piracicaba", "Limpeza das margens do rio com atividades educativas e distribuição de mudas.", "05/04/2026", "08:00", "Rua do Porto", "Rua do Porto - Centro", "mutirão", 200, "SOS Rio Piracicaba", "(19) 99765-4321", "MUTIRAO01", 200),
         ("🌿 Semana da Água 2026", "Palestras, oficinas e atividades sobre preservação dos recursos hídricos. Com participação de especialistas da USP.", "22/03/2026", "09:00", "ESALQ/USP", "Av. Pádua Dias, 11 - São Dimas", "palestra", 300, "ESALQ/USP", "(19) 3447-8500", "AGUA2026", 180),
+        
+        # ABRIL 2026
         ("🍃 Feira de Trocas Sustentáveis", "Traga objetos que não usa mais e troque por outros. Roupas, livros, brinquedos e eletrônicos.", "10/04/2026", "10:00", "Praça José Bonifácio", "Praça José Bonifácio - Centro", "feira", 0, "Coletivo Transition", "(19) 99876-5432", "TROCA2026", 120),
         ("🌳 Plantio do Dia da Terra", "Mutirão de plantio de 500 árvores nativas em comemoração ao Dia da Terra.", "22/04/2026", "08:30", "Parque Ecológico", "Av. Dr. Paulo de Moraes, 2000 - Santa Terezinha", "mutirão", 400, "SOS Mata Atlântica", "(11) 3262-4088", "PLANTIO22", 250),
+        ("🐝 Oficina de Abelhas sem Ferrão", "Aprenda sobre a importância das abelhas nativas e como criar abelhas sem ferrão em casa.", "25/04/2026", "14:00", "ESALQ/USP", "Av. Pádua Dias, 11 - São Dimas", "oficina", 40, "USP", "(19) 3447-8500", "ABRABELHA", 180),
+        ("♻️ Feira de Artesanato Reciclado", "Exposição e venda de artesanato feito com materiais reciclados.", "29/04/2026", "09:00", "Engenho Central", "Av. Maurice Allain, 454 - Engenho Central", "feira", 0, "Artesanato Solidário", "(19) 99888-7766", "ABRARTE", 120),
+        
+        # MAIO 2026
         ("🔋 Descarte de Eletrônicos", "Campanha de coleta de lixo eletrônico: computadores, celulares, pilhas e baterias.", "15/05/2026", "09:00", "Shopping Piracicaba", "Av. Limeira, 700 - Areão", "campanha", 0, "Green Eletronics", "(19) 3403-3000", "ELETRO26", 100),
         ("🚴 Pedal Verde", "Passeio ciclístico ecológico de 15km pelas áreas verdes da cidade.", "23/05/2026", "08:00", "Largo dos Pescadores", "Rua do Porto - Centro", "passeio", 200, "Ciclovida", "(19) 99876-1234", "PEDAL26", 180),
+        ("🌿 Dia do Sol - Energia Solar", "Feira de energia solar com expositores, palestras e oficinas sobre instalação de painéis solares.", "16/05/2026", "10:00", "Engenho Central", "Av. Maurice Allain, 454 - Engenho Central", "feira", 300, "CPFL Energia", "(19) 3421-2121", "MAISOL", 150),
+        ("💧 Caminhada das Águas", "Caminhada de 5km pelas margens do rio conscientizando sobre a preservação da água.", "30/05/2026", "08:30", "Rua do Porto", "Rua do Porto - Centro", "caminhada", 500, "Comitê PCJ", "(19) 3437-2000", "MAIAGUA", 120),
+        
+        # JUNHO 2026
         ("🥕 Feira Agroecológica", "Feira de produtos orgânicos, agroecológicos e artesanato sustentável.", "05/06/2026", "08:00", "Mercado Municipal", "Praça Dr. Alfredo Stead, 100 - Centro", "feira", 0, "Associação Orgânicos", "(19) 3434-7890", "AGRO26", 120),
         ("🌍 Dia Mundial do Meio Ambiente", "Evento especial com shows, palestras, oficinas e feira de sustentabilidade.", "05/06/2026", "09:00", "Engenho Central", "Av. Maurice Allain, 454 - Engenho Central", "evento", 2000, "Prefeitura de Piracicaba", "(19) 3403-1100", "DIAMUNDIAL", 200),
         ("🌱 Oficina de Compostagem", "Aprenda a fazer compostagem doméstica e comunitária com minhocas californianas.", "15/06/2026", "14:00", "Horto Municipal", "Av. Maurílio Biagi, 1500 - Santa Cecília", "oficina", 40, "Horto Municipal", "(19) 3434-5678", "COMPOST26", 150),
         ("♻️ Feira de Reciclagem Criativa", "Exposição e venda de produtos feitos com materiais reciclados. Oficinas de artesanato sustentável.", "20/06/2026", "10:00", "SESC Piracicaba", "Rua Ipiranga, 155 - Centro", "feira", 0, "SESC", "(19) 3437-9292", "RECICRIA", 150),
+        ("🌿 Noite das Estrelas no Parque", "Observação astronômica no Parque Ecológico com astrônomos amadores.", "27/06/2026", "19:00", "Parque Ecológico", "Av. Dr. Paulo de Moraes, 2000 - Santa Terezinha", "evento", 150, "Observatório de Piracicaba", "(19) 3434-5678", "JUNESTRELAS", 180),
+        
+        # JULHO 2026
         ("🌿 Palestra: Energia Solar", "Como instalar e economizar com energia solar residencial.", "05/07/2026", "19:00", "Teatro Municipal", "Av. Independência, 100 - Centro", "palestra", 200, "CPFL Energia", "(19) 3421-2121", "SOLAR26", 120),
         ("💧 Expedição Rio Piracicaba", "Passeio de barco educativo pelas águas do rio com biólogos explicando o ecossistema.", "18/07/2026", "09:00", "Rua do Porto", "Rua do Porto - Centro", "passeio", 80, "Comitê PCJ", "(19) 3437-2000", "EXPED26", 200),
         ("🌳 Plantio de Árvores Frutíferas", "Mutirão de plantio de árvores frutíferas nativas em áreas urbanas.", "25/07/2026", "08:30", "Parque da Rua do Porto", "Rua do Porto - Centro", "mutirão", 150, "Projeto Pomar", "(19) 99888-7766", "FRUTAS26", 250),
+        ("♻️ Férias Sustentáveis - Oficina para Crianças", "Oficinas de reciclagem e arte para crianças durante as férias.", "11/07/2026", "14:00", "SESC", "Rua Ipiranga, 155 - Centro", "oficina", 30, "SESC", "(19) 3437-9292", "JULCRIANCA", 180),
+        ("🚴 Pedal Noturno", "Passeio ciclístico noturno pelas ruas de Piracicaba com iluminação especial.", "24/07/2026", "19:00", "Largo dos Pescadores", "Rua do Porto - Centro", "passeio", 150, "Ciclovida", "(19) 99876-1234", "JULPEDAL", 180),
+        
+        # AGOSTO 2026
         ("🐝 Dia das Abelhas", "Palestra e oficina sobre a importância das abelhas para o meio ambiente e como criar abelhas sem ferrão.", "29/08/2026", "14:00", "ESALQ/USP", "Av. Pádua Dias, 11 - São Dimas", "palestra", 100, "USP", "(19) 3447-8500", "ABELHAS26", 150),
+        ("🌱 Feira de Mudas Nativas", "Feira de troca e venda de mudas de árvores nativas do cerrado e mata atlântica.", "08/08/2026", "09:00", "Horto Municipal", "Av. Maurílio Biagi, 1500 - Santa Cecília", "feira", 0, "Horto Municipal", "(19) 3434-5678", "AGOMUDAS", 120),
+        ("♻️ Workshop de Upcycling de Móveis", "Aprenda a restaurar e transformar móveis velhos em peças novas e estilosas.", "15/08/2026", "14:00", "SENAC", "Rua Santa Cruz, 1145 - Centro", "workshop", 25, "SENAC", "(19) 3412-3000", "AGOUPCYCLE", 200),
+        ("🌿 Caminhada Ecológica no Parque", "Caminhada guiada pelo Parque Ecológico com identificação de árvores e aves.", "22/08/2026", "08:00", "Parque Ecológico", "Av. Dr. Paulo de Moraes, 2000 - Santa Terezinha", "caminhada", 100, "Parque Ecológico", "(19) 3434-1234", "AGOCAMINHADA", 120),
+        
+        # SETEMBRO 2026
         ("♻️ Workshop de Upcycling", "Transforme roupas velhas em novas peças. Traga suas roupas e aprenda técnicas de customização.", "12/09/2026", "14:00", "SENAC Piracicaba", "Rua Santa Cruz, 1145 - Centro", "workshop", 30, "SENAC", "(19) 3412-3000", "UPCYCLE", 180),
         ("🚴 Bike na Rua", "Dia com ruas fechadas para bicicletas, com atividades, food trucks e música.", "20/09/2026", "09:00", "Av. Independência", "Av. Independência - Centro", "evento", 0, "Prefeitura de Piracicaba", "(19) 3403-1100", "BIKERUA", 150),
+        ("🌱 Semana da Árvore", "Eventos durante toda a semana sobre a importância das árvores, com plantios e palestras.", "21/09/2026", "09:00", "Vários locais", "Diversos pontos da cidade", "evento", 0, "SOS Mata Atlântica", "(11) 3262-4088", "SETARVORE", 200),
+        ("🌿 Palestra: Permacultura", "Introdução à permacultura e design de ecossistemas sustentáveis.", "26/09/2026", "10:00", "ESALQ/USP", "Av. Pádua Dias, 11 - São Dimas", "palestra", 80, "ESALQ", "(19) 3447-8500", "SETPERMA", 150),
+        
+        # OUTUBRO 2026
         ("🌱 Feira de Mudas", "Feira de troca e venda de mudas de árvores nativas, frutíferas e ornamentais.", "05/10/2026", "09:00", "Horto Municipal", "Av. Maurílio Biagi, 1500 - Santa Cecília", "feira", 0, "Horto Municipal", "(19) 3434-5678", "MUDAS26", 120),
         ("💧 Fórum das Águas", "Encontro com especialistas discutindo a preservação dos recursos hídricos da região.", "18/10/2026", "08:30", "Acadêmico", "Rua São João, 500 - Centro", "palestra", 150, "Comitê PCJ", "(19) 3437-2000", "FORUMAGUA", 180),
         ("♻️ Semana Lixo Zero", "Eventos durante toda a semana sobre redução, reutilização e reciclagem de resíduos.", "25/10/2026", "09:00", "Vários locais", "Diversos pontos da cidade", "evento", 0, "Instituto Lixo Zero", "(11) 99999-8888", "LIXOZERO", 200),
+        ("🌿 Oficina de Sabonetes Naturais", "Aprenda a fazer sabonetes e produtos de limpeza ecológicos.", "10/10/2026", "14:00", "SESC", "Rua Ipiranga, 155 - Centro", "oficina", 30, "SESC", "(19) 3437-9292", "OUTSABONETE", 150),
+        ("🚴 Pedal da Primavera", "Passeio ciclístico para celebrar a primavera, com flores e cores.", "17/10/2026", "09:00", "Largo dos Pescadores", "Rua do Porto - Centro", "passeio", 200, "Ciclovida", "(19) 99876-1234", "OUTPEDAL", 180),
+        
+        # NOVEMBRO 2026
         ("🌳 Plantio da Primavera", "Mutirão de plantio de árvores para celebrar a primavera.", "08/11/2026", "08:30", "Parque Ecológico", "Av. Dr. Paulo de Moraes, 2000 - Santa Terezinha", "mutirão", 300, "SOS Mata Atlântica", "(11) 3262-4088", "PRIMAVERA", 250),
         ("🥕 Feira Orgânica Especial", "Edição especial da feira orgânica com produtos sazonais e alimentos da reforma agrária.", "15/11/2026", "08:00", "Mercado Municipal", "Praça Dr. Alfredo Stead, 100 - Centro", "feira", 0, "Associação Orgânicos", "(19) 3434-7890", "ORGSPECIAL", 120),
         ("🌿 Encontro de Sustentabilidade", "Palestras e debates com líderes ambientais sobre o futuro sustentável de Piracicaba.", "22/11/2026", "09:00", "Teatro Municipal", "Av. Independência, 100 - Centro", "evento", 400, "ONG Planeta Verde", "(19) 99876-5432", "ENCONTRO26", 180),
+        ("♻️ Feira de Troca de Livros e Brinquedos", "Traga livros e brinquedos usados em bom estado e troque por outros.", "14/11/2026", "10:00", "Praça José Bonifácio", "Praça José Bonifácio - Centro", "feira", 0, "Coletivo Cultural", "(19) 99888-7766", "NOVTROCA", 120),
+        ("🚴 Pedal da Consciência Negra", "Passeio ciclístico em homenagem ao Dia da Consciência Negra, com música e cultura.", "20/11/2026", "09:00", "Largo dos Pescadores", "Rua do Porto - Centro", "passeio", 200, "Ciclovida", "(19) 99876-1234", "NOVCONSCIENCIA", 180),
+        
+        # DEZEMBRO 2026
         ("♻️ Feira de Natal Sustentável", "Presentes sustentáveis, artesanato ecológico e decoração feita com materiais reciclados.", "05/12/2026", "10:00", "Engenho Central", "Av. Maurice Allain, 454 - Engenho Central", "feira", 0, "Prefeitura de Piracicaba", "(19) 3403-1100", "NATALECO", 150),
-        ("🚴 Pedal de Natal", "Passeio ciclístico natalino com decoração temática e arrecadação de alimentos.", "12/12/2026", "18:00", "Largo dos Pescadores", "Rua do Porto - Centro", "passeio", 200, "Ciclovida", "(19) 99876-1234", "PEDALNATAL", 180)
+        ("🚴 Pedal de Natal", "Passeio ciclístico natalino com decoração temática e arrecadação de alimentos.", "12/12/2026", "18:00", "Largo dos Pescadores", "Rua do Porto - Centro", "passeio", 200, "Ciclovida", "(19) 99876-1234", "PEDALNATAL", 180),
+        ("🌱 Natal Verde - Plantio de Árvores", "Plante uma árvore e ganhe uma muda para presentear no Natal.", "19/12/2026", "08:30", "Parque da Rua do Porto", "Rua do Porto - Centro", "mutirão", 150, "Projeto Pomar", "(19) 99888-7766", "DEZNATALVERDE", 250),
+        ("🌿 Reveillon Sustentável", "Celebração de Ano Novo com fogos de artifício silenciosos e baixo impacto ambiental.", "31/12/2026", "22:00", "Engenho Central", "Av. Maurice Allain, 454 - Engenho Central", "evento", 2000, "Prefeitura de Piracicaba", "(19) 3403-1100", "DEZREVEILLON", 200),
+        ("♻️ Feira de Artesanato de Natal", "Artesanato sustentável e ecológico para presentes de Natal.", "13/12/2026", "10:00", "Mercado Municipal", "Praça Dr. Alfredo Stead, 100 - Centro", "feira", 0, "Artesanato Solidário", "(19) 99888-7766", "DEZARTESANATO", 120)
     ]
     
     for e in eventos:
@@ -425,64 +474,185 @@ def dados_iniciais(conn, c):
             e
         )
     
-    # ===== PONTOS DE COLETA EM PIRACICABA (AMPLIADOS) =====
-    pontos = [
-        # Pontos existentes
+    # ===== PONTOS DE COLETA EM PIRACICABA (MEGA EXPANDIDO POR CATEGORIA) =====
+    
+    # 1. PONTOS GERAIS (Ecopontos)
+    pontos_gerais = [
         ("Ecoponto Centro", "Av. Rui Barbosa, 800 - Centro", "geral", "Seg-Sex 8h-17h, Sáb 8h-12h", "(19) 3403-1100", 4.5, "Recebe todos os tipos de recicláveis, eletrônicos e óleo de cozinha"),
-        ("Shopping Piracicaba", "Av. Limeira, 700 - Areão", "pilhas", "Seg-Sáb 10h-22h, Dom 14h-20h", "(19) 3432-4545", 4.8, "Ponto de coleta de pilhas e baterias no piso G1"),
-        
-        # NOVOS PONTOS DE COLETA
         ("Ecoponto Paulicéia", "R. Javari, 150 - Paulicéia", "geral", "Ter-Sáb 8h-16h", "(19) 3403-2200", 4.3, "Ecoponto completo com coleta de óleo, recicláveis e eletrônicos"),
         ("Ecoponto Santa Terezinha", "Av. Dr. Paulo de Moraes, 1500 - Santa Terezinha", "geral", "Seg-Sáb 8h-17h", "(19) 3403-2300", 4.4, "Recebe recicláveis, entulho e resíduos volumosos"),
         ("Ecoponto Vila Sônia", "R. Benedito Tolosa, 500 - Vila Sônia", "geral", "Seg-Sáb 8h-17h", "(19) 3403-2400", 4.2, "Ponto de entrega voluntária de recicláveis"),
-        
-        # Pontos de pilhas e baterias
+        ("Ecoponto Nova Piracicaba", "Av. Cruzeiro do Sul, 2000 - Nova Piracicaba", "geral", "Seg-Sáb 8h-17h", "(19) 3403-2500", 4.6, "Ecoponto moderno com coleta seletiva completa"),
+        ("Ecoponto Vila Rezende", "R. dos Operários, 500 - Vila Rezende", "geral", "Seg-Sáb 8h-16h", "(19) 3403-2600", 4.3, "Ponto de coleta para a região norte"),
+        ("Ecoponto Ártemis", "Av. 1º de Agosto, 1000 - Ártemis", "geral", "Seg-Sáb 8h-16h", "(19) 3403-2700", 4.2, "Ecoponto para o distrito de Ártemis"),
+        ("Ecoponto Tupi", "R. Tiradentes, 300 - Tupi", "geral", "Seg-Sáb 8h-16h", "(19) 3403-2800", 4.1, "Ponto de coleta para o distrito de Tupi"),
+    ]
+    
+    # 2. PILHAS E BATERIAS
+    pontos_pilhas = [
+        ("Shopping Piracicaba", "Av. Limeira, 700 - Areão", "pilhas", "Seg-Sáb 10h-22h, Dom 14h-20h", "(19) 3432-4545", 4.8, "Ponto de coleta de pilhas e baterias no piso G1"),
         ("Unimed Sede", "R. Voluntários, 450 - Centro", "pilhas", "Seg-Sex 7h-19h", "(19) 3432-9000", 4.6, "Coleta de pilhas e baterias na recepção"),
         ("Hospital dos Fornecedores", "R. Dr. Paulo Pinto, 500 - Cidade Alta", "pilhas", "Seg-Sex 8h-18h", "(19) 3421-3000", 4.5, "Ponto de coleta de pilhas no saguão principal"),
         ("Santa Casa de Piracicaba", "Av. Independência, 950 - Centro", "pilhas", "Seg-Sex 8h-18h", "(19) 3412-2000", 4.4, "Coletores de pilhas na entrada principal"),
-        
-        # Eletrônicos
+        ("Prefeitura Municipal", "R. Antônio Corrêa Barbosa, 2233 - Centro Cívico", "pilhas", "Seg-Sex 8h-17h", "(19) 3403-1000", 4.5, "Coletores no hall de entrada"),
+        ("Câmara Municipal", "R. do Rosário, 833 - Centro", "pilhas", "Seg-Sex 8h-17h", "(19) 3403-1500", 4.4, "Ponto de coleta no saguão"),
+        ("Terminal Central de Ônibus", "Av. Dr. Paulo de Moraes, 200 - Centro", "pilhas", "Seg-Dom 5h-23h", "(19) 3403-3000", 4.3, "Coletores no terminal"),
+        ("Estação da Paulista", "Av. Rio Claro, 500 - Paulista", "pilhas", "Seg-Dom 5h-23h", "(19) 3403-3100", 4.2, "Ponto de coleta na estação"),
+    ]
+    
+    # 3. ELETRÔNICOS
+    pontos_eletronicos = [
         ("CDI Eletrônicos", "R. do Porto, 234 - Centro", "eletronicos", "Seg-Sex 9h-18h, Sáb 9h-12h", "(19) 3433-5678", 4.7, "Centro de Descarte de Eletrônicos - computadores, celulares e pilhas"),
         ("Associação Comercial", "R. Gov. Pedro de Toledo, 345 - Centro", "eletronicos", "Seg-Sex 9h-17h", "(19) 3412-4500", 4.3, "Ponto de coleta de eletrônicos para reciclagem"),
         ("ESALQ/USP", "Av. Pádua Dias, 11 - Agronomia", "eletronicos", "Seg-Sex 8h-17h", "(19) 3447-8500", 4.9, "Campus da ESALQ com pontos de coleta de eletrônicos"),
-        
-        # Óleo de cozinha
+        ("UNIMEP", "R. do Rosário, 1301 - Centro", "eletronicos", "Seg-Sex 8h-22h", "(19) 3421-3000", 4.7, "Universidade Metodista com pontos de coleta"),
+        ("FUMEP", "Av. Monsenhor Martinho Salgot, 560 - Areião", "eletronicos", "Seg-Sex 8h-17h", "(19) 3412-4000", 4.4, "Fundação Municipal de Ensino"),
+        ("Senai", "Av. Luiz Ralph Benatti, 500 - Vila Industrial", "eletronicos", "Seg-Sex 8h-17h", "(19) 3412-5000", 4.6, "Escola técnica com ponto de coleta"),
+        ("Sesc", "R. Ipiranga, 155 - Centro", "eletronicos", "Seg-Sex 9h-21h, Sáb 9h-17h", "(19) 3437-9292", 4.8, "Unidade Sesc com coletores"),
+        ("Sesi", "Av. Luiz Ralph Benatti, 700 - Vila Industrial", "eletronicos", "Seg-Sex 8h-17h", "(19) 3412-6000", 4.5, "Ponto de coleta no Sesi"),
+    ]
+    
+    # 4. ÓLEO DE COZINHA
+    pontos_oleo = [
         ("Oleobom", "R. São João, 678 - Centro", "oleo", "Seg-Sex 9h-18h, Sáb 9h-13h", "(19) 3421-5678", 4.6, "Ponto de coleta de óleo de cozinha usado"),
         ("Supermercados Pague Menos", "Av. Limeira, 1200 - Areão", "oleo", "Seg-Dom 8h-22h", "(19) 3434-2000", 4.5, "Coletores de óleo no estacionamento"),
         ("Supermercados Savegnago", "Av. Cruzeiro do Sul, 800 - Nova Piracicaba", "oleo", "Seg-Dom 8h-22h", "(19) 3433-3000", 4.7, "Ponto de coleta de óleo usado"),
-        
-        # Vidros
-        ("Coopervidros", "R. Treze de Maio, 300 - Centro", "vidros", "Seg-Sex 8h-17h", "(19) 3421-1234", 4.2, "Cooperativa especializada em reciclagem de vidros"),
-        ("Recicla Vidros", "Av. Rio Claro, 450 - Vila Industrial", "vidros", "Seg-Sex 8h-16h", "(19) 3434-5678", 4.3, "Recebimento de vidros para reciclagem"),
-        
-        # Papel e papelão
-        ("Cooperativa Recicla Piracicaba", "R. dos Operários, 200 - Centro", "papel", "Seg-Sex 8h-16h", "(19) 3422-3344", 4.4, "Cooperativa de catadores de papel e papelão"),
-        ("Papelão Recicla", "Av. Independência, 1800 - Centro", "papel", "Seg-Sex 8h-17h", "(19) 3433-4455", 4.2, "Compra e recebimento de papelão"),
-        
-        # Plásticos
-        ("Recicla Plásticos", "R. do Porto, 567 - Centro", "plasticos", "Seg-Sex 8h-16h", "(19) 3423-4567", 4.3, "Recebimento de todos os tipos de plásticos"),
-        ("Plástico Verde", "Av. Cruzeiro do Sul, 1500 - Nova Piracicaba", "plasticos", "Seg-Sex 8h-17h", "(19) 3434-6789", 4.5, "Reciclagem de plásticos PET e PVC"),
-        
-        # Resíduos orgânicos
-        ("Horto Municipal", "Av. Maurílio Biagi, 1500 - Santa Cecília", "organicos", "Seg-Sex 8h-16h", "(19) 3434-5678", 4.3, "Recebimento de podas e resíduos orgânicos"),
-        ("Feira Noturna", "Praça José Bonifácio - Centro", "organicos", "Qui 17h-22h", "(19) 3403-1100", 4.1, "Ponto de coleta de resíduos orgânicos da feira"),
-        
-        # Medicamentos vencidos
-        ("Farmácias Pague Menos", "Av. Independência, 1000 - Centro", "medicamentos", "Seg-Dom 8h-22h", "(19) 3412-9000", 4.6, "Coleta de medicamentos vencidos"),
-        ("Drogasil", "Rua do Rosário, 500 - Centro", "medicamentos", "Seg-Dom 8h-22h", "(19) 3421-8000", 4.5, "Descarte correto de medicamentos"),
-        
-        # Lâmpadas
-        ("Lumi Recicla", "Av. Rio Claro, 800 - Vila Industrial", "lampadas", "Seg-Sex 9h-17h", "(19) 3433-2121", 4.4, "Reciclagem de lâmpadas fluorescentes e LED"),
-        
-        # Roupas e tecidos
-        ("Brechó Solidário", "R. Governador, 400 - Centro", "roupas", "Seg-Sex 9h-17h", "(19) 3421-4321", 4.5, "Doação de roupas para projetos sociais"),
-        ("Casa da Fraternidade", "R. do Vergueiro, 200 - Centro", "roupas", "Seg-Sex 8h-16h", "(19) 3422-1234", 4.7, "Ponto de coleta de roupas e agasalhos"),
-        
-        # Móveis e eletrodomésticos
-        ("Ecoponto Volumosos", "Av. Limeira, 2000 - Areão", "moveis", "Seg-Sáb 8h-16h", "(19) 3403-2500", 4.2, "Recebimento de móveis e eletrodomésticos inservíveis")
+        ("Supermercados Covabra", "Av. Limeira, 1500 - Areão", "oleo", "Seg-Dom 8h-22h", "(19) 3434-4000", 4.6, "Coletores de óleo na entrada"),
+        ("Supermercados São Vicente", "R. do Porto, 500 - Centro", "oleo", "Seg-Dom 8h-22h", "(19) 3421-7000", 4.5, "Ponto de coleta de óleo"),
+        ("Atacadão", "Av. Limeira, 2000 - Areão", "oleo", "Seg-Dom 8h-22h", "(19) 3434-5000", 4.4, "Coletores de óleo no estacionamento"),
+        ("Associação Comercial", "R. Gov. Pedro de Toledo, 345 - Centro", "oleo", "Seg-Sex 9h-17h", "(19) 3412-4500", 4.3, "Ponto de coleta de óleo"),
+        ("Feira Noturna", "Praça José Bonifácio - Centro", "oleo", "Qui 17h-22h", "(19) 3403-1100", 4.2, "Ponto de coleta durante a feira"),
     ]
     
-    for p in pontos:
+    # 5. VIDROS
+    pontos_vidros = [
+        ("Coopervidros", "R. Treze de Maio, 300 - Centro", "vidros", "Seg-Sex 8h-17h", "(19) 3421-1234", 4.2, "Cooperativa especializada em reciclagem de vidros"),
+        ("Recicla Vidros", "Av. Rio Claro, 450 - Vila Industrial", "vidros", "Seg-Sex 8h-16h", "(19) 3434-5678", 4.3, "Recebimento de vidros para reciclagem"),
+        ("Vidrocenter", "R. do Vergueiro, 600 - Centro", "vidros", "Seg-Sex 8h-18h", "(19) 3422-3344", 4.4, "Empresa especializada em vidros"),
+        ("Cooperativa Recicla Piracicaba", "R. dos Operários, 200 - Centro", "vidros", "Seg-Sex 8h-16h", "(19) 3422-3344", 4.3, "Recebimento de vidros"),
+        ("Ecoponto Centro", "Av. Rui Barbosa, 800 - Centro", "vidros", "Seg-Sex 8h-17h", "(19) 3403-1100", 4.5, "Recebe vidros no ecoponto"),
+        ("Ecoponto Paulicéia", "R. Javari, 150 - Paulicéia", "vidros", "Ter-Sáb 8h-16h", "(19) 3403-2200", 4.3, "Recebe vidros"),
+        ("Shopping Piracicaba", "Av. Limeira, 700 - Areão", "vidros", "Seg-Sáb 10h-22h", "(19) 3432-4545", 4.5, "Coletores de vidros no estacionamento"),
+        ("Bares e Restaurantes", "R. do Porto, 400 - Centro", "vidros", "Parceria com estabelecimentos", "(19) 99888-7766", 4.2, "Rede de coleta em bares parceiros"),
+    ]
+    
+    # 6. PAPEL E PAPELÃO
+    pontos_papel = [
+        ("Cooperativa Recicla Piracicaba", "R. dos Operários, 200 - Centro", "papel", "Seg-Sex 8h-16h", "(19) 3422-3344", 4.4, "Cooperativa de catadores de papel e papelão"),
+        ("Papelão Recicla", "Av. Independência, 1800 - Centro", "papel", "Seg-Sex 8h-17h", "(19) 3433-4455", 4.2, "Compra e recebimento de papelão"),
+        ("Recicla Papel", "R. do Porto, 567 - Centro", "papel", "Seg-Sex 8h-16h", "(19) 3423-4567", 4.3, "Recebimento de papel e papelão"),
+        ("Ecoponto Centro", "Av. Rui Barbosa, 800 - Centro", "papel", "Seg-Sex 8h-17h", "(19) 3403-1100", 4.5, "Recebe papel e papelão"),
+        ("Escolas Municipais", "Diversos endereços", "papel", "Seg-Sex 8h-17h", "(19) 3403-1800", 4.3, "Rede de coleta nas escolas"),
+        ("Faculdades", "Campus UNIMEP e ESALQ", "papel", "Seg-Sex 8h-22h", "(19) 3421-3000", 4.6, "Pontos de coleta nas universidades"),
+        ("Prédios Comerciais", "Centro empresarial", "papel", "Seg-Sex 8h-18h", "(19) 3422-3344", 4.2, "Coleta seletiva em edifícios comerciais"),
+        ("Gráficas", "Av. Rio Claro, 300 - Centro", "papel", "Seg-Sex 8h-18h", "(19) 3423-4567", 4.3, "Parceria com gráficas para coleta de aparas"),
+    ]
+    
+    # 7. PLÁSTICOS
+    pontos_plasticos = [
+        ("Recicla Plásticos", "R. do Porto, 567 - Centro", "plasticos", "Seg-Sex 8h-16h", "(19) 3423-4567", 4.3, "Recebimento de todos os tipos de plásticos"),
+        ("Plástico Verde", "Av. Cruzeiro do Sul, 1500 - Nova Piracicaba", "plasticos", "Seg-Sex 8h-17h", "(19) 3434-6789", 4.5, "Reciclagem de plásticos PET e PVC"),
+        ("Cooperativa Recicla", "R. dos Operários, 200 - Centro", "plasticos", "Seg-Sex 8h-16h", "(19) 3422-3344", 4.4, "Recebimento de plásticos"),
+        ("Ecoponto Santa Terezinha", "Av. Dr. Paulo de Moraes, 1500", "plasticos", "Seg-Sáb 8h-17h", "(19) 3403-2300", 4.4, "Recebe plásticos"),
+        ("Supermercados", "Rede Pague Menos", "plasticos", "Seg-Dom 8h-22h", "(19) 3434-2000", 4.5, "Coletores de plásticos nos mercados"),
+        ("Escolas", "Rede municipal", "plasticos", "Seg-Sex 8h-17h", "(19) 3403-1800", 4.3, "Programa Escola Sustentável"),
+        ("Condomínios", "Diversos endereços", "plasticos", "24h", "(19) 99888-7766", 4.2, "Coleta seletiva em condomínios"),
+        ("Indústrias", "Distrito Industrial", "plasticos", "Seg-Sex 8h-17h", "(19) 3423-4567", 4.4, "Parceria com indústrias"),
+    ]
+    
+    # 8. RESÍDUOS ORGÂNICOS
+    pontos_organicos = [
+        ("Horto Municipal", "Av. Maurílio Biagi, 1500 - Santa Cecília", "organicos", "Seg-Sex 8h-16h", "(19) 3434-5678", 4.3, "Recebimento de podas e resíduos orgânicos"),
+        ("Feira Noturna", "Praça José Bonifácio - Centro", "organicos", "Qui 17h-22h", "(19) 3403-1100", 4.1, "Ponto de coleta de resíduos orgânicos da feira"),
+        ("Feira do Areião", "Av. Limeira - Areão", "organicos", "Sáb 7h-12h", "(19) 3403-1100", 4.2, "Coleta de orgânicos na feira"),
+        ("Feira da Paulista", "Av. Rio Claro - Paulista", "organicos", "Dom 7h-12h", "(19) 3403-1100", 4.1, "Ponto de coleta de orgânicos"),
+        ("Composteiras Comunitárias", "Praça José Bonifácio", "organicos", "24h", "(19) 99888-7766", 4.5, "Composteira comunitária para resíduos de feira"),
+        ("Restaurantes Parceiros", "Centro", "organicos", "Parceria", "(19) 99888-7766", 4.3, "Coleta de orgânicos em restaurantes"),
+        ("Sítios e Chácaras", "Zona rural", "organicos", "Parceria", "(19) 99888-7766", 4.4, "Programa de compostagem rural"),
+        ("Escolas com Composteira", "Rede municipal", "organicos", "Seg-Sex", "(19) 3403-1800", 4.5, "Escolas com projeto de compostagem"),
+    ]
+    
+    # 9. MEDICAMENTOS VENCIDOS
+    pontos_medicamentos = [
+        ("Farmácias Pague Menos", "Av. Independência, 1000 - Centro", "medicamentos", "Seg-Dom 8h-22h", "(19) 3412-9000", 4.6, "Coleta de medicamentos vencidos"),
+        ("Drogasil", "Rua do Rosário, 500 - Centro", "medicamentos", "Seg-Dom 8h-22h", "(19) 3421-8000", 4.5, "Descarte correto de medicamentos"),
+        ("Droga Raia", "Av. Limeira, 800 - Areão", "medicamentos", "Seg-Dom 8h-22h", "(19) 3434-7000", 4.6, "Coleta de medicamentos"),
+        ("Farmácias São João", "R. Gov. Pedro de Toledo, 400 - Centro", "medicamentos", "Seg-Dom 8h-22h", "(19) 3421-9000", 4.5, "Ponto de coleta"),
+        ("Farmácias Drogal", "Av. Cruzeiro do Sul, 1000 - Nova Piracicaba", "medicamentos", "Seg-Dom 8h-22h", "(19) 3433-8000", 4.4, "Descarte de medicamentos"),
+        ("Farmácia Municipal", "R. do Rosário, 200 - Centro", "medicamentos", "Seg-Sex 8h-17h", "(19) 3403-1700", 4.7, "Farmácia pública com coleta"),
+        ("UBSs", "Diversos endereços", "medicamentos", "Seg-Sex 8h-17h", "(19) 3403-1800", 4.5, "Unidades Básicas de Saúde com coleta"),
+        ("Hospitais", "Santa Casa, Unimed", "medicamentos", "Seg-Sex 8h-18h", "(19) 3412-2000", 4.6, "Hospitais com pontos de coleta"),
+    ]
+    
+    # 10. LÂMPADAS
+    pontos_lampadas = [
+        ("Lumi Recicla", "Av. Rio Claro, 800 - Vila Industrial", "lampadas", "Seg-Sex 9h-17h", "(19) 3433-2121", 4.4, "Reciclagem de lâmpadas fluorescentes e LED"),
+        ("Ecoponto Centro", "Av. Rui Barbosa, 800 - Centro", "lampadas", "Seg-Sex 8h-17h", "(19) 3403-1100", 4.5, "Recebe lâmpadas para reciclagem"),
+        ("Ecoponto Paulicéia", "R. Javari, 150 - Paulicéia", "lampadas", "Ter-Sáb 8h-16h", "(19) 3403-2200", 4.3, "Recebe lâmpadas"),
+        ("Shopping Piracicaba", "Av. Limeira, 700 - Areão", "lampadas", "Seg-Sáb 10h-22h", "(19) 3432-4545", 4.6, "Ponto de coleta de lâmpadas"),
+        ("Home Center", "Av. Limeira, 1500 - Areão", "lampadas", "Seg-Dom 8h-20h", "(19) 3434-9000", 4.5, "Lojas de material de construção com coleta"),
+        ("Leroy Merlin", "Av. Limeira, 1800 - Areão", "lampadas", "Seg-Dom 8h-20h", "(19) 3434-9500", 4.7, "Coleta de lâmpadas"),
+        ("Prefeitura", "R. Antônio Corrêa Barbosa, 2233", "lampadas", "Seg-Sex 8h-17h", "(19) 3403-1000", 4.4, "Ponto de coleta no Centro Cívico"),
+        ("Câmara Municipal", "R. do Rosário, 833 - Centro", "lampadas", "Seg-Sex 8h-17h", "(19) 3403-1500", 4.3, "Coleta de lâmpadas"),
+    ]
+    
+    # 11. ROUPAS E TECIDOS
+    pontos_roupas = [
+        ("Brechó Solidário", "R. Governador, 400 - Centro", "roupas", "Seg-Sex 9h-17h", "(19) 3421-4321", 4.5, "Doação de roupas para projetos sociais"),
+        ("Casa da Fraternidade", "R. do Vergueiro, 200 - Centro", "roupas", "Seg-Sex 8h-16h", "(19) 3422-1234", 4.7, "Ponto de coleta de roupas e agasalhos"),
+        ("Igrejas", "Diversas paróquias", "roupas", "Parceria", "(19) 3422-1234", 4.5, "Rede de coleta em igrejas"),
+        ("Escolas", "Rede municipal e estadual", "roupas", "Seg-Sex", "(19) 3403-1800", 4.4, "Campanhas do agasalho"),
+        ("Sesc", "R. Ipiranga, 155 - Centro", "roupas", "Seg-Sex 9h-21h", "(19) 3437-9292", 4.6, "Ponto permanente de coleta"),
+        ("Senac", "R. Santa Cruz, 1145 - Centro", "roupas", "Seg-Sex 8h-17h", "(19) 3412-3000", 4.5, "Coleta de roupas"),
+        ("Faculdades", "ESALQ, UNIMEP", "roupas", "Seg-Sex", "(19) 3447-8500", 4.6, "Pontos de coleta nas universidades"),
+        ("Condomínios", "Diversos endereços", "roupas", "24h", "(19) 99888-7766", 4.3, "Coleta em condomínios"),
+    ]
+    
+    # 12. MÓVEIS E ELETRODOMÉSTICOS
+    pontos_moveis = [
+        ("Ecoponto Volumosos", "Av. Limeira, 2000 - Areão", "moveis", "Seg-Sáb 8h-16h", "(19) 3403-2500", 4.2, "Recebimento de móveis e eletrodomésticos inservíveis"),
+        ("Ecoponto Santa Terezinha", "Av. Dr. Paulo de Moraes, 1500", "moveis", "Seg-Sáb 8h-17h", "(19) 3403-2300", 4.3, "Recebe móveis e eletros"),
+        ("Ecoponto Vila Sônia", "R. Benedito Tolosa, 500", "moveis", "Seg-Sáb 8h-17h", "(19) 3403-2400", 4.2, "Recebe resíduos volumosos"),
+        ("Associação Comercial", "R. Gov. Pedro de Toledo, 345", "moveis", "Seg-Sex 9h-17h", "(19) 3412-4500", 4.1, "Campanhas pontuais"),
+        ("Sindloja", "R. do Rosário, 700 - Centro", "moveis", "Seg-Sex 9h-17h", "(19) 3421-5000", 4.2, "Parceria com lojistas"),
+        ("Lojas de Móveis", "Diversos endereços", "moveis", "Parceria", "(19) 99888-7766", 4.1, "Programa de logística reversa"),
+        ("Condomínios", "Diversos", "moveis", "Agendamento", "(19) 3403-2500", 4.0, "Coleta agendada de volumosos"),
+        ("Cooperativas", "R. dos Operários, 200", "moveis", "Seg-Sex 8h-16h", "(19) 3422-3344", 4.3, "Recebimento para reciclagem"),
+    ]
+    
+    # 13. FERRO VELHO E METAIS
+    pontos_metais = [
+        ("Ferro Velho Central", "Av. Rio Claro, 600 - Centro", "metais", "Seg-Sex 8h-17h, Sáb 8h-12h", "(19) 3421-6000", 4.3, "Compra de sucata e metais"),
+        ("Reciclagem de Metais", "R. dos Operários, 300 - Centro", "metais", "Seg-Sex 8h-17h", "(19) 3422-4455", 4.4, "Recebimento de metais ferrosos e não ferrosos"),
+        ("Sucata Piracicaba", "Av. Cruzeiro do Sul, 500 - Nova Piracicaba", "metais", "Seg-Sex 8h-17h", "(19) 3433-5566", 4.3, "Compra de sucata"),
+        ("Ecoponto Centro", "Av. Rui Barbosa, 800 - Centro", "metais", "Seg-Sex 8h-17h", "(19) 3403-1100", 4.4, "Recebe metais"),
+        ("Indústrias", "Distrito Industrial", "metais", "Parceria", "(19) 3421-6000", 4.5, "Parceria com indústrias"),
+        ("Oficinas Mecânicas", "Diversos", "metais", "Parceria", "(19) 99888-7766", 4.2, "Coleta de peças e sucata"),
+        ("Sucatas de Carros", "Estrada da Velha", "metais", "Seg-Sex 8h-17h", "(19) 3421-6000", 4.1, "Compra de veículos para reciclagem"),
+        ("Cooperativas", "R. dos Operários, 200", "metais", "Seg-Sex 8h-16h", "(19) 3422-3344", 4.4, "Recebimento de metais"),
+    ]
+    
+    # 14. PILHAS E BATERIAS (LUGARES ADICIONAIS)
+    pontos_pilhas_extra = [
+        ("Farmácias Drogasil", "Av. Independência, 800 - Centro", "pilhas", "Seg-Dom 8h-22h", "(19) 3421-8000", 4.5, "Coletores de pilhas"),
+        ("Farmácias Pague Menos", "Av. Limeira, 900 - Areão", "pilhas", "Seg-Dom 8h-22h", "(19) 3434-2000", 4.5, "Coletores de pilhas"),
+        ("Supermercados Covabra", "Av. Cruzeiro do Sul, 1000", "pilhas", "Seg-Dom 8h-22h", "(19) 3433-4000", 4.5, "Coletores de pilhas"),
+        ("Sesc", "R. Ipiranga, 155 - Centro", "pilhas", "Seg-Sex 9h-21h", "(19) 3437-9292", 4.6, "Coletores de pilhas"),
+        ("Sesi", "Av. Luiz Ralph Benatti, 700", "pilhas", "Seg-Sex 8h-17h", "(19) 3412-6000", 4.4, "Coletores de pilhas"),
+        ("ESALQ", "Av. Pádua Dias, 11", "pilhas", "Seg-Sex 8h-17h", "(19) 3447-8500", 4.8, "Coletores nos departamentos"),
+        ("UNIMEP", "R. do Rosário, 1301", "pilhas", "Seg-Sex 8h-22h", "(19) 3421-3000", 4.6, "Coletores no campus"),
+        ("Escolas Estaduais", "Diversos", "pilhas", "Seg-Sex 8h-17h", "(19) 3403-1800", 4.3, "Programa Escola Sustentável"),
+    ]
+    
+    # Combinar todos os pontos
+    todos_pontos = (
+        pontos_gerais + pontos_pilhas + pontos_eletronicos + pontos_oleo + 
+        pontos_vidros + pontos_papel + pontos_plasticos + pontos_organicos + 
+        pontos_medicamentos + pontos_lampadas + pontos_roupas + pontos_moveis + 
+        pontos_metais + pontos_pilhas_extra
+    )
+    
+    for p in todos_pontos:
         c.execute(
             "INSERT INTO pontos_coleta (nome, endereco, categoria, horario, telefone, avaliacao, descricao) VALUES (?, ?, ?, ?, ?, ?, ?)",
             p
@@ -497,7 +667,11 @@ def dados_iniciais(conn, c):
         ("🛍️ Sacolas Retornáveis", "Uma sacola plástica leva 400 anos para se decompor. Use sempre sacolas retornáveis nas compras.", "plástico", data_atual, 0, "WWF"),
         ("🥗 Alimentação Orgânica", "Alimentos orgânicos são mais saudáveis e não contaminam o solo com agrotóxicos. Prefira produtos da agricultura familiar.", "alimentação", data_atual, 0, "Feira Orgânica"),
         ("♻️ Separação de Lixo", "Separe sempre o lixo seco (reciclável) do úmido (orgânico). Lave as embalagens antes de descartar.", "reciclagem", data_atual, 0, "Prefeitura de Piracicaba"),
-        ("🚲 Mobilidade Sustentável", "Use bicicleta para trajetos curtos. Além de saudável, reduz a emissão de poluentes.", "mobilidade", data_atual, 0, "Ciclovida")
+        ("🚲 Mobilidade Sustentável", "Use bicicleta para trajetos curtos. Além de saudável, reduz a emissão de poluentes.", "mobilidade", data_atual, 0, "Ciclovida"),
+        ("🧴 Óleo de Cozinha", "1 litro de óleo contamina 1 milhão de litros de água. Guarde em garrafas PET e leve aos pontos de coleta.", "resíduos", data_atual, 0, "Oleobom"),
+        ("📱 Eletrônicos", "Celulares e computadores contêm metais pesados. Nunca descarte no lixo comum.", "eletrônicos", data_atual, 0, "CDI Eletrônicos"),
+        ("💊 Medicamentos", "Medicamentos vencidos não devem ser jogados no lixo ou pia. Farmárias têm pontos de coleta.", "saúde", data_atual, 0, "Anvisa"),
+        ("👕 Roupas", "Doe roupas que não usa mais. Tecidos levam anos para se decompor em aterros.", "têxtil", data_atual, 0, "Casa da Fraternidade"),
     ]
     
     for d in dicas:
@@ -512,7 +686,7 @@ init_database()
 # ========== FUNÇÕES DE PROGRESSO ==========
 
 def get_user_data(user_id):
-    """Busca dados completos do usuário - CORRIGIDO"""
+    """Busca dados completos do usuário"""
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     
@@ -523,7 +697,7 @@ def get_user_data(user_id):
         conn.close()
         return None, None, None, None, None, None, None, None, banido[1]
     
-    # Dados do usuário - usar os campos que existem
+    # Dados do usuário
     c.execute("SELECT nome, email, cidade, data_cadastro FROM usuarios WHERE id = ?", (user_id,))
     user = c.fetchone()
     
@@ -1178,7 +1352,7 @@ def mostrar_ranking_completo(text_color, card_bg, icon_color, border_color, seco
         """, unsafe_allow_html=True)
 
 def mostrar_pontos_completos(text_color, card_bg, icon_color, border_color, secondary_text):
-    """Mostra pontos de coleta"""
+    """Mostra pontos de coleta com expanders por categoria"""
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     c.execute("SELECT * FROM pontos_coleta ORDER BY categoria, nome")
@@ -1195,6 +1369,23 @@ def mostrar_pontos_completos(text_color, card_bg, icon_color, border_color, seco
         if categoria not in categorias:
             categorias[categoria] = []
         categorias[categoria].append(ponto)
+    
+    # Dicionário de ícones por categoria
+    icones_categoria = {
+        'geral': '🗑️',
+        'pilhas': '🔋',
+        'eletronicos': '💻',
+        'oleo': '🫒',
+        'vidros': '🥃',
+        'papel': '📄',
+        'plasticos': '🧴',
+        'organicos': '🌱',
+        'medicamentos': '💊',
+        'lampadas': '💡',
+        'roupas': '👕',
+        'moveis': '🪑',
+        'metais': '⚙️'
+    }
     
     # Mostrar estatísticas
     col1, col2, col3 = st.columns(3)
@@ -1226,9 +1417,11 @@ def mostrar_pontos_completos(text_color, card_bg, icon_color, border_color, seco
     
     st.markdown("---")
     
-    # Mostrar pontos por categoria
-    for categoria, pontos_cat in categorias.items():
-        with st.expander(f"📌 {categoria.upper()} ({len(pontos_cat)} pontos)"):
+    # Mostrar pontos por categoria em expanders
+    for categoria, pontos_cat in sorted(categorias.items()):
+        icone = icones_categoria.get(categoria, '📍')
+        with st.expander(f"{icone} {categoria.upper()} ({len(pontos_cat)} pontos)", expanded=False):
+            # Subdividir em 2 colunas para melhor visualização
             cols = st.columns(2)
             for i, ponto in enumerate(pontos_cat):
                 with cols[i % 2]:
@@ -1484,7 +1677,7 @@ if st.session_state.usuario_logado is None:
         <div style='text-align: center; padding: 20px;'>
             <i class='fas fa-calendar-alt' style='font-size: 30px; color: {icon_color};'></i>
             <h4 style='color: {text_color};'>Eventos 2026</h4>
-            <p style='color: {secondary_text};'>Acompanhe todos os eventos sustentáveis de Piracicaba</p>
+            <p style='color: {secondary_text};'>Mais de 50 eventos durante o ano</p>
         </div>
         """, unsafe_allow_html=True)
     with col2:
@@ -1492,7 +1685,7 @@ if st.session_state.usuario_logado is None:
         <div style='text-align: center; padding: 20px;'>
             <i class='fas fa-map-marker-alt' style='font-size: 30px; color: {icon_color};'></i>
             <h4 style='color: {text_color};'>Pontos de Coleta</h4>
-            <p style='color: {secondary_text};'>Mais de 30 pontos para descarte correto</p>
+            <p style='color: {secondary_text};'>Mais de 100 pontos em 14 categorias</p>
         </div>
         """, unsafe_allow_html=True)
     with col3:
@@ -1530,7 +1723,7 @@ else:
         conn.close()
         
         st.markdown(f"<h2 style='color: {text_color};'>📅 Eventos 2026 - Piracicaba</h2>", unsafe_allow_html=True)
-        st.markdown(f"<p style='color: {secondary_text}; margin-bottom: 30px;'>Participe dos eventos e ganhe pontos extras!</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='color: {secondary_text}; margin-bottom: 30px;'>Participe dos eventos e ganhe pontos extras! Total de {len(eventos)} eventos durante o ano.</p>", unsafe_allow_html=True)
         
         # Estatísticas dos eventos
         total_eventos = len(eventos)
@@ -1584,16 +1777,16 @@ else:
                 eventos_por_mes[mes] = []
             eventos_por_mes[mes].append(evento)
         
-        # Mostrar eventos por mês
+        # Mostrar eventos por mês em expanders
         meses = {
-            '03': 'Março', '04': 'Abril', '05': 'Maio', '06': 'Junho',
-            '07': 'Julho', '08': 'Agosto', '09': 'Setembro', '10': 'Outubro',
-            '11': 'Novembro', '12': 'Dezembro'
+            '01': 'Janeiro', '02': 'Fevereiro', '03': 'Março', '04': 'Abril',
+            '05': 'Maio', '06': 'Junho', '07': 'Julho', '08': 'Agosto',
+            '09': 'Setembro', '10': 'Outubro', '11': 'Novembro', '12': 'Dezembro'
         }
         
         for mes_num, eventos_mes in sorted(eventos_por_mes.items()):
             nome_mes = meses.get(mes_num, f'Mês {mes_num}')
-            with st.expander(f"📅 {nome_mes} 2026 ({len(eventos_mes)} eventos)"):
+            with st.expander(f"📅 {nome_mes} 2026 ({len(eventos_mes)} eventos)", expanded=False):
                 for evento in eventos_mes:
                     col1, col2 = st.columns([4, 1])
                     with col1:
