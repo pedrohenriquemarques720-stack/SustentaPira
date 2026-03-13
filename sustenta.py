@@ -1547,11 +1547,11 @@ else:
         
         with col3:
             st.markdown(f"""
-            <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
-                <h3 style='color: {icon_color}; font-size: 32px;'>+{sum(e[12] for e in eventos)}</h3>
-                <p style='color: {text_color};'>Pontos totais</p>
-            </div>
-            """, unsafe_allow_html=True)
+        <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
+            <h3 style='color: {icon_color}; font-size: 32px;'>+{sum(e[12] for e in eventos if len(e) > 12)}</h3>
+            <p style='color: {text_color};'>Pontos totais</p>
+        </div>
+        """, unsafe_allow_html=True)
         
         st.markdown("---")
         
