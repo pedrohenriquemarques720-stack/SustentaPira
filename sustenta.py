@@ -887,10 +887,6 @@ def mostrar_eventos_destaque(text_color, card_bg, icon_color, border_color, seco
                 </div>
             </div>
             """, unsafe_allow_html=True)
-
-def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_color, secondary_text):
-    """Mostra perfil completo com estatísticas"""
-    result = get_user_data(usuario_id)
     
     if len(result) == 9:
         user, progresso, conquistas, comprovantes, inscricoes, dicas_vistas, visitas, convites, motivo_ban = result
