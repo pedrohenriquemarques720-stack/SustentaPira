@@ -161,17 +161,18 @@ def init_database():
     
     # Criar tabelas se não existirem
     c.execute('''
-        CREATE TABLE IF NOT EXISTS usuarios (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nome TEXT NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            senha TEXT NOT NULL,
-            telefone TEXT,
-            cidade TEXT DEFAULT 'Piracicaba',
-            data_cadastro TEXT,
-            ultimo_acesso TEXT,
-            banido INTEGER DEFAULT 0,
-            motivo_ban TEXT
+    CREATE TABLE IF NOT EXISTS usuarios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        senha TEXT NOT NULL,
+        telefone TEXT,
+        avatar TEXT,
+        cidade TEXT DEFAULT 'Piracicaba',
+        data_cadastro TEXT,
+        ultimo_acesso TEXT,
+        banido INTEGER DEFAULT 0,
+        motivo_ban TEXT
         )
     ''')
     
