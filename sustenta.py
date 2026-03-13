@@ -16,7 +16,7 @@ import numpy as np
 
 # Configuração da página
 st.set_page_config(
-    page_title="EcoPiracicaba 2026",
+    page_title="SustentaPira",
     page_icon="🌿",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -411,7 +411,7 @@ def dados_iniciais(conn, c):
         # Admin
         c.execute(
             "INSERT INTO usuarios (nome, email, senha, data_cadastro) VALUES (?, ?, ?, ?)",
-            ("Administrador", "admin@ecopiracicaba.com", "eco2026", data_atual)
+            ("Administrador", "admin@sustentapira.com", "eco2026", data_atual)
         )
         admin_id = c.lastrowid
         c.execute(
@@ -717,7 +717,7 @@ def dados_iniciais(conn, c):
     # Dicas
     c.execute("DELETE FROM dicas")
     dicas = [
-        ("🌱 Compostagem Doméstica", "50% do lixo doméstico pode ser compostado! Faça sua própria composteira com baldes e minhocas californianas. Use restos de frutas, verduras e cascas de ovos.", "resíduos", data_atual, 0, "Equipe EcoPiracicaba"),
+        ("🌱 Compostagem Doméstica", "50% do lixo doméstico pode ser compostado! Faça sua própria composteira com baldes e minhocas californianas. Use restos de frutas, verduras e cascas de ovos.", "resíduos", data_atual, 0, "Equipe SustentaPira"),
         ("💧 Economia de Água", "Um banho de 15 minutos gasta 135 litros. Reduza para 5 minutos e economize 90 litros por banho! Instale arejadores nas torneiras.", "água", data_atual, 0, "Sabesp"),
         ("🔋 Pilhas e Baterias", "Uma pilha pode contaminar 20 mil litros de água por até 50 anos. Descarte sempre em pontos de coleta específicos.", "resíduos", data_atual, 0, "Greenpeace"),
         ("🌳 Plante uma Árvore", "Uma árvore adulta absorve até 150kg de CO2 por ano. Plante árvores nativas como ipê, pitanga e jatobá.", "natureza", data_atual, 0, "SOS Mata Atlântica"),
@@ -1657,7 +1657,7 @@ if 'usuario_logado' not in st.session_state:
     st.session_state['evento_atual'] = None
 
 with st.sidebar:
-    st.markdown(f"<h2 style='color: {sidebar_text}; text-align: center;'>🌿 EcoPiracicaba</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='color: {sidebar_text}; text-align: center;'>🌿 SustentaPira</h2>", unsafe_allow_html=True)
     st.markdown(f"<p style='color: {sidebar_text}; text-align: center;'>Sustentabilidade em ação</p>", unsafe_allow_html=True)
     
     st.markdown("---")
