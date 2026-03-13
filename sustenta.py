@@ -133,20 +133,15 @@ DESAFIOS_LISTA = [
 def init_database():
     db_path = os.path.join(os.path.dirname(__file__), 'ecopiracicaba.db')
     
-    # Se o banco existir, remover para garantir que seja recriado corretamente
-    if os.path.exists(db_path):
-        try:
-            os.remove(db_path)
-            print("Banco de dados antigo removido.")
-        except:
-            pass
+    # Verifica se o banco já existe
+    db_exists = os.path.exists(db_path)
     
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
     
-    # Criar tabelas
+    # Criar tabelas se não existirem (NÃO RECRIA SE JÁ EXISTIR)
     c.execute('''
-        CREATE TABLE usuarios (
+        CREATE TABLE IF NOT EXISTS usuarios (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nome TEXT NOT NULL,
             email TEXT UNIQUE NOT NULL,
@@ -161,7 +156,7 @@ def init_database():
     ''')
     
     c.execute('''
-        CREATE TABLE progresso (
+        CREATE TABLE IF NOT EXISTS progresso (
             usuario_id INTEGER PRIMARY KEY,
             total_pontos INTEGER DEFAULT 0,
             nivel TEXT DEFAULT '🌱 EcoIniciante',
@@ -179,7 +174,7 @@ def init_database():
     ''')
     
     c.execute('''
-        CREATE TABLE conquistas (
+        CREATE TABLE IF NOT EXISTS conquistas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             usuario_id INTEGER,
             tipo TEXT NOT NULL,
@@ -192,7 +187,7 @@ def init_database():
     ''')
     
     c.execute('''
-        CREATE TABLE comprovantes (
+        CREATE TABLE IF NOT EXISTS comprovantes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             usuario_id INTEGER NOT NULL,
             tipo TEXT NOT NULL,
@@ -211,7 +206,7 @@ def init_database():
     ''')
     
     c.execute('''
-        CREATE TABLE eventos (
+        CREATE TABLE IF NOT EXISTS eventos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             titulo TEXT NOT NULL,
             descricao TEXT,
@@ -228,7 +223,7 @@ def init_database():
     ''')
     
     c.execute('''
-        CREATE TABLE inscricoes (
+        CREATE TABLE IF NOT EXISTS inscricoes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             usuario_id INTEGER,
             evento_id INTEGER,
@@ -243,7 +238,7 @@ def init_database():
     ''')
     
     c.execute('''
-        CREATE TABLE dicas (
+        CREATE TABLE IF NOT EXISTS dicas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             titulo TEXT NOT NULL,
             conteudo TEXT,
@@ -255,7 +250,7 @@ def init_database():
     ''')
     
     c.execute('''
-        CREATE TABLE dicas_vistas (
+        CREATE TABLE IF NOT EXISTS dicas_vistas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             usuario_id INTEGER,
             dica_id INTEGER,
@@ -267,7 +262,7 @@ def init_database():
     ''')
     
     c.execute('''
-        CREATE TABLE pontos_coleta (
+        CREATE TABLE IF NOT EXISTS pontos_coleta (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nome TEXT NOT NULL,
             endereco TEXT,
@@ -280,7 +275,7 @@ def init_database():
     ''')
     
     c.execute('''
-        CREATE TABLE visitas_pontos (
+        CREATE TABLE IF NOT EXISTS visitas_pontos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             usuario_id INTEGER,
             ponto_id INTEGER,
@@ -293,7 +288,7 @@ def init_database():
     ''')
     
     c.execute('''
-        CREATE TABLE convites (
+        CREATE TABLE IF NOT EXISTS convites (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             usuario_id INTEGER,
             codigo TEXT UNIQUE,
@@ -307,7 +302,7 @@ def init_database():
     ''')
     
     c.execute('''
-        CREATE TABLE logs_fraude (
+        CREATE TABLE IF NOT EXISTS logs_fraude (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             usuario_id INTEGER,
             tipo TEXT,
@@ -319,20 +314,25 @@ def init_database():
     
     conn.commit()
     
-    # Criar índices
-    c.execute('CREATE INDEX idx_comprovantes_hash ON comprovantes(imagem_hash)')
-    c.execute('CREATE INDEX idx_comprovantes_usuario ON comprovantes(usuario_id, tipo, data)')
-    c.execute('CREATE INDEX idx_inscricoes_evento ON inscricoes(evento_id, participou)')
+    # Criar índices se não existirem
+    try:
+        c.execute('CREATE INDEX IF NOT EXISTS idx_comprovantes_hash ON comprovantes(imagem_hash)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_comprovantes_usuario ON comprovantes(usuario_id, tipo, data)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_inscricoes_evento ON inscricoes(evento_id, participou)')
+    except:
+        pass
     
     conn.commit()
     
-    # Inserir dados iniciais
-    try:
-        dados_iniciais(conn, c)
-        conn.commit()
-        print("Dados iniciais inseridos com sucesso!")
-    except Exception as e:
-        print(f"Erro ao inserir dados iniciais: {e}")
+    # Inserir dados iniciais APENAS se o banco for novo (nenhum usuário existir)
+    c.execute("SELECT COUNT(*) FROM usuarios")
+    if c.fetchone()[0] == 0:
+        try:
+            dados_iniciais(conn, c)
+            conn.commit()
+            print("Dados iniciais inseridos com sucesso!")
+        except Exception as e:
+            print(f"Erro ao inserir dados iniciais: {e}")
     
     conn.close()
 
@@ -407,7 +407,7 @@ def dados_iniciais(conn, c):
             p
         )
 
-# Inicializar banco (vai recriar do zero)
+# Inicializar banco (agora preserva dados existentes)
 init_database()
 
 # ========== FUNÇÕES DE PROGRESSO ==========
@@ -507,10 +507,11 @@ def criar_usuario(nome, email, senha):
         if conn:
             conn.close()
 
-# ========== FUNÇÃO DE LOGIN SIMPLIFICADA ==========
+# ========== FUNÇÃO DE LOGIN CORRIGIDA ==========
 
 def fazer_login(email, senha):
-    """Faz login do usuário - VERSÃO SIMPLIFICADA"""
+    """Faz login do usuário - VERSÃO CORRIGIDA"""
+    conn = None
     try:
         conn = sqlite3.connect('ecopiracicaba.db')
         c = conn.cursor()
@@ -531,42 +532,41 @@ def fazer_login(email, senha):
             data_atual = datetime.now().strftime("%d/%m/%Y %H:%M")
             c.execute("UPDATE usuarios SET ultimo_acesso = ? WHERE id = ?", (data_atual, user_id))
             
-            # Atualizar streak de forma simples
+            # Atualizar streak
             c.execute("SELECT ultima_atividade FROM progresso WHERE usuario_id = ?", (user_id,))
             row = c.fetchone()
             
             if row and row[0]:
                 try:
-                    # Pegar apenas a data
-                    ultima_data_str = row[0].split()[0]
+                    ultima_data_str = row[0].split()[0] if ' ' in row[0] else row[0]
                     ultima_data = datetime.strptime(ultima_data_str, "%d/%m/%Y")
                     hoje = datetime.now()
                     
-                    # Calcular diferença em dias
-                    diff = (hoje.date() - ultima_data.date()).days
+                    diff_dias = (hoje.date() - ultima_data.date()).days
                     
-                    if diff == 1:
+                    if diff_dias == 1:
                         c.execute("UPDATE progresso SET streak_dias = streak_dias + 1 WHERE usuario_id = ?", (user_id,))
-                    elif diff > 1:
+                    elif diff_dias > 1:
                         c.execute("UPDATE progresso SET streak_dias = 1 WHERE usuario_id = ?", (user_id,))
-                except:
-                    # Se der erro, não faz nada
-                    pass
+                except Exception as e:
+                    print(f"Erro ao calcular streak: {e}")
             
             # Atualizar última atividade
             c.execute("UPDATE progresso SET ultima_atividade = ? WHERE usuario_id = ?", (data_atual, user_id))
             
             conn.commit()
             conn.close()
-            
             return (user_id, nome), None
         else:
             conn.close()
             return None, "E-mail ou senha inválidos"
             
     except Exception as e:
-        print(f"Erro no login: {str(e)}")
+        print(f"Erro detalhado no login: {str(e)}")
         return None, f"Erro ao fazer login: {str(e)}"
+    finally:
+        if conn:
+            conn.close()
 
 def adicionar_pontos(usuario_id, pontos, descricao, icone="✨", tipo="geral"):
     """Adiciona pontos ao usuário"""
