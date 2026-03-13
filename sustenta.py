@@ -152,6 +152,20 @@ DESAFIOS_LISTA = [
 
 # ========== INICIALIZAÇÃO DO BANCO DE DADOS ==========
 
+# ===== FUNÇÃO PARA RESETAR O BANCO DE DADOS =====
+def reset_database():
+    """Remove o banco de dados existente para recriar com os novos dados"""
+    db_path = os.path.join(os.path.dirname(__file__), 'ecopiracicaba.db')
+    if os.path.exists(db_path):
+        try:
+            os.remove(db_path)
+            print("✅ Banco de dados antigo removido. Novos dados serão inseridos.")
+        except Exception as e:
+            print(f"❌ Erro ao remover banco: {e}")
+
+# DESCOMENTE A LINHA ABAIXO PARA RESETAR O BANCO (faça isso apenas uma vez)
+# reset_database()  # <--- Descomente esta linha para resetar o banco
+
 def init_database():
     db_path = os.path.join(os.path.dirname(__file__), 'ecopiracicaba.db')
     db_exists = os.path.exists(db_path)
@@ -341,50 +355,87 @@ def init_database():
     
     conn.commit()
     
-    # Inserir dados iniciais APENAS se o banco for novo
+    # VERIFICAR SE JÁ EXISTEM DADOS
     c.execute("SELECT COUNT(*) FROM usuarios")
-    if c.fetchone()[0] == 0:
+    tem_usuarios = c.fetchone()[0] > 0
+    
+    c.execute("SELECT COUNT(*) FROM eventos")
+    tem_eventos = c.fetchone()[0] > 0
+    
+    c.execute("SELECT COUNT(*) FROM pontos_coleta")
+    tem_pontos = c.fetchone()[0] > 0
+    
+    # SE NÃO TIVER DADOS OU FORÇAR RESET, INSERIR DADOS INICIAIS
+    if not tem_usuarios or not tem_eventos or not tem_pontos:
         try:
+            # Limpar dados existentes se houver
+            if tem_usuarios:
+                print("Atualizando dados existentes...")
+            
             dados_iniciais(conn, c)
             conn.commit()
-            print("Dados iniciais inseridos com sucesso!")
+            print("✅ Dados iniciais inseridos/atualizados com sucesso!")
+            print(f"   - Eventos: {len(eventos)}")
+            print(f"   - Pontos de coleta: {len(pontos_gerais) + len(pontos_pilhas) + len(pontos_eletronicos) + len(pontos_oleo) + len(pontos_vidros) + len(pontos_papel) + len(pontos_plasticos) + len(pontos_organicos) + len(pontos_medicamentos) + len(pontos_lampadas) + len(pontos_roupas) + len(pontos_moveis) + len(pontos_metais) + len(pontos_pilhas_extra)}")
         except Exception as e:
-            print(f"Erro ao inserir dados iniciais: {e}")
+            print(f"❌ Erro ao inserir dados iniciais: {e}")
     
     conn.close()
 
+# ===== DADOS INICIAIS =====
+eventos = []  # Lista vazia para ser preenchida
+pontos_gerais = []
+pontos_pilhas = []
+pontos_eletronicos = []
+pontos_oleo = []
+pontos_vidros = []
+pontos_papel = []
+pontos_plasticos = []
+pontos_organicos = []
+pontos_medicamentos = []
+pontos_lampadas = []
+pontos_roupas = []
+pontos_moveis = []
+pontos_metais = []
+pontos_pilhas_extra = []
+
 def dados_iniciais(conn, c):
     """Insere dados iniciais no banco"""
+    global eventos, pontos_gerais, pontos_pilhas, pontos_eletronicos, pontos_oleo, pontos_vidros, pontos_papel, pontos_plasticos, pontos_organicos, pontos_medicamentos, pontos_lampadas, pontos_roupas, pontos_moveis, pontos_metais, pontos_pilhas_extra
+    
     data_atual = datetime.now().strftime("%d/%m/%Y")
     
-    # Admin
-    c.execute(
-        "INSERT INTO usuarios (nome, email, senha, data_cadastro) VALUES (?, ?, ?, ?)",
-        ("Administrador", "admin@ecopiracicaba.com", "eco2026", data_atual)
-    )
-    admin_id = c.lastrowid
-    c.execute(
-        "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
-        (admin_id, 1000, get_nivel(1000), data_atual)
-    )
-    
-    # Usuários exemplo
-    usuarios_exemplo = [
-        ("João Silva", "joao@email.com", "123456", 350),
-        ("Maria Santos", "maria@email.com", "123456", 520),
-        ("Pedro Oliveira", "pedro@email.com", "123456", 180)
-    ]
-    
-    for nome, email, senha, pontos in usuarios_exemplo:
+    # Só insere usuários se não existirem
+    c.execute("SELECT COUNT(*) FROM usuarios")
+    if c.fetchone()[0] == 0:
+        # Admin
         c.execute(
             "INSERT INTO usuarios (nome, email, senha, data_cadastro) VALUES (?, ?, ?, ?)",
-            (nome, email, senha, data_atual)
+            ("Administrador", "admin@ecopiracicaba.com", "eco2026", data_atual)
         )
-        user_id = c.lastrowid
+        admin_id = c.lastrowid
         c.execute(
             "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
-            (user_id, pontos, get_nivel(pontos), data_atual)
+            (admin_id, 1000, get_nivel(1000), data_atual)
         )
+        
+        # Usuários exemplo
+        usuarios_exemplo = [
+            ("João Silva", "joao@email.com", "123456", 350),
+            ("Maria Santos", "maria@email.com", "123456", 520),
+            ("Pedro Oliveira", "pedro@email.com", "123456", 180)
+        ]
+        
+        for nome, email, senha, pontos in usuarios_exemplo:
+            c.execute(
+                "INSERT INTO usuarios (nome, email, senha, data_cadastro) VALUES (?, ?, ?, ?)",
+                (nome, email, senha, data_atual)
+            )
+            user_id = c.lastrowid
+            c.execute(
+                "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
+                (user_id, pontos, get_nivel(pontos), data_atual)
+            )
     
     # ===== EVENTOS 2026 - PIRACICABA (MEGA EXPANDIDO) =====
     eventos = [
@@ -466,6 +517,8 @@ def dados_iniciais(conn, c):
         ("♻️ Feira de Artesanato de Natal", "Artesanato sustentável e ecológico para presentes de Natal.", "13/12/2026", "10:00", "Mercado Municipal", "Praça Dr. Alfredo Stead, 100 - Centro", "feira", 0, "Artesanato Solidário", "(19) 99888-7766", "DEZARTESANATO", 120)
     ]
     
+    # Limpar eventos existentes e inserir novos
+    c.execute("DELETE FROM eventos")
     for e in eventos:
         c.execute(
             """INSERT INTO eventos 
@@ -644,6 +697,9 @@ def dados_iniciais(conn, c):
         ("Escolas Estaduais", "Diversos", "pilhas", "Seg-Sex 8h-17h", "(19) 3403-1800", 4.3, "Programa Escola Sustentável"),
     ]
     
+    # Limpar pontos existentes e inserir novos
+    c.execute("DELETE FROM pontos_coleta")
+    
     # Combinar todos os pontos
     todos_pontos = (
         pontos_gerais + pontos_pilhas + pontos_eletronicos + pontos_oleo + 
@@ -659,6 +715,7 @@ def dados_iniciais(conn, c):
         )
     
     # Dicas
+    c.execute("DELETE FROM dicas")
     dicas = [
         ("🌱 Compostagem Doméstica", "50% do lixo doméstico pode ser compostado! Faça sua própria composteira com baldes e minhocas californianas. Use restos de frutas, verduras e cascas de ovos.", "resíduos", data_atual, 0, "Equipe EcoPiracicaba"),
         ("💧 Economia de Água", "Um banho de 15 minutos gasta 135 litros. Reduza para 5 minutos e economize 90 litros por banho! Instale arejadores nas torneiras.", "água", data_atual, 0, "Sabesp"),
@@ -680,8 +737,29 @@ def dados_iniciais(conn, c):
             d
         )
 
+# ===== FUNÇÃO PARA VERIFICAR DADOS =====
+def verificar_dados():
+    """Verifica quantos eventos e pontos foram inseridos"""
+    conn = sqlite3.connect('ecopiracicaba.db')
+    c = conn.cursor()
+    c.execute("SELECT COUNT(*) FROM eventos")
+    total_eventos = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM pontos_coleta")
+    total_pontos = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM dicas")
+    total_dicas = c.fetchone()[0]
+    conn.close()
+    print(f"\n📊 VERIFICAÇÃO DE DADOS:")
+    print(f"   - Eventos: {total_eventos}")
+    print(f"   - Pontos de coleta: {total_pontos}")
+    print(f"   - Dicas: {total_dicas}\n")
+    return total_eventos, total_pontos
+
 # Inicializar banco
 init_database()
+
+# Verificar dados inseridos
+verificar_dados()
 
 # ========== FUNÇÕES DE PROGRESSO ==========
 
