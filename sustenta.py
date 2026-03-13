@@ -888,12 +888,6 @@ def mostrar_eventos_destaque(text_color, card_bg, icon_color, border_color, seco
             </div>
             """, unsafe_allow_html=True)
     
-    if len(result) == 9:
-        user, progresso, conquistas, comprovantes, inscricoes, dicas_vistas, visitas, convites, motivo_ban = result
-    else:
-        user, progresso, conquistas, comprovantes, inscricoes, dicas_vistas, visitas, convites = result
-        motivo_ban = None
-    
     if motivo_ban:
         st.error(f"🚫 Usuário banido: {motivo_ban}")
         if st.button("Sair"):
