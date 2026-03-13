@@ -887,22 +887,6 @@ def mostrar_eventos_destaque(text_color, card_bg, icon_color, border_color, seco
                 </div>
             </div>
             """, unsafe_allow_html=True)
-    
-    if motivo_ban:
-        st.error(f"🚫 Usuário banido: {motivo_ban}")
-        if st.button("Sair"):
-            st.session_state.usuario_logado = None
-            st.rerun()
-        return
-    
-    if not user or not progresso:
-        st.error("Erro ao carregar perfil")
-        return
-    
-    nome, email, telefone, cidade, data_cadastro = user
-    
-    pontos = progresso[1] if len(progresso) > 1 else 0
-    nivel = progresso[2] if len(progresso) > 2 else "🌱 EcoIniciante"
     eventos = progresso[3] if len(progresso) > 3 else 0
     dicas = progresso[4] if len(progresso) > 4 else 0
     pontos_visitados = progresso[5] if len(progresso) > 5 else 0
