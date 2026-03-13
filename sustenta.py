@@ -14,8 +14,6 @@ from PIL import Image
 import io
 import numpy as np
 import shutil
-import threading
-import schedule
 
 # Configuração da página
 st.set_page_config(
@@ -25,14 +23,13 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ========== SISTEMA DE BACKUP AUTOMÁTICO ==========
+# ========== SISTEMA DE BACKUP SIMPLIFICADO ==========
 
 class BackupSystem:
     def __init__(self):
         self.backup_dir = os.path.join(os.path.dirname(__file__), 'backups')
         self.db_path = os.path.join(os.path.dirname(__file__), 'ecopiracicaba.db')
         self.criar_pasta_backup()
-        self.iniciar_backup_automatico()
     
     def criar_pasta_backup(self):
         """Cria pasta de backups se não existir"""
@@ -118,24 +115,12 @@ class BackupSystem:
         except Exception as e:
             print(f"Erro ao listar backups: {e}")
             return []
-    
-    def iniciar_backup_automatico(self):
-        """Inicia thread para backup automático a cada 12 horas"""
-        def run_schedule():
-            while True:
-                schedule.run_pending()
-                time.sleep(60)
-        
-        # Agendar backup a cada 12 horas
-        schedule.every(12).hours.do(self.fazer_backup)
-        
-        # Iniciar thread
-        thread = threading.Thread(target=run_schedule, daemon=True)
-        thread.start()
-        print("⏰ Sistema de backup automático iniciado (a cada 12 horas)")
 
 # Inicializar sistema de backup
 backup_system = BackupSystem()
+
+# Fazer backup na inicialização
+backup_system.fazer_backup()
 
 # ========== FUNÇÕES BÁSICAS ==========
 
@@ -549,7 +534,7 @@ def dados_iniciais(conn, c):
             (user_id, pontos, get_nivel(pontos), data_atual)
         )
     
-    # ===== EVENTOS 2026 - PIRACICABA =====
+    # ===== EVENTOS 2026 - PIRACICABA (MEGA EXPANDIDO) =====
     eventos = [
         # JANEIRO 2026
         ("🌱 1º Mutirão de Limpeza 2026", "Inicie o ano contribuindo com a limpeza das margens do Rio Piracicaba. Haverá café da manhã comunitário e distribuição de mudas.", "10/01/2026", "08:00", "Rua do Porto", "Rua do Porto - Centro", "mutirão", 150, "SOS Rio Piracicaba", "(19) 99765-4321", "JANLIMPEZA", 200),
@@ -637,7 +622,7 @@ def dados_iniciais(conn, c):
             e
         )
     
-    # ===== PONTOS DE COLETA EM PIRACICABA =====
+    # ===== PONTOS DE COLETA EM PIRACICABA (MEGA EXPANDIDO POR CATEGORIA) =====
     
     # 1. PONTOS GERAIS (Ecopontos)
     pontos_gerais = [
@@ -834,7 +819,7 @@ def dados_iniciais(conn, c):
 # Inicializar banco
 init_database()
 
-# Fazer backup inicial
+# Fazer backup na inicialização
 backup_system.fazer_backup()
 
 # ========== FUNÇÕES DE PROGRESSO ==========
@@ -849,7 +834,7 @@ def get_user_data(user_id):
     banido = c.fetchone()
     if banido and banido[0] == 1:
         conn.close()
-        return None, None, None, None, None, None, None, None, banido[1]
+        return None, None, None, None, None, None, None, None, 0, banido[1]
     
     # Dados do usuário
     c.execute("SELECT nome, email, cidade, data_cadastro FROM usuarios WHERE id = ?", (user_id,))
