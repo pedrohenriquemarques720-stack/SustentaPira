@@ -404,6 +404,7 @@ def dados_iniciais(conn, c):
             p
         )
 
+# Inicializar banco
 init_database()
 
 # ========== FUNÇÕES DE PROGRESSO ==========
@@ -503,8 +504,10 @@ def criar_usuario(nome, email, senha):
         if conn:
             conn.close()
 
+# ========== FUNÇÃO DE LOGIN CORRIGIDA ==========
+
 def fazer_login(email, senha):
-    """Faz login do usuário"""
+    """Faz login do usuário - VERSÃO CORRIGIDA"""
     conn = None
     try:
         conn = sqlite3.connect('ecopiracicaba.db')
@@ -512,44 +515,62 @@ def fazer_login(email, senha):
         
         # Buscar usuário com email e senha
         c.execute("SELECT id, nome, banido FROM usuarios WHERE email = ? AND senha = ?", (email, senha))
-        user = c.fetchone()
+        resultado = c.fetchone()
         
-        if user:
+        if resultado:
+            user_id, nome, banido = resultado
+            
             # Verificar se está banido
-            if user[2] == 1:
+            if banido == 1:
                 conn.close()
                 return None, "Usuário banido por atividades suspeitas."
             
             # Atualizar último acesso
             data_atual = datetime.now().strftime("%d/%m/%Y %H:%M")
-            c.execute("UPDATE usuarios SET ultimo_acesso = ? WHERE id = ?", (data_atual, user[0]))
+            c.execute("UPDATE usuarios SET ultimo_acesso = ? WHERE id = ?", (data_atual, user_id))
             
             # Atualizar streak
-            c.execute("SELECT ultima_atividade FROM progresso WHERE usuario_id = ?", (user[0],))
-            resultado = c.fetchone()
+            c.execute("SELECT ultima_atividade FROM progresso WHERE usuario_id = ?", (user_id,))
+            row = c.fetchone()
             
-            if resultado and resultado[0]:
+            if row and row[0]:
                 try:
-                    ultima = datetime.strptime(resultado[0].split()[0], "%d/%m/%Y")
-                    hoje = datetime.now()
-                    
-                    if (hoje - ultima).days == 1:
-                        c.execute("UPDATE progresso SET streak_dias = streak_dias + 1 WHERE usuario_id = ?", (user[0],))
-                    elif (hoje - ultima).days > 1:
-                        c.execute("UPDATE progresso SET streak_dias = 1 WHERE usuario_id = ?", (user[0],))
-                except:
-                    pass
+                    # Extrair apenas a data (ignorar hora)
+                    data_parts = row[0].split()
+                    if data_parts:
+                        ultima_data = datetime.strptime(data_parts[0], "%d/%m/%Y")
+                        hoje = datetime.now()
+                        
+                        # Comparar apenas as datas
+                        diff_dias = (hoje.date() - ultima_data.date()).days
+                        
+                        if diff_dias == 1:
+                            c.execute("UPDATE progresso SET streak_dias = streak_dias + 1 WHERE usuario_id = ?", (user_id,))
+                        elif diff_dias > 1:
+                            c.execute("UPDATE progresso SET streak_dias = 1 WHERE usuario_id = ?", (user_id,))
+                except Exception as e:
+                    print(f"Erro ao atualizar streak: {e}")
+                    # Se der erro, não interrompe o login
+            
+            # Atualizar última atividade
+            c.execute("UPDATE progresso SET ultima_atividade = ? WHERE usuario_id = ?", (data_atual, user_id))
             
             conn.commit()
             conn.close()
-            return (user[0], user[1]), None
+            return (user_id, nome), None
         else:
             conn.close()
-            return None, "E-mail ou senha inválidos"
+            # Verificar se o email existe para dar mensagem mais específica
+            c = sqlite3.connect('ecopiracicaba.db').cursor()
+            c.execute("SELECT id FROM usuarios WHERE email = ?", (email,))
+            if c.fetchone():
+                return None, "Senha incorreta."
+            else:
+                return None, "E-mail não encontrado."
             
     except Exception as e:
-        print(f"Erro no login: {e}")
-        return None, "Erro ao fazer login. Tente novamente."
+        print(f"Erro detalhado no login: {str(e)}")
+        return None, f"Erro ao fazer login. Tente novamente."
     finally:
         if conn:
             conn.close()
