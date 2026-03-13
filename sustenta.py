@@ -517,11 +517,6 @@ def get_user_data(user_id):
     c = conn.cursor()
     
     # Verificar se usuário está banido
-    def get_user_data(user_id):
-    conn = sqlite3.connect('ecopiracicaba.db')
-    c = conn.cursor()
-    
-    # Verificar se usuário está banido
     c.execute("SELECT banido, motivo_ban FROM usuarios WHERE id = ?", (user_id,))
     banido = c.fetchone()
     if banido and banido[0] == 1:
