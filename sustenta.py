@@ -845,19 +845,41 @@ def mostrar_eventos_destaque(text_color, card_bg, icon_color, border_color, seco
         with col1 if i % 2 == 0 else col2:
             disponibilidade = (evento[8] / evento[7] * 100) if evento[7] > 0 else 0
             
+            def mostrar_eventos_destaque(text_color, card_bg, icon_color, border_color, secondary_text):
+    """Mostra eventos em destaque na página inicial"""
+    conn = sqlite3.connect('ecopiracicaba.db')
+    c = conn.cursor()
+    c.execute("SELECT * FROM eventos ORDER BY data LIMIT 6")
+    eventos = c.fetchall()
+    conn.close()
+    
+    st.markdown(f"<h1 style='text-align: center; color: {text_color}; margin-bottom: 30px;'>🌿 EcoPiracicaba 2026</h1>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align: center; color: {secondary_text}; margin-bottom: 40px;'>Eventos em Piracicaba</h2>", unsafe_allow_html=True)
+    
+    col1, col2 = st.columns(2)
+    
+    for i, evento in enumerate(eventos):
+        with col1 if i % 2 == 0 else col2:
+            # CORREÇÃO: evento[6] é o tipo, evento[7] são as vagas
+            tipo_evento = evento[6]  # tipo está no índice 6
+            vagas = evento[7]         # vagas no índice 7
+            inscritos = evento[8]      # inscritos no índice 8
+            
+            disponibilidade = (inscritos / vagas * 100) if vagas > 0 else 0
+            
             st.markdown(f"""
             <div style='background: {card_bg}; padding: 20px; border-radius: 15px; margin-bottom: 20px; border-left: 6px solid {icon_color}; border: 1px solid {border_color}; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
                 <div style='display: flex; justify-content: space-between; align-items: start;'>
                     <div style='flex: 1;'>
-                        <span style='background: {icon_color}; color: white; padding: 3px 10px; border-radius: 50px; font-size: 12px;'>{evento[7].upper()}</span>
+                        <span style='background: {icon_color}; color: white; padding: 3px 10px; border-radius: 50px; font-size: 12px;'>{tipo_evento.upper()}</span>
                         <h3 style='color: {text_color}; margin: 10px 0 5px 0;'>{evento[1]}</h3>
                         <p style='color: {text_color}; margin: 5px 0; font-size: 14px;'>{evento[2][:100]}...</p>
                         <p style='margin: 5px 0; color: {text_color};'><i class='fas fa-calendar' style='color: {icon_color};'></i> {evento[3]} às {evento[4]}</p>
                         <p style='margin: 5px 0; color: {text_color};'><i class='fas fa-map-marker-alt' style='color: {icon_color};'></i> {evento[5]}</p>
-                        <p style='margin: 5px 0; color: {icon_color};'><i class='fas fa-star'></i> +{evento[12]} pontos</p>
+                        <p style='margin: 5px 0; color: {icon_color};'><i class='fas fa-star'></i> +{evento[12] if len(evento) > 12 else 150} pontos</p>
                     </div>
                     <div style='text-align: right; min-width: 120px;'>
-                        <p style='color: {secondary_text};'><strong>{evento[8]}/{evento[7] if evento[7] > 0 else '∞'}</strong> inscritos</p>
+                        <p style='color: {secondary_text};'><strong>{inscritos}/{vagas if vagas > 0 else '∞'}</strong> inscritos</p>
                         <div style='height: 6px; background: {border_color}; border-radius: 3px; margin: 10px 0;'>
                             <div style='height: 100%; width: {disponibilidade}%; background: {icon_color}; border-radius: 3px;'></div>
                         </div>
