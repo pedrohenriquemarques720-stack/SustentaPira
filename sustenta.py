@@ -512,7 +512,7 @@ init_database()
 # ========== FUNÇÕES DE PROGRESSO ==========
 
 def get_user_data(user_id):
-    """Busca dados completos do usuário"""
+    """Busca dados completos do usuário - CORRIGIDO"""
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     
@@ -523,31 +523,13 @@ def get_user_data(user_id):
         conn.close()
         return None, None, None, None, None, None, None, None, banido[1]
     
-    # Dados do usuário
-    def get_user_data(user_id):
-    conn = sqlite3.connect('ecopiracicaba.db')
-    c = conn.cursor()
-    
-    # Verificar se usuário está banido
-    c.execute("SELECT banido, motivo_ban FROM usuarios WHERE id = ?", (user_id,))
-    banido = c.fetchone()
-    if banido and banido[0] == 1:
-        conn.close()
-        return None, None, None, None, None, None, None, None, banido[1]
-    
-    # CORREÇÃO: Removido 'telefone' da consulta
+    # Dados do usuário - CORREÇÃO: removido 'telefone' da consulta
     c.execute("SELECT nome, email, cidade, data_cadastro FROM usuarios WHERE id = ?", (user_id,))
     user = c.fetchone()
     
-    # Adicionar telefone como None para manter compatibilidade
+    # Adicionar telefone como string vazia para manter compatibilidade
     if user:
         user = (user[0], user[1], "", user[2], user[3])  # nome, email, telefone="", cidade, data_cadastro
-    
-    # Progresso
-    c.execute("SELECT * FROM progresso WHERE usuario_id = ?", (user_id,))
-    progresso = c.fetchone()
-    
-    # ... resto da função permanece igual
     
     # Progresso
     c.execute("SELECT * FROM progresso WHERE usuario_id = ?", (user_id,))
@@ -865,10 +847,9 @@ def mostrar_eventos_destaque(text_color, card_bg, icon_color, border_color, seco
     
     for i, evento in enumerate(eventos):
         with col1 if i % 2 == 0 else col2:
-            # CORREÇÃO: evento[6] é o tipo, evento[7] são as vagas
-            tipo_evento = evento[6]  # tipo está no índice 6
-            vagas = evento[7]         # vagas no índice 7
-            inscritos = evento[8]      # inscritos no índice 8
+            tipo_evento = evento[6]
+            vagas = evento[7]
+            inscritos = evento[8]
             
             disponibilidade = (inscritos / vagas * 100) if vagas > 0 else 0
             
@@ -1589,7 +1570,7 @@ else:
         # Agrupar eventos por mês
         eventos_por_mes = {}
         for evento in eventos:
-            mes = evento[3].split('/')[1]  # Extrair mês da data
+            mes = evento[3].split('/')[1]
             if mes not in eventos_por_mes:
                 eventos_por_mes[mes] = []
             eventos_por_mes[mes].append(evento)
