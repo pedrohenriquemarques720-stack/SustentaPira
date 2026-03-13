@@ -578,6 +578,26 @@ def get_user_data(user_id):
     
     return user, progresso, conquistas, comprovantes, inscricoes, dicas_vistas, visitas, convites, None
     
+    # Inscrições em eventos
+    c.execute("SELECT evento_id FROM inscricoes WHERE usuario_id = ?", (user_id,))
+    inscricoes = c.fetchall()
+    
+    # Dicas vistas
+    c.execute("SELECT dica_id FROM dicas_vistas WHERE usuario_id = ?", (user_id,))
+    dicas_vistas = c.fetchall()
+    
+    # Visitas a pontos
+    c.execute("SELECT ponto_id FROM visitas_pontos WHERE usuario_id = ?", (user_id,))
+    visitas = c.fetchall()
+    
+    # Convites
+    c.execute("SELECT codigo FROM convites WHERE usuario_id = ? AND usado = 0", (user_id,))
+    convites = c.fetchall()
+    
+    conn.close()
+    
+    return user, progresso, conquistas, comprovantes, inscricoes, dicas_vistas, visitas, convites, None
+    
     conn.close()
     
     return user, progresso, conquistas, comprovantes, inscricoes, dicas_vistas, visitas, convites, None
