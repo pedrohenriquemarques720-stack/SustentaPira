@@ -518,7 +518,6 @@ def get_user_data(user_id):
     
     # Verificar se usuário está banido
     def get_user_data(user_id):
-    """Busca dados completos do usuário - CORRIGIDO"""
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     
