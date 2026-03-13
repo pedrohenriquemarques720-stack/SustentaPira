@@ -13,14 +13,129 @@ import json
 from PIL import Image
 import io
 import numpy as np
+import shutil
+import threading
+import schedule
 
 # Configuração da página
 st.set_page_config(
     page_title="EcoPiracicaba 2026",
     page_icon="🌿",
     layout="wide",
-    initial_sidebar_state="collapsed"  # Mudado para collapsed
+    initial_sidebar_state="collapsed"
 )
+
+# ========== SISTEMA DE BACKUP AUTOMÁTICO ==========
+
+class BackupSystem:
+    def __init__(self):
+        self.backup_dir = os.path.join(os.path.dirname(__file__), 'backups')
+        self.db_path = os.path.join(os.path.dirname(__file__), 'ecopiracicaba.db')
+        self.criar_pasta_backup()
+        self.iniciar_backup_automatico()
+    
+    def criar_pasta_backup(self):
+        """Cria pasta de backups se não existir"""
+        if not os.path.exists(self.backup_dir):
+            os.makedirs(self.backup_dir)
+            print("📁 Pasta de backups criada")
+    
+    def fazer_backup(self):
+        """Faz backup do banco de dados"""
+        try:
+            if os.path.exists(self.db_path):
+                # Nome do arquivo com timestamp
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                backup_file = os.path.join(self.backup_dir, f'backup_{timestamp}.db')
+                
+                # Copiar arquivo
+                shutil.copy2(self.db_path, backup_file)
+                
+                # Limpar backups antigos (manter apenas os últimos 10)
+                self.limpar_backups_antigos()
+                
+                print(f"✅ Backup realizado: {backup_file}")
+                return True, backup_file
+            return False, "Banco de dados não encontrado"
+        except Exception as e:
+            print(f"❌ Erro no backup: {e}")
+            return False, str(e)
+    
+    def limpar_backups_antigos(self):
+        """Mantém apenas os 10 backups mais recentes"""
+        try:
+            backups = []
+            for arquivo in os.listdir(self.backup_dir):
+                if arquivo.startswith('backup_') and arquivo.endswith('.db'):
+                    caminho = os.path.join(self.backup_dir, arquivo)
+                    backups.append((caminho, os.path.getmtime(caminho)))
+            
+            # Ordenar por data de modificação (mais recente primeiro)
+            backups.sort(key=lambda x: x[1], reverse=True)
+            
+            # Remover backups antigos (manter apenas 10)
+            for caminho, _ in backups[10:]:
+                os.remove(caminho)
+                print(f"🗑️ Backup antigo removido: {caminho}")
+        except Exception as e:
+            print(f"Erro ao limpar backups antigos: {e}")
+    
+    def restaurar_backup(self, arquivo_backup):
+        """Restaura um backup específico"""
+        try:
+            if os.path.exists(arquivo_backup):
+                # Fazer backup atual antes de restaurar
+                self.fazer_backup()
+                
+                # Restaurar backup selecionado
+                shutil.copy2(arquivo_backup, self.db_path)
+                print(f"✅ Backup restaurado: {arquivo_backup}")
+                return True, "Backup restaurado com sucesso"
+            return False, "Arquivo de backup não encontrado"
+        except Exception as e:
+            print(f"❌ Erro ao restaurar backup: {e}")
+            return False, str(e)
+    
+    def listar_backups(self):
+        """Lista todos os backups disponíveis"""
+        backups = []
+        try:
+            for arquivo in os.listdir(self.backup_dir):
+                if arquivo.startswith('backup_') and arquivo.endswith('.db'):
+                    caminho = os.path.join(self.backup_dir, arquivo)
+                    data_mod = datetime.fromtimestamp(os.path.getmtime(caminho))
+                    tamanho = os.path.getsize(caminho) / (1024 * 1024)  # MB
+                    backups.append({
+                        'arquivo': arquivo,
+                        'caminho': caminho,
+                        'data': data_mod.strftime("%d/%m/%Y %H:%M:%S"),
+                        'tamanho': f"{tamanho:.2f} MB"
+                    })
+            
+            # Ordenar por data (mais recente primeiro)
+            backups.sort(key=lambda x: x['data'], reverse=True)
+            return backups
+        except Exception as e:
+            print(f"Erro ao listar backups: {e}")
+            return []
+    
+    def iniciar_backup_automatico(self):
+        """Inicia thread para backup automático a cada 12 horas"""
+        def run_schedule():
+            while True:
+                schedule.run_pending()
+                time.sleep(60)
+        
+        # Agendar backup a cada 12 horas
+        schedule.every(12).hours.do(self.fazer_backup)
+        
+        # Iniciar thread
+        thread = threading.Thread(target=run_schedule, daemon=True)
+        thread.start()
+        print("⏰ Sistema de backup automático iniciado (a cada 12 horas)")
+
+# Inicializar sistema de backup
+backup_system = BackupSystem()
 
 # ========== FUNÇÕES BÁSICAS ==========
 
@@ -152,20 +267,6 @@ DESAFIOS_LISTA = [
 
 # ========== INICIALIZAÇÃO DO BANCO DE DADOS ==========
 
-# ===== FUNÇÃO PARA RESETAR O BANCO DE DADOS =====
-def reset_database():
-    """Remove o banco de dados existente para recriar com os novos dados"""
-    db_path = os.path.join(os.path.dirname(__file__), 'ecopiracicaba.db')
-    if os.path.exists(db_path):
-        try:
-            os.remove(db_path)
-            print("✅ Banco de dados antigo removido. Novos dados serão inseridos.")
-        except Exception as e:
-            print(f"❌ Erro ao remover banco: {e}")
-
-# DESCOMENTE A LINHA ABAIXO PARA RESETAR O BANCO (faça isso apenas uma vez)
-# reset_database()  # <--- Descomente esta linha para resetar o banco
-
 def init_database():
     db_path = os.path.join(os.path.dirname(__file__), 'ecopiracicaba.db')
     db_exists = os.path.exists(db_path)
@@ -186,7 +287,8 @@ def init_database():
         data_cadastro TEXT,
         ultimo_acesso TEXT,
         banido INTEGER DEFAULT 0,
-        motivo_ban TEXT
+        motivo_ban TEXT,
+        preferencias_notificacao INTEGER DEFAULT 1
         )
     ''')
     
@@ -204,6 +306,8 @@ def init_database():
             streak_dias INTEGER DEFAULT 0,
             ultima_atividade TEXT,
             tentativas_falhas INTEGER DEFAULT 0,
+            desafios_completados INTEGER DEFAULT 0,
+            horas_voluntariado INTEGER DEFAULT 0,
             FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
         )
     ''')
@@ -217,6 +321,7 @@ def init_database():
             data TEXT NOT NULL,
             descricao TEXT,
             icone TEXT,
+            nivel INTEGER DEFAULT 1,
             FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
         )
     ''')
@@ -236,6 +341,7 @@ def init_database():
             data_validacao TEXT,
             metadados TEXT,
             motivo_rejeicao TEXT,
+            localizacao TEXT,
             FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
         )
     ''')
@@ -255,7 +361,9 @@ def init_database():
             organizador TEXT,
             contato TEXT,
             codigo_confirmacao TEXT,
-            pontos_evento INTEGER DEFAULT 150
+            pontos_evento INTEGER DEFAULT 150,
+            imagem_url TEXT,
+            destaque INTEGER DEFAULT 0
         )
     ''')
     
@@ -271,6 +379,8 @@ def init_database():
             nome_participante TEXT,
             email_participante TEXT,
             telefone_participante TEXT,
+            checkin_realizado INTEGER DEFAULT 0,
+            data_checkin TEXT,
             UNIQUE(usuario_id, evento_id),
             FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE,
             FOREIGN KEY (evento_id) REFERENCES eventos (id) ON DELETE CASCADE
@@ -285,7 +395,9 @@ def init_database():
             categoria TEXT,
             data_publicacao TEXT,
             likes INTEGER DEFAULT 0,
-            autor TEXT
+            autor TEXT,
+            imagem_url TEXT,
+            visualizacoes INTEGER DEFAULT 0
         )
     ''')
     
@@ -312,7 +424,10 @@ def init_database():
             avaliacao REAL DEFAULT 0,
             descricao TEXT,
             latitude REAL,
-            longitude REAL
+            longitude REAL,
+            fotos TEXT,
+            website TEXT,
+            icone TEXT DEFAULT '📍'
         )
     ''')
     
@@ -323,6 +438,8 @@ def init_database():
             ponto_id INTEGER,
             data_visita TEXT,
             quantidade REAL DEFAULT 0,
+            avaliacao_usuario INTEGER,
+            comentario TEXT,
             UNIQUE(usuario_id, ponto_id, data_visita),
             FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE,
             FOREIGN KEY (ponto_id) REFERENCES pontos_coleta (id) ON DELETE CASCADE
@@ -338,8 +455,32 @@ def init_database():
             usado_por INTEGER,
             data_criacao TEXT,
             data_uso TEXT,
+            pontos_ganhos INTEGER DEFAULT 50,
             FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE,
             FOREIGN KEY (usado_por) REFERENCES usuarios (id) ON DELETE CASCADE
+        )
+    ''')
+    
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS notificacoes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER,
+            titulo TEXT NOT NULL,
+            mensagem TEXT,
+            tipo TEXT DEFAULT 'info',
+            lida INTEGER DEFAULT 0,
+            data_criacao TEXT,
+            link TEXT,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
+        )
+    ''')
+    
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS configuracoes (
+            chave TEXT PRIMARY KEY,
+            valor TEXT,
+            descricao TEXT,
+            data_atualizacao TEXT
         )
     ''')
     
@@ -350,92 +491,65 @@ def init_database():
         c.execute('CREATE INDEX IF NOT EXISTS idx_comprovantes_hash ON comprovantes(imagem_hash)')
         c.execute('CREATE INDEX IF NOT EXISTS idx_comprovantes_usuario ON comprovantes(usuario_id, tipo, data)')
         c.execute('CREATE INDEX IF NOT EXISTS idx_inscricoes_evento ON inscricoes(evento_id, participou)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_notificacoes_usuario ON notificacoes(usuario_id, lida)')
+        c.execute('CREATE INDEX IF NOT EXISTS idx_eventos_data ON eventos(data)')
     except:
         pass
     
     conn.commit()
     
-    # VERIFICAR SE JÁ EXISTEM DADOS
+    # Inserir configurações iniciais
+    c.execute("INSERT OR IGNORE INTO configuracoes (chave, valor, descricao, data_atualizacao) VALUES (?, ?, ?, ?)",
+              ("ultimo_backup", datetime.now().strftime("%d/%m/%Y %H:%M"), "Data do último backup automático", datetime.now().strftime("%d/%m/%Y %H:%M")))
+    
+    # Inserir dados iniciais se necessário
     c.execute("SELECT COUNT(*) FROM usuarios")
-    tem_usuarios = c.fetchone()[0] > 0
-    
-    c.execute("SELECT COUNT(*) FROM eventos")
-    tem_eventos = c.fetchone()[0] > 0
-    
-    c.execute("SELECT COUNT(*) FROM pontos_coleta")
-    tem_pontos = c.fetchone()[0] > 0
-    
-    # SE NÃO TIVER DADOS OU FORÇAR RESET, INSERIR DADOS INICIAIS
-    if not tem_usuarios or not tem_eventos or not tem_pontos:
+    if c.fetchone()[0] == 0:
         try:
-            # Limpar dados existentes se houver
-            if tem_usuarios:
-                print("Atualizando dados existentes...")
-            
             dados_iniciais(conn, c)
             conn.commit()
-            print("✅ Dados iniciais inseridos/atualizados com sucesso!")
+            print("✅ Dados iniciais inseridos com sucesso!")
         except Exception as e:
             print(f"❌ Erro ao inserir dados iniciais: {e}")
     
     conn.close()
 
-# ===== DADOS INICIAIS =====
-eventos = []  # Lista vazia para ser preenchida
-pontos_gerais = []
-pontos_pilhas = []
-pontos_eletronicos = []
-pontos_oleo = []
-pontos_vidros = []
-pontos_papel = []
-pontos_plasticos = []
-pontos_organicos = []
-pontos_medicamentos = []
-pontos_lampadas = []
-pontos_roupas = []
-pontos_moveis = []
-pontos_metais = []
-pontos_pilhas_extra = []
-
 def dados_iniciais(conn, c):
     """Insere dados iniciais no banco"""
-    global eventos, pontos_gerais, pontos_pilhas, pontos_eletronicos, pontos_oleo, pontos_vidros, pontos_papel, pontos_plasticos, pontos_organicos, pontos_medicamentos, pontos_lampadas, pontos_roupas, pontos_moveis, pontos_metais, pontos_pilhas_extra
-    
     data_atual = datetime.now().strftime("%d/%m/%Y")
     
-    # Só insere usuários se não existirem
-    c.execute("SELECT COUNT(*) FROM usuarios")
-    if c.fetchone()[0] == 0:
-        # Admin
+    # Admin
+    c.execute(
+        "INSERT INTO usuarios (nome, email, senha, data_cadastro) VALUES (?, ?, ?, ?)",
+        ("Administrador", "admin@ecopiracicaba.com", "eco2026", data_atual)
+    )
+    admin_id = c.lastrowid
+    c.execute(
+        "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
+        (admin_id, 1000, get_nivel(1000), data_atual)
+    )
+    
+    # Usuários exemplo
+    usuarios_exemplo = [
+        ("João Silva", "joao@email.com", "123456", 350),
+        ("Maria Santos", "maria@email.com", "123456", 520),
+        ("Pedro Oliveira", "pedro@email.com", "123456", 180),
+        ("Ana Costa", "ana@email.com", "123456", 780),
+        ("Carlos Souza", "carlos@email.com", "123456", 420)
+    ]
+    
+    for nome, email, senha, pontos in usuarios_exemplo:
         c.execute(
             "INSERT INTO usuarios (nome, email, senha, data_cadastro) VALUES (?, ?, ?, ?)",
-            ("Administrador", "admin@ecopiracicaba.com", "eco2026", data_atual)
+            (nome, email, senha, data_atual)
         )
-        admin_id = c.lastrowid
+        user_id = c.lastrowid
         c.execute(
             "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
-            (admin_id, 1000, get_nivel(1000), data_atual)
+            (user_id, pontos, get_nivel(pontos), data_atual)
         )
-        
-        # Usuários exemplo
-        usuarios_exemplo = [
-            ("João Silva", "joao@email.com", "123456", 350),
-            ("Maria Santos", "maria@email.com", "123456", 520),
-            ("Pedro Oliveira", "pedro@email.com", "123456", 180)
-        ]
-        
-        for nome, email, senha, pontos in usuarios_exemplo:
-            c.execute(
-                "INSERT INTO usuarios (nome, email, senha, data_cadastro) VALUES (?, ?, ?, ?)",
-                (nome, email, senha, data_atual)
-            )
-            user_id = c.lastrowid
-            c.execute(
-                "INSERT INTO progresso (usuario_id, total_pontos, nivel, ultima_atividade) VALUES (?, ?, ?, ?)",
-                (user_id, pontos, get_nivel(pontos), data_atual)
-            )
     
-    # ===== EVENTOS 2026 - PIRACICABA (MEGA EXPANDIDO) =====
+    # ===== EVENTOS 2026 - PIRACICABA =====
     eventos = [
         # JANEIRO 2026
         ("🌱 1º Mutirão de Limpeza 2026", "Inicie o ano contribuindo com a limpeza das margens do Rio Piracicaba. Haverá café da manhã comunitário e distribuição de mudas.", "10/01/2026", "08:00", "Rua do Porto", "Rua do Porto - Centro", "mutirão", 150, "SOS Rio Piracicaba", "(19) 99765-4321", "JANLIMPEZA", 200),
@@ -515,8 +629,6 @@ def dados_iniciais(conn, c):
         ("♻️ Feira de Artesanato de Natal", "Artesanato sustentável e ecológico para presentes de Natal.", "13/12/2026", "10:00", "Mercado Municipal", "Praça Dr. Alfredo Stead, 100 - Centro", "feira", 0, "Artesanato Solidário", "(19) 99888-7766", "DEZARTESANATO", 120)
     ]
     
-    # Limpar eventos existentes e inserir novos
-    c.execute("DELETE FROM eventos")
     for e in eventos:
         c.execute(
             """INSERT INTO eventos 
@@ -525,7 +637,7 @@ def dados_iniciais(conn, c):
             e
         )
     
-    # ===== PONTOS DE COLETA EM PIRACICABA (MEGA EXPANDIDO POR CATEGORIA) =====
+    # ===== PONTOS DE COLETA EM PIRACICABA =====
     
     # 1. PONTOS GERAIS (Ecopontos)
     pontos_gerais = [
@@ -683,27 +795,12 @@ def dados_iniciais(conn, c):
         ("Cooperativas", "R. dos Operários, 200", "metais", "Seg-Sex 8h-16h", "(19) 3422-3344", 4.4, "Recebimento de metais"),
     ]
     
-    # 14. PILHAS E BATERIAS (LUGARES ADICIONAIS)
-    pontos_pilhas_extra = [
-        ("Farmácias Drogasil", "Av. Independência, 800 - Centro", "pilhas", "Seg-Dom 8h-22h", "(19) 3421-8000", 4.5, "Coletores de pilhas"),
-        ("Farmácias Pague Menos", "Av. Limeira, 900 - Areão", "pilhas", "Seg-Dom 8h-22h", "(19) 3434-2000", 4.5, "Coletores de pilhas"),
-        ("Supermercados Covabra", "Av. Cruzeiro do Sul, 1000", "pilhas", "Seg-Dom 8h-22h", "(19) 3433-4000", 4.5, "Coletores de pilhas"),
-        ("Sesc", "R. Ipiranga, 155 - Centro", "pilhas", "Seg-Sex 9h-21h", "(19) 3437-9292", 4.6, "Coletores de pilhas"),
-        ("Sesi", "Av. Luiz Ralph Benatti, 700", "pilhas", "Seg-Sex 8h-17h", "(19) 3412-6000", 4.4, "Coletores de pilhas"),
-        ("ESALQ", "Av. Pádua Dias, 11", "pilhas", "Seg-Sex 8h-17h", "(19) 3447-8500", 4.8, "Coletores nos departamentos"),
-        ("UNIMEP", "R. do Rosário, 1301", "pilhas", "Seg-Sex 8h-22h", "(19) 3421-3000", 4.6, "Coletores no campus"),
-        ("Escolas Estaduais", "Diversos", "pilhas", "Seg-Sex 8h-17h", "(19) 3403-1800", 4.3, "Programa Escola Sustentável"),
-    ]
-    
-    # Limpar pontos existentes e inserir novos
-    c.execute("DELETE FROM pontos_coleta")
-    
     # Combinar todos os pontos
     todos_pontos = (
         pontos_gerais + pontos_pilhas + pontos_eletronicos + pontos_oleo + 
         pontos_vidros + pontos_papel + pontos_plasticos + pontos_organicos + 
         pontos_medicamentos + pontos_lampadas + pontos_roupas + pontos_moveis + 
-        pontos_metais + pontos_pilhas_extra
+        pontos_metais
     )
     
     for p in todos_pontos:
@@ -713,7 +810,6 @@ def dados_iniciais(conn, c):
         )
     
     # Dicas
-    c.execute("DELETE FROM dicas")
     dicas = [
         ("🌱 Compostagem Doméstica", "50% do lixo doméstico pode ser compostado! Faça sua própria composteira com baldes e minhocas californianas. Use restos de frutas, verduras e cascas de ovos.", "resíduos", data_atual, 0, "Equipe EcoPiracicaba"),
         ("💧 Economia de Água", "Um banho de 15 minutos gasta 135 litros. Reduza para 5 minutos e economize 90 litros por banho! Instale arejadores nas torneiras.", "água", data_atual, 0, "Sabesp"),
@@ -735,29 +831,11 @@ def dados_iniciais(conn, c):
             d
         )
 
-# ===== FUNÇÃO PARA VERIFICAR DADOS =====
-def verificar_dados():
-    """Verifica quantos eventos e pontos foram inseridos"""
-    conn = sqlite3.connect('ecopiracicaba.db')
-    c = conn.cursor()
-    c.execute("SELECT COUNT(*) FROM eventos")
-    total_eventos = c.fetchone()[0]
-    c.execute("SELECT COUNT(*) FROM pontos_coleta")
-    total_pontos = c.fetchone()[0]
-    c.execute("SELECT COUNT(*) FROM dicas")
-    total_dicas = c.fetchone()[0]
-    conn.close()
-    print(f"\n📊 VERIFICAÇÃO DE DADOS:")
-    print(f"   - Eventos: {total_eventos}")
-    print(f"   - Pontos de coleta: {total_pontos}")
-    print(f"   - Dicas: {total_dicas}\n")
-    return total_eventos, total_pontos
-
 # Inicializar banco
 init_database()
 
-# Verificar dados inseridos
-verificar_dados()
+# Fazer backup inicial
+backup_system.fazer_backup()
 
 # ========== FUNÇÕES DE PROGRESSO ==========
 
@@ -817,9 +895,13 @@ def get_user_data(user_id):
     c.execute("SELECT codigo FROM convites WHERE usuario_id = ? AND usado = 0", (user_id,))
     convites = c.fetchall()
     
+    # Notificações não lidas
+    c.execute("SELECT COUNT(*) FROM notificacoes WHERE usuario_id = ? AND lida = 0", (user_id,))
+    notificacoes_nao_lidas = c.fetchone()[0]
+    
     conn.close()
     
-    return user, progresso, conquistas, comprovantes, inscricoes, dicas_vistas, visitas, convites, None
+    return user, progresso, conquistas, comprovantes, inscricoes, dicas_vistas, visitas, convites, notificacoes_nao_lidas, None
 
 def criar_usuario(nome, email, senha, telefone=""):
     """Cria um novo usuário no banco"""
@@ -857,7 +939,17 @@ def criar_usuario(nome, email, senha, telefone=""):
             (user_id, codigo, data_atual)
         )
         
+        # Criar notificação de boas-vindas
+        c.execute(
+            "INSERT INTO notificacoes (usuario_id, titulo, mensagem, tipo, data_criacao) VALUES (?, ?, ?, ?, ?)",
+            (user_id, "🎉 Bem-vindo ao EcoPiracicaba!", "Comece a participar de eventos e completar desafios para ganhar pontos!", "success", data_atual)
+        )
+        
         conn.commit()
+        
+        # Fazer backup após novo usuário
+        backup_system.fazer_backup()
+        
         return True, user_id, "Conta criada com sucesso! Faça o login."
     except sqlite3.IntegrityError:
         return False, None, "Erro ao criar conta. Tente novamente."
@@ -952,6 +1044,9 @@ def adicionar_pontos(usuario_id, pontos, descricao, icone="✨", tipo="geral"):
             "UPDATE progresso SET total_pontos = ?, nivel = ?, ultima_atividade = ? WHERE usuario_id = ?",
             (novos_pontos, novo_nivel, data_atual, usuario_id)
         )
+        
+        # Atualizar desafios completados
+        c.execute("UPDATE progresso SET desafios_completados = desafios_completados + 1 WHERE usuario_id = ?", (usuario_id,))
     
     # Atualizar estatísticas específicas
     if tipo == "reciclagem":
@@ -1027,7 +1122,7 @@ def get_ranking():
     c = conn.cursor()
     
     c.execute("""
-        SELECT u.nome, p.total_pontos, p.nivel
+        SELECT u.nome, p.total_pontos, p.nivel, p.streak_dias
         FROM usuarios u
         JOIN progresso p ON u.id = p.usuario_id
         WHERE u.banido = 0
@@ -1088,40 +1183,374 @@ def inscrever_evento(usuario_id, evento_id, nome, email, telefone):
         print(f"Erro na inscrição: {e}")
         return False, "Erro ao realizar inscrição."
 
-# ========== COMPONENTES DE INTERFACE ==========
+# ========== COMPONENTES DE INTERFACE PROFISSIONAL ==========
 
-def mostrar_login_cadastro():
-    """Mostra formulários de login e cadastro no topo da página"""
+def aplicar_estilo_profissional():
+    """Aplica CSS profissional ao app"""
+    st.markdown("""
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Cards modernos */
+        .card-moderno {
+            background: linear-gradient(145deg, #1a3329 0%, #1f4035 100%);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid rgba(139, 195, 74, 0.2);
+            box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card-moderno:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px -12px rgba(139, 195, 74, 0.3);
+            border-color: rgba(139, 195, 74, 0.5);
+        }
+        
+        /* Badges e tags */
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        
+        .badge-sucesso {
+            background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+            color: white;
+        }
+        
+        .badge-info {
+            background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+            color: white;
+        }
+        
+        .badge-warning {
+            background: linear-gradient(135deg, #ff8f00 0%, #ff6f00 100%);
+            color: white;
+        }
+        
+        /* Gradientes animados */
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .gradiente-animado {
+            background: linear-gradient(-45deg, #8bc34a, #4caf50, #2e7d32, #1b5e20);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+        
+        /* Estatísticas com ícones flutuantes */
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+            border-radius: 15px;
+            background: rgba(26, 51, 41, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(139, 195, 74, 0.2);
+        }
+        
+        .stat-number {
+            font-size: 36px;
+            font-weight: 700;
+            color: #8bc34a;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #e0e0e0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* Botões com efeitos */
+        .btn-profissional {
+            background: linear-gradient(135deg, #8bc34a 0%, #4caf50 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(139, 195, 74, 0.3);
+        }
+        
+        .btn-profissional:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 195, 74, 0.5);
+        }
+        
+        .btn-profissional:active {
+            transform: translateY(0);
+        }
+        
+        /* Títulos com linha decorativa */
+        .titulo-secao {
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+            position: relative;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .titulo-secao:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, #8bc34a, #4caf50);
+            border-radius: 2px;
+        }
+        
+        .titulo-secao.centered:after {
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        /* Grid de cards responsivo */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px 0;
+        }
+        
+        /* Animações de entrada */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-fadeInUp {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+        
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #1a3329;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #8bc34a, #4caf50);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #4caf50, #2e7d32);
+        }
+        
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            background: #1a3329;
+            border-left: 4px solid #8bc34a;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 9999;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Loading spinner */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(139, 195, 74, 0.3);
+            border-top-color: #8bc34a;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Tooltips personalizados */
+        [data-tooltip] {
+            position: relative;
+            cursor: help;
+        }
+        
+        [data-tooltip]:before {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 5px 10px;
+            background: #1a3329;
+            color: white;
+            border-radius: 5px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border: 1px solid #8bc34a;
+        }
+        
+        [data-tooltip]:hover:before {
+            opacity: 1;
+        }
+        
+        /* Progresso circular */
+        .progress-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(#8bc34a 0deg, #2e7d32 0deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .progress-circle-inner {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: #1a3329;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+        }
+        
+        /* Dividers decorativos */
+        .divider {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #8bc34a, transparent);
+            margin: 30px 0;
+        }
+        
+        .divider-vertical {
+            width: 1px;
+            height: 50px;
+            background: linear-gradient(180deg, transparent, #8bc34a, transparent);
+            margin: 0 20px;
+        }
+        
+        /* Alertas estilizados */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid;
+            background: rgba(26, 51, 41, 0.9);
+            backdrop-filter: blur(10px);
+        }
+        
+        .alert-success {
+            border-left-color: #8bc34a;
+        }
+        
+        .alert-info {
+            border-left-color: #2196f3;
+        }
+        
+        .alert-warning {
+            border-left-color: #ff9800;
+        }
+        
+        .alert-error {
+            border-left-color: #f44336;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+def mostrar_login_cadastro_profissional():
+    """Mostra formulários de login e cadastro profissional"""
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
-        st.markdown(f"<h2 style='color: {text_color}; text-align: center;'>🌿 EcoPiracicaba</h2>", unsafe_allow_html=True)
-        st.markdown(f"<p style='color: {secondary_text}; text-align: center;'>Sustentabilidade em ação</p>", unsafe_allow_html=True)
+        st.markdown("""
+        <div class='card-moderno animate-fadeInUp' style='text-align: center; margin-bottom: 30px;'>
+            <h1 style='font-size: 48px; margin-bottom: 10px;'>🌿</h1>
+            <h1 style='font-size: 32px; font-weight: 700; margin: 0;'>EcoPiracicaba</h1>
+            <p style='color: #8bc34a; font-size: 16px; margin: 5px 0 20px 0;'>Sustentabilidade em ação</p>
+            <div class='divider'></div>
+        </div>
+        """, unsafe_allow_html=True)
         
         tab_login, tab_cadastro = st.tabs(["🔐 Login", "🆕 Cadastro"])
         
         with tab_login:
             with st.form("login_form"):
-                email = st.text_input("E-mail")
-                senha = st.text_input("Senha", type="password")
-                if st.form_submit_button("Entrar", use_container_width=True):
-                    user, erro = fazer_login(email, senha)
-                    if user:
-                        st.session_state.usuario_logado = {
-                            'id': user[0],
-                            'nome': user[1]
-                        }
-                        st.rerun()
-                    else:
-                        st.error(erro)
+                st.markdown("<h3 style='margin-bottom: 20px;'>Acesse sua conta</h3>", unsafe_allow_html=True)
+                email = st.text_input("E-mail", placeholder="seu@email.com")
+                senha = st.text_input("Senha", type="password", placeholder="••••••••")
+                
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    if st.form_submit_button("Entrar", use_container_width=True):
+                        user, erro = fazer_login(email, senha)
+                        if user:
+                            st.session_state.usuario_logado = {
+                                'id': user[0],
+                                'nome': user[1]
+                            }
+                            st.rerun()
+                        else:
+                            st.error(erro)
+                with col_b:
+                    st.markdown("<br><small style='color: #8bc34a;'>Esqueceu a senha?</small>", unsafe_allow_html=True)
         
         with tab_cadastro:
             with st.form("cadastro_form"):
-                nome = st.text_input("Nome completo")
-                email = st.text_input("E-mail")
-                telefone = st.text_input("Telefone (opcional)")
-                senha = st.text_input("Senha", type="password")
-                confirmar_senha = st.text_input("Confirmar senha", type="password")
+                st.markdown("<h3 style='margin-bottom: 20px;'>Crie sua conta</h3>", unsafe_allow_html=True)
+                nome = st.text_input("Nome completo", placeholder="João Silva")
+                email = st.text_input("E-mail", placeholder="joao@email.com")
+                telefone = st.text_input("Telefone (opcional)", placeholder="(19) 99999-9999")
+                senha = st.text_input("Senha", type="password", placeholder="••••••••")
+                confirmar_senha = st.text_input("Confirmar senha", type="password", placeholder="••••••••")
+                
+                st.markdown("<small style='color: #e0e0e0;'>Ao criar uma conta, você concorda com nossos Termos de Uso e Política de Privacidade.</small>", unsafe_allow_html=True)
+                st.markdown("<br>", unsafe_allow_html=True)
                 
                 if st.form_submit_button("Criar conta", use_container_width=True):
                     if not nome:
@@ -1136,22 +1565,23 @@ def mostrar_login_cadastro():
                         sucesso, user_id, mensagem = criar_usuario(nome, email, senha, telefone)
                         if sucesso:
                             st.success(mensagem)
+                            st.balloons()
                         else:
                             st.error(mensagem)
         
-        st.markdown("---")
+        st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
-def mostrar_info_usuario():
-    """Mostra informações do usuário logado"""
-    col1, col2, col3 = st.columns([1, 2, 1])
+def mostrar_info_usuario_profissional():
+    """Mostra informações do usuário logado profissional"""
+    col1, col2, col3 = st.columns([1, 3, 1])
     
     with col2:
         result = get_user_data(st.session_state.usuario_logado['id'])
         
-        if len(result) == 9:
-            user, progresso, conquistas, _, _, _, _, convites, motivo_ban = result
+        if len(result) == 10:
+            user, progresso, conquistas, _, _, _, _, convites, notificacoes, motivo_ban = result
         else:
-            user, progresso, conquistas, _, _, _, _, convites = result
+            user, progresso, conquistas, _, _, _, _, convites, notificacoes = result
             motivo_ban = None
         
         if motivo_ban:
@@ -1164,20 +1594,69 @@ def mostrar_info_usuario():
         pontos = progresso[1] if progresso and len(progresso) > 1 else 0
         nivel = progresso[2] if progresso and len(progresso) > 2 else "🌱 EcoIniciante"
         streak = progresso[9] if progresso and len(progresso) > 9 else 0
+        desafios = progresso[13] if progresso and len(progresso) > 13 else 0
+        
+        # Calcular porcentagem para próximo nível
+        proximo = get_proximo_nivel(pontos)
+        porcentagem = min(100, (pontos / 5000) * 100) if pontos < 5000 else 100
+        
+        col_a, col_b, col_c = st.columns(3)
+        
+        with col_a:
+            st.markdown(f"""
+            <div class='card-moderno' style='padding: 20px;'>
+                <div style='display: flex; align-items: center; gap: 15px;'>
+                    <div style='font-size: 40px;'>{'🔥' if streak > 0 else '✨'}</div>
+                    <div>
+                        <h3 style='margin: 0;'>{streak}</h3>
+                        <p style='margin: 0; color: #e0e0e0;'>dias de streak</p>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col_b:
+            st.markdown(f"""
+            <div class='card-moderno' style='padding: 20px;'>
+                <div style='display: flex; align-items: center; gap: 15px;'>
+                    <div style='font-size: 40px;'>🏆</div>
+                    <div>
+                        <h3 style='margin: 0;'>{desafios}</h3>
+                        <p style='margin: 0; color: #e0e0e0;'>desafios</p>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col_c:
+            st.markdown(f"""
+            <div class='card-moderno' style='padding: 20px;'>
+                <div style='display: flex; align-items: center; gap: 15px;'>
+                    <div style='font-size: 40px;'>🔔</div>
+                    <div>
+                        <h3 style='margin: 0;'>{notificacoes}</h3>
+                        <p style='margin: 0; color: #e0e0e0;'>notificações</p>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
         
         st.markdown(f"""
-        <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
-            <h3 style='color: {sidebar_text};'>{st.session_state.usuario_logado['nome']}</h3>
-            <h4 style='color: {icon_color};'>{nivel}</h4>
-            <h2 style='color: {icon_color};'>{pontos} pts</h2>
-            <div style='height: 8px; background: {border_color}; border-radius: 4px; margin: 10px 0;'>
-                <div style='height: 100%; width: {min(100, (pontos/5000)*100)}%; background: {icon_color}; border-radius: 4px;'></div>
+        <div class='card-moderno' style='margin-top: 20px;'>
+            <div style='display: flex; align-items: center; justify-content: space-between;'>
+                <div>
+                    <h2 style='margin: 0;'>{st.session_state.usuario_logado['nome']}</h2>
+                    <p style='color: #8bc34a; margin: 5px 0;'>{nivel}</p>
+                </div>
+                <div style='text-align: right;'>
+                    <h1 style='color: #8bc34a; font-size: 48px; margin: 0;'>{pontos}</h1>
+                    <p style='margin: 0;'>pontos totais</p>
+                </div>
             </div>
-            <div style='display: flex; justify-content: space-around; margin-top: 10px;'>
-                <div><span style='color: #ff9800;'>🔥 {streak}</span><br><small style='color: {sidebar_text};'>dias</small></div>
-                <div><span style='color: {icon_color};'>🏅 {len(conquistas)}</span><br><small style='color: {sidebar_text};'>conquistas</small></div>
-                <div><span style='color: gold;'>🔗 {len(convites)}</span><br><small style='color: {sidebar_text};'>convites</small></div>
+            <div style='height: 8px; background: #2a4a3a; border-radius: 4px; margin: 20px 0 10px 0;'>
+                <div style='height: 100%; width: {porcentagem}%; background: linear-gradient(90deg, #8bc34a, #4caf50); border-radius: 4px;'></div>
             </div>
+            <p style='text-align: right; margin: 0; color: #e0e0e0;'>{proximo} pontos para o próximo nível</p>
         </div>
         """, unsafe_allow_html=True)
         
@@ -1185,18 +1664,18 @@ def mostrar_info_usuario():
             st.session_state.usuario_logado = None
             st.rerun()
         
-        st.markdown("---")
+        st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
-def mostrar_eventos_destaque(text_color, card_bg, icon_color, border_color, secondary_text):
-    """Mostra eventos em destaque na página inicial"""
+def mostrar_eventos_destaque_profissional(text_color, card_bg, icon_color, border_color, secondary_text):
+    """Mostra eventos em destaque profissional"""
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     c.execute("SELECT * FROM eventos ORDER BY data LIMIT 6")
     eventos = c.fetchall()
     conn.close()
     
-    st.markdown(f"<h1 style='text-align: center; color: {text_color}; margin-bottom: 30px;'>🌿 EcoPiracicaba 2026</h1>", unsafe_allow_html=True)
-    st.markdown(f"<h2 style='text-align: center; color: {secondary_text}; margin-bottom: 40px;'>Eventos em Piracicaba</h2>", unsafe_allow_html=True)
+    st.markdown("<h1 class='titulo-secao centered' style='text-align: center;'>🌿 EcoPiracicaba 2026</h1>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #8bc34a; margin-bottom: 40px;'>Eventos em Piracicaba</h2>", unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     
@@ -1205,38 +1684,43 @@ def mostrar_eventos_destaque(text_color, card_bg, icon_color, border_color, seco
             tipo_evento = evento[6]
             vagas = evento[7]
             inscritos = evento[8]
-            
             disponibilidade = (inscritos / vagas * 100) if vagas > 0 else 0
+            vagas_restantes = vagas - inscritos if vagas > 0 else "∞"
             
             st.markdown(f"""
-            <div style='background: {card_bg}; padding: 20px; border-radius: 15px; margin-bottom: 20px; border-left: 6px solid {icon_color}; border: 1px solid {border_color}; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
+            <div class='card-moderno animate-fadeInUp' style='margin-bottom: 20px; animation-delay: {i * 0.1}s;'>
                 <div style='display: flex; justify-content: space-between; align-items: start;'>
                     <div style='flex: 1;'>
-                        <span style='background: {icon_color}; color: white; padding: 3px 10px; border-radius: 50px; font-size: 12px;'>{tipo_evento.upper()}</span>
-                        <h3 style='color: {text_color}; margin: 10px 0 5px 0;'>{evento[1]}</h3>
-                        <p style='color: {text_color}; margin: 5px 0; font-size: 14px;'>{evento[2][:100]}...</p>
-                        <p style='margin: 5px 0; color: {text_color};'><i class='fas fa-calendar' style='color: {icon_color};'></i> {evento[3]} às {evento[4]}</p>
-                        <p style='margin: 5px 0; color: {text_color};'><i class='fas fa-map-marker-alt' style='color: {icon_color};'></i> {evento[5]}</p>
-                        <p style='margin: 5px 0; color: {icon_color};'><i class='fas fa-star'></i> +{evento[12] if len(evento) > 12 else 150} pontos</p>
-                    </div>
-                    <div style='text-align: right; min-width: 120px;'>
-                        <p style='color: {secondary_text};'><strong>{inscritos}/{vagas if vagas > 0 else '∞'}</strong> inscritos</p>
-                        <div style='height: 6px; background: {border_color}; border-radius: 3px; margin: 10px 0;'>
-                            <div style='height: 100%; width: {disponibilidade}%; background: {icon_color}; border-radius: 3px;'></div>
+                        <span class='badge badge-info'>{tipo_evento.upper()}</span>
+                        <h3 style='margin: 15px 0 10px 0;'>{evento[1]}</h3>
+                        <p style='color: #e0e0e0; font-size: 14px; margin-bottom: 15px;'>{evento[2][:120]}...</p>
+                        <div style='display: flex; gap: 20px; flex-wrap: wrap;'>
+                            <p style='margin: 0;'><i class='fas fa-calendar' style='color: {icon_color};'></i> {evento[3]} às {evento[4]}</p>
+                            <p style='margin: 0;'><i class='fas fa-map-marker-alt' style='color: {icon_color};'></i> {evento[5]}</p>
                         </div>
+                    </div>
+                    <div style='text-align: center; min-width: 120px;'>
+                        <div class='progress-circle' style='background: conic-gradient(#8bc34a {disponibilidade}deg, #2a4a3a 0deg);'>
+                            <div class='progress-circle-inner'>
+                                <span>{int(disponibilidade)}%</span>
+                            </div>
+                        </div>
+                        <p style='margin: 10px 0 0 0;'><strong>{inscritos}/{vagas if vagas > 0 else '∞'}</strong> inscritos</p>
+                        <span class='badge badge-success'>{vagas_restantes} vagas</span>
+                        <p style='margin-top: 10px; color: {icon_color};'><i class='fas fa-star'></i> +{evento[12] if len(evento) > 12 else 150} pontos</p>
                     </div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
 
-def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_color, secondary_text):
-    """Mostra perfil completo com estatísticas"""
+def mostrar_perfil_completo_profissional(usuario_id, text_color, card_bg, icon_color, border_color, secondary_text):
+    """Mostra perfil completo profissional"""
     result = get_user_data(usuario_id)
     
-    if len(result) == 9:
-        user, progresso, conquistas, comprovantes, inscricoes, dicas_vistas, visitas, convites, motivo_ban = result
+    if len(result) == 10:
+        user, progresso, conquistas, comprovantes, inscricoes, dicas_vistas, visitas, convites, notificacoes, motivo_ban = result
     else:
-        user, progresso, conquistas, comprovantes, inscricoes, dicas_vistas, visitas, convites = result
+        user, progresso, conquistas, comprovantes, inscricoes, dicas_vistas, visitas, convites, notificacoes = result
         motivo_ban = None
     
     if motivo_ban:
@@ -1259,92 +1743,97 @@ def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_
     pontos_visitados = progresso[5] if len(progresso) > 5 else 0
     kg = progresso[6] if len(progresso) > 6 else 0
     streak = progresso[9] if len(progresso) > 9 else 0
+    desafios = progresso[13] if len(progresso) > 13 else 0
     
     proximo = get_proximo_nivel(pontos)
+    porcentagem = min(100, (pontos / 5000) * 100) if pontos < 5000 else 100
     
-    st.markdown(f"<h2 style='color: {text_color};'>👤 Meu Perfil</h2>", unsafe_allow_html=True)
+    st.markdown("<h1 class='titulo-secao'>👤 Meu Perfil</h1>", unsafe_allow_html=True)
     
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown(f"<span style='color: {text_color};'>**Nome:** {nome}</span>", unsafe_allow_html=True)
-        st.markdown(f"<span style='color: {text_color};'>**Email:** {email}</span>", unsafe_allow_html=True)
-    with col2:
-        st.markdown(f"<span style='color: {text_color};'>**Telefone:** {telefone or 'Não informado'}</span>", unsafe_allow_html=True)
-        st.markdown(f"<span style='color: {text_color};'>**Cidade:** {cidade or 'Piracicaba'}</span>", unsafe_allow_html=True)
-        st.markdown(f"<span style='color: {text_color};'>**Membro desde:** {data_cadastro}</span>", unsafe_allow_html=True)
-    
-    st.markdown("---")
-    
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns([2, 1])
     
     with col1:
         st.markdown(f"""
-        <div style='background: {card_bg}; padding: 20px; border-radius: 15px; text-align: center; border: 1px solid {border_color};'>
-            <h2 style='color: {text_color};'>{nivel}</h2>
-            <h1 style='color: {icon_color}; font-size: 48px;'>{pontos}</h1>
-            <p style='color: {text_color};'>pontos totais</p>
-            <div style='height: 8px; background: {border_color}; border-radius: 4px; margin: 10px 0;'>
-                <div style='height: 100%; width: {min(100, (pontos/5000)*100)}%; background: {icon_color}; border-radius: 4px;'></div>
+        <div class='card-moderno'>
+            <div style='display: flex; align-items: center; gap: 30px; margin-bottom: 20px;'>
+                <div style='width: 80px; height: 80px; background: linear-gradient(135deg, #8bc34a, #4caf50); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px;'>
+                    👤
+                </div>
+                <div>
+                    <h2 style='margin: 0;'>{nome}</h2>
+                    <p style='color: #8bc34a; margin: 5px 0;'>{nivel}</p>
+                    <p style='margin: 0; color: #e0e0e0;'><i class='fas fa-envelope'></i> {email}</p>
+                </div>
             </div>
-            <p style='color: {text_color};'>{proximo} para próximo nível</p>
+            <div class='divider'></div>
+            <div style='display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;'>
+                <div>
+                    <p><i class='fas fa-phone' style='color: {icon_color};'></i> {telefone or 'Não informado'}</p>
+                    <p><i class='fas fa-map-marker-alt' style='color: {icon_color};'></i> {cidade or 'Piracicaba'}</p>
+                </div>
+                <div>
+                    <p><i class='fas fa-calendar-alt' style='color: {icon_color};'></i> Membro desde {data_cadastro}</p>
+                    <p><i class='fas fa-fire' style='color: #ff9800;'></i> Streak de {streak} dias</p>
+                </div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
     
     with col2:
         st.markdown(f"""
-        <div style='background: {card_bg}; padding: 20px; border-radius: 15px; text-align: center; border: 1px solid {border_color};'>
-            <h3 style='color: {text_color};'>🔥 Streak</h3>
-            <h1 style='color: #ff9800; font-size: 48px;'>{streak}</h1>
-            <p style='color: {text_color};'>dias seguidos</p>
+        <div class='card-moderno' style='text-align: center;'>
+            <div class='progress-circle' style='margin: 0 auto 20px; background: conic-gradient(#8bc34a {porcentagem}deg, #2a4a3a 0deg);'>
+                <div class='progress-circle-inner'>
+                    <span>{int(porcentagem)}%</span>
+                </div>
+            </div>
+            <h2 style='color: #8bc34a; margin: 10px 0;'>{pontos}</h2>
+            <p style='color: #e0e0e0;'>pontos totais</p>
+            <p style='margin-top: 10px;'>{proximo} para próximo nível</p>
         </div>
         """, unsafe_allow_html=True)
     
-    with col3:
-        st.markdown(f"""
-        <div style='background: {card_bg}; padding: 20px; border-radius: 15px; text-align: center; border: 1px solid {border_color};'>
-            <h3 style='color: {text_color};'>🏆 Conquistas</h3>
-            <h1 style='color: {icon_color}; font-size: 48px;'>{len(conquistas)}</h1>
-            <p style='color: {text_color};'>conquistas</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown(f"<h3 style='color: {text_color};'>📊 Estatísticas</h3>", unsafe_allow_html=True)
+    st.markdown("<h2 class='titulo-secao' style='margin-top: 30px;'>📊 Estatísticas Detalhadas</h2>", unsafe_allow_html=True)
     
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
         st.markdown(f"""
-        <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
-            <h4 style='color: {text_color};'>📅 Eventos</h4>
-            <h2 style='color: {icon_color};'>{eventos}</h2>
-            <small style='color: {text_color};'>{len(inscricoes)} inscrições</small>
+        <div class='stat-card'>
+            <i class='fas fa-calendar-check' style='font-size: 30px; color: {icon_color};'></i>
+            <div class='stat-number'>{eventos}</div>
+            <div class='stat-label'>Eventos</div>
+            <small>{len(inscricoes)} inscrições</small>
         </div>
         """, unsafe_allow_html=True)
     
     with col2:
         st.markdown(f"""
-        <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
-            <h4 style='color: {text_color};'>💡 Dicas</h4>
-            <h2 style='color: {icon_color};'>{dicas}</h2>
-            <small style='color: {text_color};'>{len(dicas_vistas)} lidas</small>
+        <div class='stat-card'>
+            <i class='fas fa-lightbulb' style='font-size: 30px; color: {icon_color};'></i>
+            <div class='stat-number'>{dicas}</div>
+            <div class='stat-label'>Dicas</div>
+            <small>{len(dicas_vistas)} lidas</small>
         </div>
         """, unsafe_allow_html=True)
     
     with col3:
         st.markdown(f"""
-        <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
-            <h4 style='color: {text_color};'>📍 Visitas</h4>
-            <h2 style='color: {icon_color};'>{pontos_visitados}</h2>
-            <small style='color: {text_color};'>{len(visitas)} pontos</small>
+        <div class='stat-card'>
+            <i class='fas fa-map-pin' style='font-size: 30px; color: {icon_color};'></i>
+            <div class='stat-number'>{pontos_visitados}</div>
+            <div class='stat-label'>Visitas</div>
+            <small>{len(visitas)} pontos</small>
         </div>
         """, unsafe_allow_html=True)
     
     with col4:
         st.markdown(f"""
-        <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
-            <h4 style='color: {text_color};'>♻️ Kg</h4>
-            <h2 style='color: {icon_color};'>{kg}</h2>
-            <p style='color: {text_color};'>reciclados</p>
+        <div class='stat-card'>
+            <i class='fas fa-recycle' style='font-size: 30px; color: {icon_color};'></i>
+            <div class='stat-number'>{kg}</div>
+            <div class='stat-label'>Kg reciclados</div>
+            <small>{desafios} desafios</small>
         </div>
         """, unsafe_allow_html=True)
     
@@ -1354,29 +1843,49 @@ def mostrar_perfil_completo(usuario_id, text_color, card_bg, icon_color, border_
                 status = "✅ Aprovado" if comp[7] else "⏳ Pendente"
                 st.markdown(f"""
                 <div style='background: {card_bg}; padding: 10px; border-radius: 10px; margin-bottom: 5px; border: 1px solid {border_color};'>
-                    <strong style='color: {text_color};'>{comp[2]}</strong><br>
-                    <small style='color: {text_color};'>{comp[6]} | {comp[5]} pontos | {status}</small>
+                    <strong>{comp[2]}</strong><br>
+                    <small>{comp[6]} | {comp[5]} pontos | {status}</small>
                 </div>
                 """, unsafe_allow_html=True)
 
-def mostrar_pagina_desafios(usuario_id, text_color, card_bg, icon_color, border_color, secondary_text):
-    """Página de desafios com upload de arquivo"""
-    st.markdown(f"<h2 style='color: {text_color};'>🎯 Desafios Ambientais</h2>", unsafe_allow_html=True)
+def mostrar_pagina_desafios_profissional(usuario_id, text_color, card_bg, icon_color, border_color, secondary_text):
+    """Página de desafios profissional"""
+    st.markdown("<h1 class='titulo-secao'>🎯 Desafios Ambientais</h1>", unsafe_allow_html=True)
     
     result = get_user_data(usuario_id)
     progresso = result[1] if result[1] else None
     
     pontos = progresso[1] if progresso and len(progresso) > 1 else 0
+    streak = progresso[9] if progresso and len(progresso) > 9 else 0
     
-    st.markdown(f"""
-    <div style='background: {card_bg}; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid {border_color}; text-align: center;'>
-        <h3 style='color: {text_color};'>📊 Seus Pontos</h3>
-        <h1 style='color: {icon_color}; font-size: 48px;'>{pontos}</h1>
-        <p style='color: {text_color};'>Continue completando desafios!</p>
-    </div>
-    """, unsafe_allow_html=True)
+    col1, col2, col3 = st.columns(3)
     
-    st.markdown(f"<h3 style='color: {text_color};'>📋 Desafios Disponíveis</h3>", unsafe_allow_html=True)
+    with col1:
+        st.markdown(f"""
+        <div class='stat-card'>
+            <div class='stat-number'>{pontos}</div>
+            <div class='stat-label'>Pontos totais</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+        <div class='stat-card'>
+            <div class='stat-number'>🔥 {streak}</div>
+            <div class='stat-label'>Dias de streak</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        conquistas_count = len(result[2]) if result[2] else 0
+        st.markdown(f"""
+        <div class='stat-card'>
+            <div class='stat-number'>🏆 {conquistas_count}</div>
+            <div class='stat-label'>Conquistas</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("<h2 class='titulo-secao' style='margin-top: 30px;'>📋 Desafios Disponíveis</h2>", unsafe_allow_html=True)
     
     # Verificar desafios completados hoje
     conn = sqlite3.connect('ecopiracicaba.db')
@@ -1389,22 +1898,24 @@ def mostrar_pagina_desafios(usuario_id, text_color, card_bg, icon_color, border_
     completados_hoje = [row[0] for row in c.fetchall()]
     conn.close()
     
-    for desafio in DESAFIOS_LISTA:
+    for i, desafio in enumerate(DESAFIOS_LISTA):
         with st.container():
-            col1, col2 = st.columns([4, 1])
+            col1, col2 = st.columns([5, 1])
             
             with col1:
                 bloqueado = desafio['tipo'] in completados_hoje
                 st.markdown(f"""
-                <div style='background: {card_bg}; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 6px solid {icon_color}; border: 1px solid {border_color}; opacity: {0.5 if bloqueado else 1};'>
-                    <div style='display: flex; align-items: center; gap: 15px;'>
-                        <span style='font-size: 40px;'>{desafio['icone']}</span>
-                        <div>
-                            <h4 style='color: {text_color}; margin: 0;'>{desafio['titulo']}</h4>
-                            <p style='color: {text_color}; margin: 5px 0;'>{desafio['descricao']}</p>
-                            <p style='color: {icon_color}; margin: 0;'>Recompensa: +{desafio['pontos']} pontos</p>
-                            <p style='color: {secondary_text}; font-size: 12px; margin: 5px 0 0 0;'><i class='fas fa-info-circle'></i> {desafio['dica_validacao']}</p>
-                            {f"<p style='color: #ff9800; font-size: 12px; margin-top: 5px;'>⏳ Limite diário atingido</p>" if bloqueado else ""}
+                <div class='card-moderno' style='margin-bottom: 15px; opacity: {0.7 if bloqueado else 1};'>
+                    <div style='display: flex; align-items: center; gap: 20px;'>
+                        <div style='font-size: 48px;'>{desafio['icone']}</div>
+                        <div style='flex: 1;'>
+                            <h3 style='margin: 0;'>{desafio['titulo']}</h3>
+                            <p style='color: #e0e0e0; margin: 5px 0;'>{desafio['descricao']}</p>
+                            <div style='display: flex; gap: 20px; margin-top: 10px;'>
+                                <span class='badge badge-success'>+{desafio['pontos']} pontos</span>
+                                <span class='badge badge-info'><i class='fas fa-info-circle'></i> {desafio['dica_validacao']}</span>
+                                {f"<span class='badge badge-warning'>⏳ Limite diário atingido</span>" if bloqueado else ""}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1412,19 +1923,19 @@ def mostrar_pagina_desafios(usuario_id, text_color, card_bg, icon_color, border_
             
             with col2:
                 if not bloqueado:
-                    if st.button(f"📸 Comprovar", key=f"btn_{desafio['id']}_{usuario_id}"):
+                    if st.button(f"📸 Comprovar", key=f"btn_{desafio['id']}_{usuario_id}", use_container_width=True):
                         st.session_state['desafio_atual'] = desafio
                         st.session_state['mostrar_upload'] = True
                         st.rerun()
                 else:
-                    st.button(f"✅ Concluído", key=f"done_{desafio['id']}_{usuario_id}", disabled=True)
+                    st.button(f"✅ Concluído", key=f"done_{desafio['id']}_{usuario_id}", disabled=True, use_container_width=True)
     
     # Modal de upload de foto
     if st.session_state.get('mostrar_upload', False):
         desafio = st.session_state['desafio_atual']
         
         st.markdown("---")
-        st.markdown(f"<h3 style='color: {text_color};'>📸 Comprovar: {desafio['titulo']}</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h2 class='titulo-secao'>📸 Comprovar: {desafio['titulo']}</h2>", unsafe_allow_html=True)
         
         with st.container():
             st.info(f"**Dica para validação:** {desafio['dica_validacao']}")
@@ -1443,12 +1954,12 @@ def mostrar_pagina_desafios(usuario_id, text_color, card_bg, icon_color, border_
                 
                 with col2:
                     st.markdown(f"""
-                    <div style='background: {card_bg}; padding: 15px; border-radius: 10px; border: 1px solid {border_color};'>
-                        <h4 style='color: {text_color};'>Resumo</h4>
-                        <p style='color: {text_color};'><strong>Desafio:</strong> {desafio['titulo']}</p>
-                        <p style='color: {text_color};'><strong>Pontos:</strong> +{desafio['pontos']}</p>
-                        <p style='color: {text_color};'><strong>Arquivo:</strong> {uploaded_file.name}</p>
-                        <p style='color: {text_color};'><strong>Tamanho:</strong> {len(uploaded_file.getvalue()) / 1024:.1f} KB</p>
+                    <div class='card-moderno'>
+                        <h4>Resumo</h4>
+                        <p><strong>Desafio:</strong> {desafio['titulo']}</p>
+                        <p><strong>Pontos:</strong> +{desafio['pontos']}</p>
+                        <p><strong>Arquivo:</strong> {uploaded_file.name}</p>
+                        <p><strong>Tamanho:</strong> {len(uploaded_file.getvalue()) / 1024:.1f} KB</p>
                     </div>
                     """, unsafe_allow_html=True)
                     
@@ -1472,68 +1983,78 @@ def mostrar_pagina_desafios(usuario_id, text_color, card_bg, icon_color, border_
                             else:
                                 st.error(mensagem)
             
-            if st.button("❌ Cancelar", key=f"cancelar_upload_{desafio['id']}_{usuario_id}"):
+            if st.button("❌ Cancelar", key=f"cancelar_upload_{desafio['id']}_{usuario_id}", use_container_width=True):
                 st.session_state['mostrar_upload'] = False
                 st.session_state['desafio_atual'] = None
                 st.rerun()
 
-def mostrar_ranking_completo(text_color, card_bg, icon_color, border_color, secondary_text):
-    """Mostra ranking completo"""
+def mostrar_ranking_completo_profissional(text_color, card_bg, icon_color, border_color, secondary_text):
+    """Mostra ranking completo profissional"""
     ranking = get_ranking()
     
-    st.markdown(f"<h2 style='color: {text_color};'>🏆 Ranking EcoCidadãos</h2>", unsafe_allow_html=True)
+    st.markdown("<h1 class='titulo-secao'>🏆 Ranking EcoCidadãos</h1>", unsafe_allow_html=True)
     
     if not ranking:
         st.info("Nenhum usuário no ranking ainda.")
         return
     
-    for i, (nome, pontos, nivel) in enumerate(ranking[:3]):
+    # Top 3 em destaque
+    st.markdown("<h2 style='margin-bottom: 20px;'>Pódio</h2>", unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns(3)
+    
+    for i, (nome, pontos, nivel, streak) in enumerate(ranking[:3]):
         medalha = "🥇" if i == 0 else "🥈" if i == 1 else "🥉"
         cor_medalha = "#ffd700" if i == 0 else "#c0c0c0" if i == 1 else "#cd7f32"
         
-        st.markdown(f"""
-        <div style='background: {card_bg}; padding: 20px; border-radius: 15px; margin-bottom: 10px; border: 2px solid {cor_medalha};'>
-            <div style='display: flex; justify-content: space-between; align-items: center;'>
-                <div style='display: flex; align-items: center; gap: 15px;'>
-                    <span style='font-size: 40px;'>{medalha}</span>
-                    <div>
-                        <h3 style='color: {text_color}; margin: 0;'>{nome}</h3>
-                        <span style='color: {secondary_text};'>{nivel}</span>
-                    </div>
-                </div>
-                <div style='text-align: right;'>
-                    <span style='color: {icon_color}; font-size: 24px;'>{pontos} pts</span>
+        col = col1 if i == 0 else col2 if i == 1 else col3
+        
+        with col:
+            st.markdown(f"""
+            <div class='card-moderno' style='text-align: center; border: 2px solid {cor_medalha};'>
+                <div style='font-size: 64px;'>{medalha}</div>
+                <h3 style='margin: 10px 0;'>{nome}</h3>
+                <p style='color: #8bc34a;'>{nivel}</p>
+                <div style='font-size: 32px; color: {icon_color};'>{pontos}</div>
+                <p>pontos</p>
+                <div style='display: flex; justify-content: center; gap: 10px; margin-top: 10px;'>
+                    <span class='badge badge-info'><i class='fas fa-fire'></i> {streak} dias</span>
                 </div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
     
-    for i, (nome, pontos, nivel) in enumerate(ranking[3:], start=4):
+    # Restante do ranking
+    st.markdown("<h2 style='margin: 30px 0 20px;'>Classificação Geral</h2>", unsafe_allow_html=True)
+    
+    for i, (nome, pontos, nivel, streak) in enumerate(ranking[3:], start=4):
         st.markdown(f"""
-        <div style='background: {card_bg}; padding: 12px; border-radius: 10px; margin-bottom: 5px; border: 1px solid {border_color};'>
+        <div class='card-moderno' style='padding: 15px; margin-bottom: 10px;'>
             <div style='display: flex; justify-content: space-between; align-items: center;'>
-                <div>
-                    <span style='font-size: 16px; font-weight: bold; color: {text_color};'>{i}º</span>
-                    <strong style='color: {text_color}; margin-left: 10px;'>{nome}</strong>
-                    <span style='color: {secondary_text}; margin-left: 10px;'>{nivel}</span>
+                <div style='display: flex; align-items: center; gap: 20px;'>
+                    <span style='font-size: 24px; font-weight: 700; color: #8bc34a;'>{i}º</span>
+                    <div>
+                        <strong style='font-size: 18px;'>{nome}</strong>
+                        <p style='margin: 0; color: #e0e0e0;'>{nivel}</p>
+                    </div>
                 </div>
-                <div>
-                    <span style='color: {icon_color};'>{pontos} pts</span>
+                <div style='display: flex; align-items: center; gap: 20px;'>
+                    <span class='badge badge-info'><i class='fas fa-fire'></i> {streak}</span>
+                    <span style='font-size: 20px; color: {icon_color};'>{pontos} pts</span>
                 </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
-def mostrar_pontos_completos(text_color, card_bg, icon_color, border_color, secondary_text):
-    """Mostra pontos de coleta com expanders por categoria"""
+def mostrar_pontos_completos_profissional(text_color, card_bg, icon_color, border_color, secondary_text):
+    """Mostra pontos de coleta profissional"""
     conn = sqlite3.connect('ecopiracicaba.db')
     c = conn.cursor()
     c.execute("SELECT * FROM pontos_coleta ORDER BY categoria, nome")
     pontos = c.fetchall()
     conn.close()
     
-    st.markdown(f"<h2 style='color: {text_color};'>📍 Pontos de Coleta em Piracicaba</h2>", unsafe_allow_html=True)
-    st.markdown(f"<p style='color: {secondary_text}; margin-bottom: 30px;'>Encontre o ponto mais próximo para descartar cada tipo de resíduo</p>", unsafe_allow_html=True)
+    st.markdown("<h1 class='titulo-secao'>📍 Pontos de Coleta em Piracicaba</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #e0e0e0; margin-bottom: 30px;'>Encontre o ponto mais próximo para descartar cada tipo de resíduo</p>", unsafe_allow_html=True)
     
     # Agrupar por categoria
     categorias = {}
@@ -1560,21 +2081,21 @@ def mostrar_pontos_completos(text_color, card_bg, icon_color, border_color, seco
         'metais': '⚙️'
     }
     
-    # Mostrar estatísticas
+    # Estatísticas
     col1, col2, col3 = st.columns(3)
     with col1:
         st.markdown(f"""
-        <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
-            <h3 style='color: {icon_color}; font-size: 32px;'>{len(pontos)}</h3>
-            <p style='color: {text_color};'>Total de Pontos</p>
+        <div class='stat-card'>
+            <div class='stat-number'>{len(pontos)}</div>
+            <div class='stat-label'>Total de Pontos</div>
         </div>
         """, unsafe_allow_html=True)
     
     with col2:
         st.markdown(f"""
-        <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
-            <h3 style='color: {icon_color}; font-size: 32px;'>{len(categorias)}</h3>
-            <p style='color: {text_color};'>Categorias</p>
+        <div class='stat-card'>
+            <div class='stat-number'>{len(categorias)}</div>
+            <div class='stat-label'>Categorias</div>
         </div>
         """, unsafe_allow_html=True)
     
@@ -1582,33 +2103,32 @@ def mostrar_pontos_completos(text_color, card_bg, icon_color, border_color, seco
         avaliacao_media = sum([p[6] for p in pontos]) / len(pontos) if pontos else 0
         estrelas = "★" * int(avaliacao_media) + "☆" * (5 - int(avaliacao_media))
         st.markdown(f"""
-        <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
+        <div class='stat-card'>
             <div style='color: gold; font-size: 20px;'>{estrelas}</div>
-            <p style='color: {text_color};'>Avaliação Média</p>
+            <div class='stat-label'>Avaliação Média</div>
         </div>
         """, unsafe_allow_html=True)
     
-    st.markdown("---")
+    st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
     
     # Mostrar pontos por categoria em expanders
     for categoria, pontos_cat in sorted(categorias.items()):
         icone = icones_categoria.get(categoria, '📍')
-        with st.expander(f"{icone} {categoria.upper()} ({len(pontos_cat)} pontos)", expanded=False):
-            # Subdividir em 2 colunas para melhor visualização
+        with st.expander(f"{icone} {categoria.upper()} ({len(pontos_cat)} pontos)"):
             cols = st.columns(2)
             for i, ponto in enumerate(pontos_cat):
                 with cols[i % 2]:
                     estrelas = "★" * int(ponto[6]) + "☆" * (5 - int(ponto[6]))
                     st.markdown(f"""
-                    <div style='background: {card_bg}; padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid {border_color};'>
-                        <h4 style='color: {text_color}; margin: 0 0 10px 0;'>{ponto[1]}</h4>
-                        <p style='margin: 5px 0; color: {text_color};'><i class='fas fa-map-pin' style='color: {icon_color};'></i> {ponto[2]}</p>
-                        <p style='margin: 5px 0; color: {text_color};'><i class='fas fa-clock' style='color: {icon_color};'></i> {ponto[4]}</p>
-                        <p style='margin: 5px 0; color: {text_color};'><i class='fas fa-phone' style='color: {icon_color};'></i> {ponto[5]}</p>
-                        <p style='margin: 5px 0; color: {secondary_text}; font-size: 12px;'>{ponto[7]}</p>
+                    <div class='card-moderno' style='padding: 15px; margin-bottom: 10px;'>
+                        <h4 style='margin: 0 0 10px 0;'>{ponto[1]}</h4>
+                        <p style='margin: 5px 0;'><i class='fas fa-map-pin' style='color: {icon_color};'></i> {ponto[2]}</p>
+                        <p style='margin: 5px 0;'><i class='fas fa-clock' style='color: {icon_color};'></i> {ponto[4]}</p>
+                        <p style='margin: 5px 0;'><i class='fas fa-phone' style='color: {icon_color};'></i> {ponto[5]}</p>
+                        <p style='margin: 5px 0; color: #e0e0e0; font-size: 12px;'>{ponto[7]}</p>
                         <div style='display: flex; justify-content: space-between; align-items: center; margin-top: 10px;'>
-                            <div style='color: gold; font-size: 16px;'>{estrelas}</div>
-                            <span style='background: {icon_color}; color: white; padding: 3px 8px; border-radius: 50px; font-size: 11px;'>{ponto[6]}/5.0</span>
+                            <div style='color: gold; font-size: 14px;'>{estrelas}</div>
+                            <span class='badge badge-info'>{ponto[6]}/5.0</span>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
@@ -1624,103 +2144,8 @@ icon_color = "#8bc34a"
 gradient_start = "#0a1f17"
 gradient_end = "#1a4a3a"
 
-sidebar_bg = "#1a3329"
-sidebar_text = "#FFFFFF"
-
-st.markdown(f"""
-<style>
-    .stApp {{
-        background: linear-gradient(135deg, {gradient_start} 0%, {gradient_end} 100%);
-    }}
-    
-    /* Esconder a sidebar completamente */
-    section[data-testid="stSidebar"] {{
-        display: none !important;
-    }}
-    
-    .stMarkdown, p, h1, h2, h3, h4, h5, h6, span, div:not(.stButton) {{
-        color: {text_color} !important;
-    }}
-    
-    .stButton button {{
-        background: {icon_color};
-        color: white;
-        border: none;
-        border-radius: 50px;
-        padding: 10px 20px;
-        transition: all 0.3s;
-    }}
-    
-    .stButton button:hover {{
-        background: #6ba539;
-        transform: scale(1.05);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    }}
-    
-    .stButton button:disabled {{
-        background: #444 !important;
-        opacity: 0.5;
-    }}
-    
-    div.stTabs [data-baseweb="tab-list"] button {{
-        color: {text_color} !important;
-    }}
-    
-    div.stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {{
-        background-color: {icon_color} !important;
-        color: white !important;
-    }}
-    
-    .stTextInput input, .stTextArea textarea, .stSelectbox div {{
-        background-color: #2a4a3a !important;
-        color: {text_color} !important;
-        border: 1px solid {border_color} !important;
-    }}
-    
-    .stTextInput label, .stTextArea label, .stSelectbox label {{
-        color: {text_color} !important;
-    }}
-    
-    ::-webkit-scrollbar {{
-        width: 8px;
-        height: 8px;
-    }}
-    
-    ::-webkit-scrollbar-track {{
-        background: {border_color};
-        border-radius: 10px;
-    }}
-    
-    ::-webkit-scrollbar-thumb {{
-        background: {icon_color};
-        border-radius: 10px;
-    }}
-    
-    .stAlert {{
-        background-color: {card_bg} !important;
-        color: {text_color} !important;
-        border: 1px solid {border_color} !important;
-    }}
-    
-    .stInfo {{
-        background-color: #1a4a6e !important;
-    }}
-    
-    .stSuccess {{
-        background-color: #1a6e4a !important;
-    }}
-    
-    .stWarning {{
-        background-color: #6e4a1a !important;
-    }}
-    
-    .stError {{
-        background-color: #6e1a1a !important;
-    }}
-</style>
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-""", unsafe_allow_html=True)
+# Aplicar estilo profissional
+aplicar_estilo_profissional()
 
 # ========== INTERFACE PRINCIPAL ==========
 
@@ -1733,39 +2158,40 @@ if 'usuario_logado' not in st.session_state:
 
 # Mostrar login/cadastro ou info do usuário no topo
 if st.session_state.usuario_logado is None:
-    mostrar_login_cadastro()
+    mostrar_login_cadastro_profissional()
 else:
-    mostrar_info_usuario()
+    mostrar_info_usuario_profissional()
 
 # Conteúdo principal
 if st.session_state.usuario_logado is None:
     # Página inicial com eventos em destaque
-    mostrar_eventos_destaque(text_color, card_bg, icon_color, border_color, secondary_text)
+    mostrar_eventos_destaque_profissional(text_color, card_bg, icon_color, border_color, secondary_text)
     
-    st.markdown("---")
+    st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
+    
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.markdown(f"""
-        <div style='text-align: center; padding: 20px;'>
-            <i class='fas fa-calendar-alt' style='font-size: 30px; color: {icon_color};'></i>
-            <h4 style='color: {text_color};'>Eventos 2026</h4>
-            <p style='color: {secondary_text};'>Mais de 50 eventos durante o ano</p>
+        st.markdown("""
+        <div class='stat-card'>
+            <i class='fas fa-calendar-alt' style='font-size: 40px; color: #8bc34a;'></i>
+            <div class='stat-number'>50+</div>
+            <div class='stat-label'>Eventos em 2026</div>
         </div>
         """, unsafe_allow_html=True)
     with col2:
-        st.markdown(f"""
-        <div style='text-align: center; padding: 20px;'>
-            <i class='fas fa-map-marker-alt' style='font-size: 30px; color: {icon_color};'></i>
-            <h4 style='color: {text_color};'>Pontos de Coleta</h4>
-            <p style='color: {secondary_text};'>Mais de 100 pontos em 14 categorias</p>
+        st.markdown("""
+        <div class='stat-card'>
+            <i class='fas fa-map-marker-alt' style='font-size: 40px; color: #8bc34a;'></i>
+            <div class='stat-number'>100+</div>
+            <div class='stat-label'>Pontos de Coleta</div>
         </div>
         """, unsafe_allow_html=True)
     with col3:
-        st.markdown(f"""
-        <div style='text-align: center; padding: 20px;'>
-            <i class='fas fa-leaf' style='font-size: 30px; color: {icon_color};'></i>
-            <h4 style='color: {text_color};'>Dicas Ambientais</h4>
-            <p style='color: {secondary_text};'>Aprenda a viver de forma mais sustentável</p>
+        st.markdown("""
+        <div class='stat-card'>
+            <i class='fas fa-leaf' style='font-size: 40px; color: #8bc34a;'></i>
+            <div class='stat-number'>12</div>
+            <div class='stat-label'>Dicas Ambientais</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -1774,19 +2200,19 @@ else:
     tab1, tab2, tab3, tab4, tab5 = st.tabs(["🎯 Desafios", "👤 Perfil", "🏆 Ranking", "📅 Eventos", "📍 Pontos"])
     
     with tab1:
-        mostrar_pagina_desafios(
+        mostrar_pagina_desafios_profissional(
             st.session_state.usuario_logado['id'],
             text_color, card_bg, icon_color, border_color, secondary_text
         )
     
     with tab2:
-        mostrar_perfil_completo(
+        mostrar_perfil_completo_profissional(
             st.session_state.usuario_logado['id'],
             text_color, card_bg, icon_color, border_color, secondary_text
         )
     
     with tab3:
-        mostrar_ranking_completo(text_color, card_bg, icon_color, border_color, secondary_text)
+        mostrar_ranking_completo_profissional(text_color, card_bg, icon_color, border_color, secondary_text)
     
     with tab4:
         conn = sqlite3.connect('ecopiracicaba.db')
@@ -1795,40 +2221,40 @@ else:
         eventos = c.fetchall()
         conn.close()
         
-        st.markdown(f"<h2 style='color: {text_color};'>📅 Eventos 2026 - Piracicaba</h2>", unsafe_allow_html=True)
-        st.markdown(f"<p style='color: {secondary_text}; margin-bottom: 30px;'>Participe dos eventos e ganhe pontos extras! Total de {len(eventos)} eventos durante o ano.</p>", unsafe_allow_html=True)
+        st.markdown(f"<h1 class='titulo-secao'>📅 Eventos 2026 - Piracicaba</h1>", unsafe_allow_html=True)
+        st.markdown(f"<p style='color: #e0e0e0; margin-bottom: 30px;'>Participe dos eventos e ganhe pontos extras! Total de {len(eventos)} eventos durante o ano.</p>", unsafe_allow_html=True)
         
         # Estatísticas dos eventos
         total_eventos = len(eventos)
         eventos_com_vagas = sum(1 for e in eventos if e[7] == 0 or e[8] < e[7])
+        total_pontos = sum(e[12] for e in eventos if len(e) > 12)
         
         col1, col2, col3 = st.columns(3)
         with col1:
             st.markdown(f"""
-            <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
-                <h3 style='color: {icon_color}; font-size: 32px;'>{total_eventos}</h3>
-                <p style='color: {text_color};'>Eventos em 2026</p>
+            <div class='stat-card'>
+                <div class='stat-number'>{total_eventos}</div>
+                <div class='stat-label'>Eventos em 2026</div>
             </div>
             """, unsafe_allow_html=True)
         
         with col2:
             st.markdown(f"""
-            <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
-                <h3 style='color: {icon_color}; font-size: 32px;'>{eventos_com_vagas}</h3>
-                <p style='color: {text_color};'>Com vagas disponíveis</p>
+            <div class='stat-card'>
+                <div class='stat-number'>{eventos_com_vagas}</div>
+                <div class='stat-label'>Com vagas disponíveis</div>
             </div>
             """, unsafe_allow_html=True)
         
         with col3:
-            total_pontos = sum(e[12] for e in eventos if len(e) > 12)
             st.markdown(f"""
-            <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
-                <h3 style='color: {icon_color}; font-size: 32px;'>+{total_pontos}</h3>
-                <p style='color: {text_color};'>Pontos totais</p>
+            <div class='stat-card'>
+                <div class='stat-number'>+{total_pontos}</div>
+                <div class='stat-label'>Pontos totais</div>
             </div>
             """, unsafe_allow_html=True)
         
-        st.markdown("---")
+        st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
         
         # Verificar inscrições do usuário
         conn = sqlite3.connect('ecopiracicaba.db')
@@ -1859,19 +2285,21 @@ else:
         
         for mes_num, eventos_mes in sorted(eventos_por_mes.items()):
             nome_mes = meses.get(mes_num, f'Mês {mes_num}')
-            with st.expander(f"📅 {nome_mes} 2026 ({len(eventos_mes)} eventos)", expanded=False):
+            with st.expander(f"📅 {nome_mes} 2026 ({len(eventos_mes)} eventos)"):
                 for evento in eventos_mes:
                     col1, col2 = st.columns([4, 1])
                     with col1:
                         pontos_evento = evento[12] if len(evento) > 12 else 150
                         st.markdown(f"""
-                        <div style='background: {card_bg}; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 6px solid {icon_color}; border: 1px solid {border_color};'>
-                            <h4 style='color: {text_color}; margin: 0 0 5px 0;'>{evento[1]}</h4>
-                            <p style='color: {text_color}; font-size: 14px; margin: 5px 0;'>{evento[2]}</p>
-                            <p style='margin: 5px 0; color: {text_color};'><i class='fas fa-calendar' style='color: {icon_color};'></i> {evento[3]} às {evento[4]}</p>
-                            <p style='margin: 5px 0; color: {text_color};'><i class='fas fa-map-marker-alt' style='color: {icon_color};'></i> {evento[5]}</p>
-                            <p style='margin: 5px 0; color: {text_color};'><i class='fas fa-building' style='color: {icon_color};'></i> {evento[9]}</p>
-                            <p style='margin: 5px 0; color: {icon_color};'><i class='fas fa-star'></i> +{pontos_evento} pontos</p>
+                        <div class='card-moderno' style='margin-bottom: 15px;'>
+                            <h3 style='margin: 0 0 5px 0;'>{evento[1]}</h3>
+                            <p style='color: #e0e0e0; font-size: 14px; margin: 5px 0;'>{evento[2]}</p>
+                            <div style='display: flex; gap: 20px; flex-wrap: wrap; margin: 10px 0;'>
+                                <p style='margin: 0;'><i class='fas fa-calendar' style='color: {icon_color};'></i> {evento[3]} às {evento[4]}</p>
+                                <p style='margin: 0;'><i class='fas fa-map-marker-alt' style='color: {icon_color};'></i> {evento[5]}</p>
+                                <p style='margin: 0;'><i class='fas fa-building' style='color: {icon_color};'></i> {evento[9]}</p>
+                            </div>
+                            <span class='badge badge-success'><i class='fas fa-star'></i> +{pontos_evento} pontos</span>
                         </div>
                         """, unsafe_allow_html=True)
                     
@@ -1891,7 +2319,7 @@ else:
                                 st.error("❌ Esgotado")
     
     with tab5:
-        mostrar_pontos_completos(text_color, card_bg, icon_color, border_color, secondary_text)
+        mostrar_pontos_completos_profissional(text_color, card_bg, icon_color, border_color, secondary_text)
 
 # Modal de inscrição em evento
 if st.session_state.get('mostrar_inscricao', False) and st.session_state['evento_atual']:
@@ -1899,33 +2327,36 @@ if st.session_state.get('mostrar_inscricao', False) and st.session_state['evento
     
     with st.container():
         st.markdown("---")
-        st.markdown(f"<h3 style='color: {text_color};'>📝 Ficha de Inscrição</h3>", unsafe_allow_html=True)
+        st.markdown(f"<h2 class='titulo-secao'>📝 Ficha de Inscrição</h2>", unsafe_allow_html=True)
         
         col1, col2 = st.columns([3, 2])
         
         with col1:
             pontos_evento = evento[12] if len(evento) > 12 else 150
             st.markdown(f"""
-            <div style='background: {card_bg}; padding: 20px; border-radius: 15px; border: 1px solid {border_color}; margin-bottom: 20px;'>
-                <h4 style='color: {text_color};'>{evento[1]}</h4>
-                <p style='color: {text_color};'>{evento[2]}</p>
-                <p style='margin: 10px 0; color: {text_color};'><i class='fas fa-calendar' style='color: {icon_color};'></i> <strong>Data:</strong> {evento[3]} às {evento[4]}</p>
-                <p style='margin: 5px 0; color: {text_color};'><i class='fas fa-map-marker-alt' style='color: {icon_color};'></i> <strong>Local:</strong> {evento[5]}</p>
-                <p style='margin: 5px 0; color: {text_color};'><i class='fas fa-building' style='color: {icon_color};'></i> <strong>Organizador:</strong> {evento[9]}</p>
-                <p style='margin: 5px 0; color: {text_color};'><i class='fas fa-phone' style='color: {icon_color};'></i> <strong>Contato:</strong> {evento[10]}</p>
-                <p style='margin: 5px 0; color: {icon_color};'><i class='fas fa-star'></i> <strong>Pontos ao participar:</strong> +{pontos_evento}</p>
+            <div class='card-moderno'>
+                <h3>{evento[1]}</h3>
+                <p style='color: #e0e0e0;'>{evento[2]}</p>
+                <div style='margin: 15px 0;'>
+                    <p><i class='fas fa-calendar' style='color: {icon_color};'></i> <strong>Data:</strong> {evento[3]} às {evento[4]}</p>
+                    <p><i class='fas fa-map-marker-alt' style='color: {icon_color};'></i> <strong>Local:</strong> {evento[5]}</p>
+                    <p><i class='fas fa-building' style='color: {icon_color};'></i> <strong>Organizador:</strong> {evento[9]}</p>
+                    <p><i class='fas fa-phone' style='color: {icon_color};'></i> <strong>Contato:</strong> {evento[10]}</p>
+                </div>
+                <span class='badge badge-success'><i class='fas fa-star'></i> Pontos ao participar: +{pontos_evento}</span>
             </div>
             """, unsafe_allow_html=True)
         
         with col2:
             with st.form("form_inscricao"):
-                st.markdown(f"<h4 style='color: {text_color};'>Seus Dados</h4>", unsafe_allow_html=True)
+                st.markdown("<h3>Seus Dados</h3>", unsafe_allow_html=True)
                 
                 nome_inscricao = st.text_input("Nome completo *", value=st.session_state.usuario_logado['nome'] if st.session_state.usuario_logado else "")
                 email_inscricao = st.text_input("E-mail *", value=email_usuario if 'email_usuario' in locals() else "")
                 telefone_inscricao = st.text_input("Telefone *", value=telefone_usuario if 'telefone_usuario' in locals() else "")
                 
-                st.markdown(f"<small style='color: {secondary_text};'>* Campos obrigatórios</small>", unsafe_allow_html=True)
+                st.markdown("<small style='color: #e0e0e0;'>* Campos obrigatórios</small>", unsafe_allow_html=True)
+                st.markdown("<br>", unsafe_allow_html=True)
                 
                 col_a, col_b = st.columns(2)
                 with col_a:
