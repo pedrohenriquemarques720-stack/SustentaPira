@@ -16,10 +16,10 @@ import numpy as np
 
 # Configuração da página
 st.set_page_config(
-    page_title="SustentaPira",
+    page_title="EcoPiracicaba 2026",
     page_icon="🌿",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"  # Mudado para collapsed
 )
 
 # ========== FUNÇÕES BÁSICAS ==========
@@ -375,8 +375,6 @@ def init_database():
             dados_iniciais(conn, c)
             conn.commit()
             print("✅ Dados iniciais inseridos/atualizados com sucesso!")
-            print(f"   - Eventos: {len(eventos)}")
-            print(f"   - Pontos de coleta: {len(pontos_gerais) + len(pontos_pilhas) + len(pontos_eletronicos) + len(pontos_oleo) + len(pontos_vidros) + len(pontos_papel) + len(pontos_plasticos) + len(pontos_organicos) + len(pontos_medicamentos) + len(pontos_lampadas) + len(pontos_roupas) + len(pontos_moveis) + len(pontos_metais) + len(pontos_pilhas_extra)}")
         except Exception as e:
             print(f"❌ Erro ao inserir dados iniciais: {e}")
     
@@ -411,7 +409,7 @@ def dados_iniciais(conn, c):
         # Admin
         c.execute(
             "INSERT INTO usuarios (nome, email, senha, data_cadastro) VALUES (?, ?, ?, ?)",
-            ("Administrador", "admin@sustentapira.com", "eco2026", data_atual)
+            ("Administrador", "admin@ecopiracicaba.com", "eco2026", data_atual)
         )
         admin_id = c.lastrowid
         c.execute(
@@ -717,7 +715,7 @@ def dados_iniciais(conn, c):
     # Dicas
     c.execute("DELETE FROM dicas")
     dicas = [
-        ("🌱 Compostagem Doméstica", "50% do lixo doméstico pode ser compostado! Faça sua própria composteira com baldes e minhocas californianas. Use restos de frutas, verduras e cascas de ovos.", "resíduos", data_atual, 0, "Equipe SustentaPira"),
+        ("🌱 Compostagem Doméstica", "50% do lixo doméstico pode ser compostado! Faça sua própria composteira com baldes e minhocas californianas. Use restos de frutas, verduras e cascas de ovos.", "resíduos", data_atual, 0, "Equipe EcoPiracicaba"),
         ("💧 Economia de Água", "Um banho de 15 minutos gasta 135 litros. Reduza para 5 minutos e economize 90 litros por banho! Instale arejadores nas torneiras.", "água", data_atual, 0, "Sabesp"),
         ("🔋 Pilhas e Baterias", "Uma pilha pode contaminar 20 mil litros de água por até 50 anos. Descarte sempre em pontos de coleta específicos.", "resíduos", data_atual, 0, "Greenpeace"),
         ("🌳 Plante uma Árvore", "Uma árvore adulta absorve até 150kg de CO2 por ano. Plante árvores nativas como ipê, pitanga e jatobá.", "natureza", data_atual, 0, "SOS Mata Atlântica"),
@@ -1091,6 +1089,103 @@ def inscrever_evento(usuario_id, evento_id, nome, email, telefone):
         return False, "Erro ao realizar inscrição."
 
 # ========== COMPONENTES DE INTERFACE ==========
+
+def mostrar_login_cadastro():
+    """Mostra formulários de login e cadastro no topo da página"""
+    col1, col2, col3 = st.columns([1, 2, 1])
+    
+    with col2:
+        st.markdown(f"<h2 style='color: {text_color}; text-align: center;'>🌿 EcoPiracicaba</h2>", unsafe_allow_html=True)
+        st.markdown(f"<p style='color: {secondary_text}; text-align: center;'>Sustentabilidade em ação</p>", unsafe_allow_html=True)
+        
+        tab_login, tab_cadastro = st.tabs(["🔐 Login", "🆕 Cadastro"])
+        
+        with tab_login:
+            with st.form("login_form"):
+                email = st.text_input("E-mail")
+                senha = st.text_input("Senha", type="password")
+                if st.form_submit_button("Entrar", use_container_width=True):
+                    user, erro = fazer_login(email, senha)
+                    if user:
+                        st.session_state.usuario_logado = {
+                            'id': user[0],
+                            'nome': user[1]
+                        }
+                        st.rerun()
+                    else:
+                        st.error(erro)
+        
+        with tab_cadastro:
+            with st.form("cadastro_form"):
+                nome = st.text_input("Nome completo")
+                email = st.text_input("E-mail")
+                telefone = st.text_input("Telefone (opcional)")
+                senha = st.text_input("Senha", type="password")
+                confirmar_senha = st.text_input("Confirmar senha", type="password")
+                
+                if st.form_submit_button("Criar conta", use_container_width=True):
+                    if not nome:
+                        st.error("Nome é obrigatório!")
+                    elif not validar_email(email):
+                        st.error("E-mail inválido!")
+                    elif len(senha) < 6:
+                        st.error("A senha deve ter pelo menos 6 caracteres!")
+                    elif senha != confirmar_senha:
+                        st.error("As senhas não coincidem!")
+                    else:
+                        sucesso, user_id, mensagem = criar_usuario(nome, email, senha, telefone)
+                        if sucesso:
+                            st.success(mensagem)
+                        else:
+                            st.error(mensagem)
+        
+        st.markdown("---")
+
+def mostrar_info_usuario():
+    """Mostra informações do usuário logado"""
+    col1, col2, col3 = st.columns([1, 2, 1])
+    
+    with col2:
+        result = get_user_data(st.session_state.usuario_logado['id'])
+        
+        if len(result) == 9:
+            user, progresso, conquistas, _, _, _, _, convites, motivo_ban = result
+        else:
+            user, progresso, conquistas, _, _, _, _, convites = result
+            motivo_ban = None
+        
+        if motivo_ban:
+            st.error(f"🚫 {motivo_ban}")
+            if st.button("Sair"):
+                st.session_state.usuario_logado = None
+                st.rerun()
+            return
+        
+        pontos = progresso[1] if progresso and len(progresso) > 1 else 0
+        nivel = progresso[2] if progresso and len(progresso) > 2 else "🌱 EcoIniciante"
+        streak = progresso[9] if progresso and len(progresso) > 9 else 0
+        
+        st.markdown(f"""
+        <div style='background: {card_bg}; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid {border_color};'>
+            <h3 style='color: {sidebar_text};'>{st.session_state.usuario_logado['nome']}</h3>
+            <h4 style='color: {icon_color};'>{nivel}</h4>
+            <h2 style='color: {icon_color};'>{pontos} pts</h2>
+            <div style='height: 8px; background: {border_color}; border-radius: 4px; margin: 10px 0;'>
+                <div style='height: 100%; width: {min(100, (pontos/5000)*100)}%; background: {icon_color}; border-radius: 4px;'></div>
+            </div>
+            <div style='display: flex; justify-content: space-around; margin-top: 10px;'>
+                <div><span style='color: #ff9800;'>🔥 {streak}</span><br><small style='color: {sidebar_text};'>dias</small></div>
+                <div><span style='color: {icon_color};'>🏅 {len(conquistas)}</span><br><small style='color: {sidebar_text};'>conquistas</small></div>
+                <div><span style='color: gold;'>🔗 {len(convites)}</span><br><small style='color: {sidebar_text};'>convites</small></div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        if st.button("🚪 Sair", use_container_width=True):
+            st.session_state.usuario_logado = None
+            st.rerun()
+        
+        st.markdown("---")
 
 def mostrar_eventos_destaque(text_color, card_bg, icon_color, border_color, secondary_text):
     """Mostra eventos em destaque na página inicial"""
@@ -1538,29 +1633,9 @@ st.markdown(f"""
         background: linear-gradient(135deg, {gradient_start} 0%, {gradient_end} 100%);
     }}
     
+    /* Esconder a sidebar completamente */
     section[data-testid="stSidebar"] {{
-        background-color: {sidebar_bg} !important;
-        border-right: 2px solid {border_color};
-    }}
-    
-    section[data-testid="stSidebar"] .stMarkdown p,
-    section[data-testid="stSidebar"] .stMarkdown h1,
-    section[data-testid="stSidebar"] .stMarkdown h2,
-    section[data-testid="stSidebar"] .stMarkdown h3,
-    section[data-testid="stSidebar"] .stTextInput label {{
-        color: {sidebar_text} !important;
-    }}
-    
-    section[data-testid="stSidebar"] .stTextInput input {{
-        background-color: #2a4a3a !important;
-        color: {sidebar_text} !important;
-        border: 1px solid {border_color} !important;
-    }}
-    
-    section[data-testid="stSidebar"] .stButton button {{
-        background-color: {icon_color} !important;
-        color: white !important;
-        border: none !important;
+        display: none !important;
     }}
     
     .stMarkdown, p, h1, h2, h3, h4, h5, h6, span, div:not(.stButton) {{
@@ -1656,96 +1731,15 @@ if 'usuario_logado' not in st.session_state:
     st.session_state['mostrar_inscricao'] = False
     st.session_state['evento_atual'] = None
 
-with st.sidebar:
-    st.markdown(f"<h2 style='color: {sidebar_text}; text-align: center;'>🌿 SustentaPira</h2>", unsafe_allow_html=True)
-    st.markdown(f"<p style='color: {sidebar_text}; text-align: center;'>Sustentabilidade em ação</p>", unsafe_allow_html=True)
-    
-    st.markdown("---")
-    
-    if st.session_state.usuario_logado is None:
-        st.markdown(f"<h3 style='color: {sidebar_text};'>🔐 Login</h3>", unsafe_allow_html=True)
-        
-        with st.form("login_form"):
-            email = st.text_input("E-mail")
-            senha = st.text_input("Senha", type="password")
-            if st.form_submit_button("Entrar", use_container_width=True):
-                user, erro = fazer_login(email, senha)
-                if user:
-                    st.session_state.usuario_logado = {
-                        'id': user[0],
-                        'nome': user[1]
-                    }
-                    st.rerun()
-                else:
-                    st.error(erro)
-        
-        st.markdown("---")
-        st.markdown(f"<h3 style='color: {sidebar_text};'>🆕 Cadastro</h3>", unsafe_allow_html=True)
-        
-        with st.form("cadastro_form"):
-            nome = st.text_input("Nome completo")
-            email = st.text_input("E-mail")
-            telefone = st.text_input("Telefone (opcional)")
-            senha = st.text_input("Senha", type="password")
-            confirmar_senha = st.text_input("Confirmar senha", type="password")
-            
-            if st.form_submit_button("Criar conta", use_container_width=True):
-                if not nome:
-                    st.error("Nome é obrigatório!")
-                elif not validar_email(email):
-                    st.error("E-mail inválido!")
-                elif len(senha) < 6:
-                    st.error("A senha deve ter pelo menos 6 caracteres!")
-                elif senha != confirmar_senha:
-                    st.error("As senhas não coincidem!")
-                else:
-                    sucesso, user_id, mensagem = criar_usuario(nome, email, senha, telefone)
-                    if sucesso:
-                        st.success(mensagem)
-                    else:
-                        st.error(mensagem)
-    else:
-        result = get_user_data(st.session_state.usuario_logado['id'])
-        
-        if len(result) == 9:
-            user, progresso, conquistas, _, _, _, _, convites, motivo_ban = result
-        else:
-            user, progresso, conquistas, _, _, _, _, convites = result
-            motivo_ban = None
-        
-        if motivo_ban:
-            st.error(f"🚫 {motivo_ban}")
-            if st.button("Sair"):
-                st.session_state.usuario_logado = None
-                st.rerun()
-        else:
-            pontos = progresso[1] if progresso and len(progresso) > 1 else 0
-            nivel = progresso[2] if progresso and len(progresso) > 2 else "🌱 EcoIniciante"
-            streak = progresso[9] if progresso and len(progresso) > 9 else 0
-            
-            st.markdown(f"""
-            <div style='text-align: center; padding: 15px; background-color: #2a4a3a; border-radius: 10px;'>
-                <h3 style='color: {sidebar_text};'>{st.session_state.usuario_logado['nome']}</h3>
-                <h4 style='color: {icon_color};'>{nivel}</h4>
-                <h2 style='color: {icon_color};'>{pontos} pts</h2>
-                <div style='height: 8px; background: {border_color}; border-radius: 4px; margin: 10px 0;'>
-                    <div style='height: 100%; width: {min(100, (pontos/5000)*100)}%; background: {icon_color}; border-radius: 4px;'></div>
-                </div>
-                <div style='display: flex; justify-content: space-around; margin-top: 10px;'>
-                    <div><span style='color: #ff9800;'>🔥 {streak}</span><br><small style='color: {sidebar_text};'>dias</small></div>
-                    <div><span style='color: {icon_color};'>🏅 {len(conquistas)}</span><br><small style='color: {sidebar_text};'>conquistas</small></div>
-                    <div><span style='color: gold;'>🔗 {len(convites)}</span><br><small style='color: {sidebar_text};'>convites</small></div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            st.markdown("<br>", unsafe_allow_html=True)
-            
-            if st.button("🚪 Sair", use_container_width=True):
-                st.session_state.usuario_logado = None
-                st.rerun()
-
+# Mostrar login/cadastro ou info do usuário no topo
 if st.session_state.usuario_logado is None:
+    mostrar_login_cadastro()
+else:
+    mostrar_info_usuario()
+
+# Conteúdo principal
+if st.session_state.usuario_logado is None:
+    # Página inicial com eventos em destaque
     mostrar_eventos_destaque(text_color, card_bg, icon_color, border_color, secondary_text)
     
     st.markdown("---")
@@ -1776,6 +1770,7 @@ if st.session_state.usuario_logado is None:
         """, unsafe_allow_html=True)
 
 else:
+    # Usuário logado - mostrar conteúdo completo com tabs
     tab1, tab2, tab3, tab4, tab5 = st.tabs(["🎯 Desafios", "👤 Perfil", "🏆 Ranking", "📅 Eventos", "📍 Pontos"])
     
     with tab1:
