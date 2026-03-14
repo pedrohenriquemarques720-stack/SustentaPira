@@ -595,6 +595,20 @@ def init_database():
         )
     ''')
     
+    # Tabela de desafios completados
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS desafios_completados (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER,
+            desafio_id INTEGER,
+            data TIMESTAMP,
+            imagem BLOB,
+            pontos_ganhos INTEGER,
+            aprovado INTEGER DEFAULT 0,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
+        )
+    ''')
+    
     conn.commit()
     
     # Inserir dados iniciais se necessário
@@ -652,6 +666,8 @@ def dados_iniciais(conn, c):
         ("Ecoponto Centro", "Av. Rui Barbosa, 800 - Centro", "geral", "Seg-Sex 8h-17h, Sáb 8h-12h", "(19) 3403-1100", 4.5, "Recebe todos os tipos de recicláveis, eletrônicos e óleo de cozinha"),
         ("Shopping Piracicaba", "Av. Limeira, 700 - Areão", "pilhas", "Seg-Sáb 10h-22h, Dom 14h-20h", "(19) 3432-4545", 4.8, "Ponto de coleta de pilhas e baterias no piso G1"),
         ("CDI Eletrônicos", "R. do Porto, 234 - Centro", "eletronicos", "Seg-Sex 9h-18h, Sáb 9h-12h", "(19) 3433-5678", 4.7, "Centro de Descarte de Eletrônicos"),
+        ("Oleobom", "R. São João, 678 - Centro", "oleo", "Seg-Sex 9h-18h, Sáb 9h-13h", "(19) 3421-5678", 4.6, "Ponto de coleta de óleo de cozinha usado"),
+        ("Coopervidros", "R. Treze de Maio, 300 - Centro", "vidros", "Seg-Sex 8h-17h", "(19) 3421-1234", 4.2, "Cooperativa especializada em reciclagem de vidros"),
     ]
     
     for p in pontos:
@@ -750,9 +766,12 @@ def get_user_stats(user_id):
     c.execute("SELECT COUNT(*) FROM inscricoes WHERE usuario_id = ? AND participou = 1", (user_id,))
     eventos_participados = c.fetchone()[0]
     
-    # Progresso registrado
-    c.execute("SELECT COUNT(*) FROM progresso WHERE usuario_id = ?", (user_id,))
-    total_atividades = c.fetchone()[0]
+    # Desafios completados
+    try:
+        c.execute("SELECT COUNT(*) FROM desafios_completados WHERE usuario_id = ? AND aprovado = 1", (user_id,))
+        desafios = c.fetchone()[0]
+    except:
+        desafios = 0
     
     pontos = user_data[0] if user_data else 0
     nivel_atual = user_data[1] if user_data else 1
@@ -760,20 +779,22 @@ def get_user_stats(user_id):
     
     # Pontos para próximo nível
     if nivel_atual == 1:
-        pontos_proximo = 100 - pontos
-        progresso = (pontos / 100) * 100
+        pontos_necessarios = 100
+        pontos_proximo_nivel = 100 - pontos
     elif nivel_atual == 2:
-        pontos_proximo = 500 - pontos
-        progresso = (pontos / 500) * 100
+        pontos_necessarios = 500
+        pontos_proximo_nivel = 500 - pontos
     elif nivel_atual == 3:
-        pontos_proximo = 1000 - pontos
-        progresso = (pontos / 1000) * 100
+        pontos_necessarios = 1000
+        pontos_proximo_nivel = 1000 - pontos
     elif nivel_atual == 4:
-        pontos_proximo = 5000 - pontos
-        progresso = (pontos / 5000) * 100
+        pontos_necessarios = 5000
+        pontos_proximo_nivel = 5000 - pontos
     else:
-        pontos_proximo = 0
-        progresso = 100
+        pontos_necessarios = pontos
+        pontos_proximo_nivel = 0
+    
+    progresso = (pontos / pontos_necessarios) * 100 if pontos_necessarios > 0 else 100
     
     conn.close()
     
@@ -782,9 +803,9 @@ def get_user_stats(user_id):
         'nivel': nivel_atual,
         'streak': streak,
         'eventos': eventos_participados,
-        'atividades': total_atividades,
+        'desafios': desafios,
         'progresso': min(100, progresso),
-        'pontos_proximo': max(0, pontos_proximo)
+        'pontos_proximo': max(0, pontos_proximo_nivel)
     }
 
 def get_ranking():
@@ -955,9 +976,9 @@ def mostrar_dashboard_usuario(user_id):
             <div class='stat-numero'>Nível {stats['nivel']}</div>
             <div class='stat-label'>{nome_nivel}</div>
             <div class='progresso-container'>
-                <div class='progresso-barra' style='width: {stats['progresso']}%;'></div>
+                <div class='progresso-barra' style='width: {stats['progresso']:.1f}%;'></div>
             </div>
-            <small style='color: #e0e0e0;'>{stats['pontos_proximo']} pts para próximo nível</small>
+            <small style='color: #e0e0e0;'>{max(0, stats['pontos_proximo'])} pts para próximo nível</small>
         </div>
         """, unsafe_allow_html=True)
     
@@ -996,16 +1017,26 @@ def mostrar_eventos_destaque():
     cols = st.columns(3)
     for idx, evento in enumerate(eventos):
         with cols[idx % 3]:
+            # CORREÇÃO: Índices corretos
+            tipo_evento = evento[6]  # tipo
+            vagas = evento[7]        # vagas
+            inscritos = evento[8]     # inscritos
+            pontos = evento[11] if len(evento) > 11 else 100  # pontos_evento
+            
+            # Calcular vagas restantes
+            vagas_restantes = vagas - inscritos if vagas > 0 else "∞"
+            
             st.markdown(f"""
             <div class='card animate-fadeIn'>
-                <span class='badge badge-verde'>{evento[7].upper()}</span>
+                <span class='badge badge-verde'>{tipo_evento.upper()}</span>
                 <h3 style='margin: 15px 0 10px 0;'>{evento[1]}</h3>
                 <p style='color: #e0e0e0; font-size: 14px;'>{evento[2][:100]}...</p>
                 <p><i class='fas fa-calendar' style='color: #8bc34a;'></i> {evento[3]} às {evento[4]}</p>
                 <p><i class='fas fa-map-marker-alt' style='color: #8bc34a;'></i> {evento[5]}</p>
-                <p><i class='fas fa-users' style='color: #8bc34a;'></i> {evento[8]}/{evento[7]} inscritos</p>
-                <div style='margin-top: 15px;'>
-                    <span class='badge badge-verde'><i class='fas fa-star'></i> +{evento[11]} pts</span>
+                <p><i class='fas fa-users' style='color: #8bc34a;'></i> {inscritos}/{vagas} inscritos</p>
+                <div style='display: flex; justify-content: space-between; align-items: center; margin-top: 15px;'>
+                    <span class='badge badge-azul'> {vagas_restantes} vagas</span>
+                    <span class='badge badge-verde'><i class='fas fa-star'></i> +{pontos} pts</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -1020,14 +1051,49 @@ def mostrar_pontos_coleta():
     
     st.markdown("<h2 class='titulo-secao'>📍 Pontos de Coleta</h2>", unsafe_allow_html=True)
     
+    if not pontos:
+        st.info("Nenhum ponto de coleta cadastrado.")
+        return
+    
     # Agrupar por categoria
     categorias = {}
     for ponto in pontos:
-        categoria = ponto[3]
+        categoria = ponto[3]  # categoria
         if categoria not in categorias:
             categorias[categoria] = []
         categorias[categoria].append(ponto)
     
+    # Mostrar estatísticas
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.markdown(f"""
+        <div class='stat-card'>
+            <div class='stat-numero'>{len(pontos)}</div>
+            <div class='stat-label'>Total de Pontos</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+        <div class='stat-card'>
+            <div class='stat-numero'>{len(categorias)}</div>
+            <div class='stat-label'>Categorias</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        avaliacao_media = sum([p[6] for p in pontos]) / len(pontos) if pontos else 0
+        estrelas = "★" * int(avaliacao_media) + "☆" * (5 - int(avaliacao_media))
+        st.markdown(f"""
+        <div class='stat-card'>
+            <div style='color: gold; font-size: 20px;'>{estrelas}</div>
+            <div class='stat-label'>Avaliação Média</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # Mostrar pontos por categoria em expanders
     for categoria, pontos_cat in categorias.items():
         with st.expander(f"📌 {categoria.upper()} ({len(pontos_cat)} pontos)"):
             cols = st.columns(2)
@@ -1041,7 +1107,7 @@ def mostrar_pontos_coleta():
                         <p><i class='fas fa-clock' style='color: #8bc34a;'></i> {ponto[4]}</p>
                         <p><i class='fas fa-phone' style='color: #8bc34a;'></i> {ponto[5]}</p>
                         <p style='color: #e0e0e0; font-size: 12px;'>{ponto[7]}</p>
-                        <div style='display: flex; justify-content: space-between; align-items: center;'>
+                        <div style='display: flex; justify-content: space-between; align-items: center; margin-top: 10px;'>
                             <div style='color: gold;'>{estrelas}</div>
                             <span class='badge badge-verde'>{ponto[6]}/5.0</span>
                         </div>
