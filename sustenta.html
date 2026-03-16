@@ -1199,12 +1199,12 @@
             document.getElementById('paneCadastro').classList.toggle('active', tab === 'cadastro');
         }
 
-        function mostrarAlerta(tipo, mensaje) {
+        function mostrarAlerta(tipo, mensagem) {
             const alertArea = document.getElementById('alertArea');
             alertArea.innerHTML = `
                 <div class="alert alert-${tipo}">
                     <i class="fas ${tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
-                    <span>${mensaje}</span>
+                    <span>${mensagem}</span>
                 </div>
             `;
             setTimeout(() => alertArea.innerHTML = '', 5000);
