@@ -984,68 +984,28 @@
     </div>
 
     <script>
+        // ========== CONFIGURAÇÃO SHEETDB ==========
+        const SHEETDB_URL = 'https://sheetdb.io/api/v1/pxcozyw0d91x8';
+        
         // ========== DADOS ==========
         
-        // Usuários exemplo com a conta ADMIN do Pedro Graciano
-        const usuarios = [
-            { 
-                id: 1, 
-                nome: "João Silva", 
-                email: "joao@email.com", 
-                senha: "123456", 
-                telefone: "(19) 99999-1234", 
-                cidade: "Piracicaba",
-                data_cadastro: "10/01/2026",
-                pontos: 2350, 
-                nivel: "🌳 EcoMestre", 
-                streak: 45, 
-                desafios: 28,
-                conquistas: ["Primeiro passo", "Reciclador", "Plantador", "Top 10"]
-            },
-            { 
-                id: 2, 
-                nome: "Maria Santos", 
-                email: "maria@email.com", 
-                senha: "123456", 
-                telefone: "(19) 98888-5678",
-                cidade: "Piracicaba",
-                data_cadastro: "15/01/2026",
-                pontos: 3520, 
-                nivel: "🏆 EcoHerói", 
-                streak: 67, 
-                desafios: 42,
-                conquistas: ["Primeiro passo", "Reciclador", "Eventos", "Streak 30"]
-            },
-            { 
-                id: 3, 
-                nome: "Pedro Graciano", 
-                email: "pedrohenriquemarques720@gmail.com", 
-                senha: "Liz1808#", 
-                telefone: "(19) 99465-7370", 
-                cidade: "Piracicaba",
-                data_cadastro: "14/03/2026",
-                pontos: 5000, 
-                nivel: "Administrador", 
-                streak: 99, 
-                desafios: 50,
-                conquistas: ["Fundador", "Mestre da Reciclagem", "Guardião da Natureza", "Lenda", "Admin"]
-            },
-        ];
-
+        // Usuários exemplo (serão carregados da planilha)
+        let usuarios = [];
+        
         // ========== DESAFIOS AMPLIADOS (12 desafios) ==========
         const desafios = [
-            { id: 1, titulo: "", descricao: "Recicle 10kg de materiais recicláveis", pontos: 200, icone: "♻️", tipo: "reciclagem", dica: "Tire foto dos materiais na balança" },
-            { id: 2, titulo: "", descricao: "Participe de 1 evento ambiental", pontos: 150, icone: "📅", tipo: "evento", dica: "Tire foto no local do evento" },
-            { id: 3, titulo: "", descricao: "Plante 1 árvore nativa", pontos: 300, icone: "🌳", tipo: "plantio", dica: "Tire foto da muda plantada" },
-            { id: 4, titulo: "", descricao: "Descarte 10 pilhas em ponto de coleta", pontos: 150, icone: "🔋", tipo: "pilhas", dica: "Tire foto das pilhas no ponto" },
-            { id: 5, titulo: "", descricao: "Use bicicleta em vez de carro 5 vezes", pontos: 250, icone: "🚲", tipo: "mobilidade", dica: "Compartilhe seu trajeto" },
-            { id: 6, titulo: "", descricao: "Doe 10kg de alimentos não perecíveis", pontos: 280, icone: "🥫", tipo: "doacao", dica: "Foto dos alimentos no local" },
-            { id: 7, titulo: "", descricao: "Doe 15 peças de roupa", pontos: 200, icone: "👕", tipo: "roupas", dica: "Foto das roupas doadas" },
-            { id: 8, titulo: "", descricao: "Reduza consumo em 20% por 1 mês", pontos: 400, icone: "💧", tipo: "agua", dica: "Compartilhe sua conta" },
-            { id: 9, titulo: "", descricao: "Instale placa solar ou use energia limpa", pontos: 500, icone: "☀️", tipo: "energia", dica: "Foto da instalação" },
-            { id: 10, titulo: "", descricao: "Inicie uma composteira doméstica", pontos: 350, icone: "🌱", tipo: "compostagem", dica: "Foto da sua composteira" },
-            { id: 11, titulo: "", descricao: "Palestre sobre sustentabilidade", pontos: 450, icone: "📚", tipo: "educacao", dica: "Foto do evento" },
-            { id: 12, titulo: "", descricao: "Convide 5 amigos para o app", pontos: 300, icone: "🏆", tipo: "social", dica: "Compartilhe seu código" },
+            { id: 1, titulo: "♻️ Reciclar 10kg", descricao: "Recicle 10kg de materiais recicláveis", pontos: 200, icone: "♻️", tipo: "reciclagem", dica: "Tire foto dos materiais na balança" },
+            { id: 2, titulo: "📅 Participar de Evento", descricao: "Participe de 1 evento ambiental", pontos: 150, icone: "📅", tipo: "evento", dica: "Tire foto no local do evento" },
+            { id: 3, titulo: "🌳 Plantar Árvore", descricao: "Plante 1 árvore nativa", pontos: 300, icone: "🌳", tipo: "plantio", dica: "Tire foto da muda plantada" },
+            { id: 4, titulo: "🔋 Descartar Pilhas", descricao: "Descarte 10 pilhas em ponto de coleta", pontos: 150, icone: "🔋", tipo: "pilhas", dica: "Tire foto das pilhas no ponto" },
+            { id: 5, titulo: "🚲 Usar Bike 5x", descricao: "Use bicicleta em vez de carro 5 vezes", pontos: 250, icone: "🚲", tipo: "mobilidade", dica: "Compartilhe seu trajeto" },
+            { id: 6, titulo: "🥫 Doar Alimentos", descricao: "Doe 10kg de alimentos não perecíveis", pontos: 280, icone: "🥫", tipo: "doacao", dica: "Foto dos alimentos no local" },
+            { id: 7, titulo: "👕 Doar Roupas", descricao: "Doe 15 peças de roupa", pontos: 200, icone: "👕", tipo: "roupas", dica: "Foto das roupas doadas" },
+            { id: 8, titulo: "💧 Economizar Água", descricao: "Reduza consumo em 20% por 1 mês", pontos: 400, icone: "💧", tipo: "agua", dica: "Compartilhe sua conta" },
+            { id: 9, titulo: "⚡ Energia Solar", descricao: "Instale placa solar ou use energia limpa", pontos: 500, icone: "☀️", tipo: "energia", dica: "Foto da instalação" },
+            { id: 10, titulo: "🌱 Compostagem", descricao: "Inicie uma composteira doméstica", pontos: 350, icone: "🌱", tipo: "compostagem", dica: "Foto da sua composteira" },
+            { id: 11, titulo: "📚 Educador Ambiental", descricao: "Palestre sobre sustentabilidade", pontos: 450, icone: "📚", tipo: "educacao", dica: "Foto do evento" },
+            { id: 12, titulo: "🏆 EcoLíder", descricao: "Convide 5 amigos para o app", pontos: 300, icone: "🏆", tipo: "social", dica: "Compartilhe seu código" },
         ];
 
         // ========== EVENTOS PIRACICABA 2026 (TODOS OS MESES) ==========
@@ -1172,6 +1132,64 @@
         let inscricoesUsuario = [];
         let comprovantesHoje = [];
 
+        // ========== FUNÇÕES DE INICIALIZAÇÃO ==========
+        
+        // Carregar usuários da planilha ao iniciar
+        async function carregarUsuarios() {
+            try {
+                const response = await fetch(SHEETDB_URL);
+                usuarios = await response.json();
+                console.log('Usuários carregados:', usuarios.length);
+            } catch (error) {
+                console.error('Erro ao carregar usuários:', error);
+                // Dados iniciais caso a planilha esteja vazia
+                usuarios = [
+                    { 
+                        nome: "João Silva", 
+                        email: "joao@email.com", 
+                        senha: "123456", 
+                        telefone: "(19) 99999-1234", 
+                        cidade: "Piracicaba",
+                        data_cadastro: "10/01/2026",
+                        pontos: "2350", 
+                        nivel: "🌳 EcoMestre", 
+                        streak: "45", 
+                        desafios: "28",
+                        conquistas: "Primeiro passo,Reciclador,Plantador,Top 10"
+                    },
+                    { 
+                        nome: "Maria Santos", 
+                        email: "maria@email.com", 
+                        senha: "123456", 
+                        telefone: "(19) 98888-5678",
+                        cidade: "Piracicaba",
+                        data_cadastro: "15/01/2026",
+                        pontos: "3520", 
+                        nivel: "🏆 EcoHerói", 
+                        streak: "67", 
+                        desafios: "42",
+                        conquistas: "Primeiro passo,Reciclador,Eventos,Streak 30"
+                    },
+                    { 
+                        nome: "Pedro Graciano", 
+                        email: "pedrohenriquemarques720@gmail.com", 
+                        senha: "Liz1808#", 
+                        telefone: "(19) 99465-7370", 
+                        cidade: "Piracicaba",
+                        data_cadastro: "14/03/2026",
+                        pontos: "5000", 
+                        nivel: "Administrador", 
+                        streak: "99", 
+                        desafios: "50",
+                        conquistas: "Fundador,Mestre da Reciclagem,Guardião da Natureza,Lenda,Admin"
+                    },
+                ];
+            }
+        }
+
+        // Chamar carregamento inicial
+        carregarUsuarios();
+
         // ========== FUNÇÕES DE LOGIN ==========
 
         function switchTab(tab) {
@@ -1181,18 +1199,18 @@
             document.getElementById('paneCadastro').classList.toggle('active', tab === 'cadastro');
         }
 
-        function mostrarAlerta(tipo, mensagem) {
+        function mostrarAlerta(tipo, mensaje) {
             const alertArea = document.getElementById('alertArea');
             alertArea.innerHTML = `
                 <div class="alert alert-${tipo}">
                     <i class="fas ${tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
-                    <span>${mensagem}</span>
+                    <span>${mensaje}</span>
                 </div>
             `;
             setTimeout(() => alertArea.innerHTML = '', 5000);
         }
 
-        function handleLogin(event) {
+        async function handleLogin(event) {
             event.preventDefault();
             const email = document.getElementById('loginEmail').value;
             const senha = document.getElementById('loginSenha').value;
@@ -1201,8 +1219,12 @@
             btn.innerHTML = '<span class="spinner"></span> Entrando...';
             btn.disabled = true;
 
-            setTimeout(() => {
-                const usuario = usuarios.find(u => u.email === email && u.senha === senha);
+            try {
+                // Buscar usuário na SheetDB
+                const response = await fetch(`${SHEETDB_URL}/search?email=${email}`);
+                const usuariosEncontrados = await response.json();
+                
+                const usuario = usuariosEncontrados.find(u => u.senha === senha);
                 
                 if (usuario) {
                     usuarioLogado = usuario;
@@ -1219,23 +1241,32 @@
                     btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Entrar no SustentaPira';
                     btn.disabled = false;
                 }
-            }, 1500);
+            } catch (error) {
+                mostrarAlerta('error', 'Erro ao conectar com o servidor');
+                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Entrar no SustentaPira';
+                btn.disabled = false;
+            }
         }
 
-        function handleCadastro(event) {
+        async function handleCadastro(event) {
             event.preventDefault();
             
             const nome = document.getElementById('cadastroNome').value;
             const email = document.getElementById('cadastroEmail').value;
             const senha = document.getElementById('cadastroSenha').value;
             const confirmar = document.getElementById('cadastroConfirmar').value;
+            const telefone = document.getElementById('cadastroTelefone').value;
 
             if (senha !== confirmar) {
                 mostrarAlerta('error', 'As senhas não coincidem!');
                 return;
             }
 
-            if (usuarios.some(u => u.email === email)) {
+            // Verificar se email já existe
+            const response = await fetch(`${SHEETDB_URL}/search?email=${email}`);
+            const usuariosExistentes = await response.json();
+            
+            if (usuariosExistentes.length > 0) {
                 mostrarAlerta('error', 'E-mail já cadastrado!');
                 return;
             }
@@ -1244,35 +1275,53 @@
             btn.innerHTML = '<span class="spinner"></span> Criando conta...';
             btn.disabled = true;
 
-            setTimeout(() => {
-                const novoUsuario = {
-                    id: usuarios.length + 1,
-                    nome: nome,
-                    email: email,
-                    senha: senha,
-                    telefone: document.getElementById('cadastroTelefone').value,
-                    cidade: "Piracicaba",
-                    data_cadastro: new Date().toLocaleDateString('pt-BR'),
-                    pontos: 0,
-                    nivel: "🌱 EcoIniciante",
-                    streak: 1,
-                    desafios: 0,
-                    conquistas: ["🌱 Primeiro passo"]
-                };
+            const novoUsuario = {
+                nome: nome,
+                email: email,
+                senha: senha,
+                telefone: telefone || '',
+                cidade: "Piracicaba",
+                data_cadastro: new Date().toLocaleDateString('pt-BR'),
+                pontos: "0",
+                nivel: "🌱 EcoIniciante",
+                streak: "1",
+                desafios: "0",
+                conquistas: "🌱 Primeiro passo"
+            };
 
-                usuarios.push(novoUsuario);
-                mostrarAlerta('success', 'Conta criada com sucesso! Faça o login.');
+            try {
+                // Salvar na SheetDB
+                const saveResponse = await fetch(SHEETDB_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: [novoUsuario] })
+                });
+
+                const resultado = await saveResponse.json();
                 
-                btn.innerHTML = '<i class="fas fa-user-plus"></i> Criar minha conta';
-                btn.disabled = false;
-                
-                document.getElementById('cadastroNome').value = '';
-                document.getElementById('cadastroEmail').value = '';
-                document.getElementById('cadastroSenha').value = '';
-                document.getElementById('cadastroConfirmar').value = '';
-                
-                switchTab('login');
-            }, 1500);
+                if (resultado.created) {
+                    mostrarAlerta('success', 'Conta criada com sucesso! Faça o login.');
+                    
+                    // Limpar formulário
+                    document.getElementById('cadastroNome').value = '';
+                    document.getElementById('cadastroEmail').value = '';
+                    document.getElementById('cadastroTelefone').value = '';
+                    document.getElementById('cadastroSenha').value = '';
+                    document.getElementById('cadastroConfirmar').value = '';
+                    
+                    // Recarregar usuários
+                    await carregarUsuarios();
+                    
+                    switchTab('login');
+                } else {
+                    mostrarAlerta('error', 'Erro ao criar conta');
+                }
+            } catch (error) {
+                mostrarAlerta('error', 'Erro ao conectar com o servidor');
+            }
+
+            btn.innerHTML = '<i class="fas fa-user-plus"></i> Criar minha conta';
+            btn.disabled = false;
         }
 
         function esqueciSenha(event) {
@@ -1361,11 +1410,14 @@
         function renderPerfil(container) {
             if (!usuarioLogado) return;
             
-            const pontosProximoNivel = usuarioLogado.pontos < 5000 ? 5000 - usuarioLogado.pontos : 0;
-            const porcentagemProgresso = Math.min(100, (usuarioLogado.pontos / 5000) * 100);
+            const pontos = parseInt(usuarioLogado.pontos) || 0;
+            const pontosProximoNivel = pontos < 5000 ? 5000 - pontos : 0;
+            const porcentagemProgresso = Math.min(100, (pontos / 5000) * 100);
+            
+            const conquistasArray = usuarioLogado.conquistas ? usuarioLogado.conquistas.split(',') : [];
             
             let conquistasHtml = '';
-            usuarioLogado.conquistas.forEach(conquista => {
+            conquistasArray.forEach(conquista => {
                 conquistasHtml += `
                     <div class="conquista-item">
                         <i class="fas fa-medal" style="color: #8b4513;"></i>
@@ -1383,7 +1435,7 @@
                     </div>
                     <div class="perfil-info">
                         <h3>${usuarioLogado.nome}</h3>
-                        <p><i class="fas fa-map-marker-alt" style="color: #8b4513;"></i> ${usuarioLogado.cidade}</p>
+                        <p><i class="fas fa-map-marker-alt" style="color: #8b4513;"></i> ${usuarioLogado.cidade || 'Piracicaba'}</p>
                         <p><i class="fas fa-calendar-alt" style="color: #8b4513;"></i> Membro desde ${usuarioLogado.data_cadastro}</p>
                         <p><i class="fas fa-envelope" style="color: #8b4513;"></i> ${usuarioLogado.email}</p>
                         <p><i class="fas fa-phone" style="color: #8b4513;"></i> ${usuarioLogado.telefone || 'Não informado'}</p>
@@ -1692,14 +1744,18 @@
             const desafio = desafios.find(d => d.id === desafioId);
             
             // Simular validação
-            usuarioLogado.pontos += desafio.pontos;
-            usuarioLogado.desafios += 1;
+            const pontosAtuais = parseInt(usuarioLogado.pontos) || 0;
+            usuarioLogado.pontos = (pontosAtuais + desafio.pontos).toString();
+            
+            const desafiosAtuais = parseInt(usuarioLogado.desafios) || 0;
+            usuarioLogado.desafios = (desafiosAtuais + 1).toString();
             
             // Atualizar nível
-            if (usuarioLogado.pontos >= 5000) usuarioLogado.nivel = "🏆 EcoHerói";
-            else if (usuarioLogado.pontos >= 1000) usuarioLogado.nivel = "🌳 EcoMestre";
-            else if (usuarioLogado.pontos >= 500) usuarioLogado.nivel = "🍃 EcoGuardião";
-            else if (usuarioLogado.pontos >= 100) usuarioLogado.nivel = "🌿 EcoAmigo";
+            const pontos = parseInt(usuarioLogado.pontos);
+            if (pontos >= 5000) usuarioLogado.nivel = "🏆 EcoHerói";
+            else if (pontos >= 1000) usuarioLogado.nivel = "🌳 EcoMestre";
+            else if (pontos >= 500) usuarioLogado.nivel = "🍃 EcoGuardião";
+            else if (pontos >= 100) usuarioLogado.nivel = "🌿 EcoAmigo";
             
             atualizarUserInfo();
             
