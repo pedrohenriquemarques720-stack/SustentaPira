@@ -11,6 +11,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
+    <!-- Biblioteca para decodificar JWT (opcional, mas recomendado) -->
+    <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -307,11 +310,23 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+            position: relative;
+            z-index: 10;
         }
 
         .btn-social:hover {
             border-color: #8b4513;
             background: #F5F5F5;
+        }
+
+        /* Estilo para o botão do Google personalizado */
+        .btn-social.google {
+            background: #FFFFFF;
+            color: #5d3a1a;
+        }
+
+        .btn-social.google i {
+            color: #DB4437;
         }
 
         .benefits {
@@ -774,6 +789,14 @@
                 font-size: 22px;
             }
         }
+
+        /* Estilo para o botão do Google quando renderizado */
+        .btn-social.google .nsm7Bb-HzV7m-LgbsSe {
+            width: 100% !important;
+            min-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
     </style>
 </head>
 <body>
@@ -897,10 +920,10 @@
                 </div>
 
                 <div class="social-buttons">
-                    <button class="btn-social google" onclick="socialLogin('google')">
+                    <div class="btn-social google" id="googleButton">
                         <i class="fab fa-google"></i>
-                        Google
-                    </button>
+                        <span>Google</span>
+                    </div>
                     <button class="btn-social facebook" onclick="socialLogin('facebook')">
                         <i class="fab fa-facebook-f"></i>
                         Facebook
@@ -986,6 +1009,10 @@
     <script>
         // ========== CONFIGURAÇÃO SHEETDB ==========
         const SHEETDB_URL = 'https://sheetdb.io/api/v1/pxcozyw0d91x8';
+        
+        // ========== CONFIGURAÇÃO GOOGLE LOGIN ==========
+        // SUBSTITUA PELO SEU CLIENT ID DO GOOGLE CLOUD CONSOLE
+        const GOOGLE_CLIENT_ID = 'SEU_CLIENT_ID_GOOGLE.apps.googleusercontent.com';
         
         // ========== DADOS ==========
         
@@ -1187,8 +1214,134 @@
             }
         }
 
+        // ========== FUNÇÕES DO GOOGLE LOGIN ==========
+        
+        // Função para carregar o script do Google
+        function loadGoogleScript() {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://accounts.google.com/gsi/client';
+                script.async = true;
+                script.defer = true;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        // Inicializar Google Login
+        async function initGoogleLogin() {
+            try {
+                await loadGoogleScript();
+                
+                window.google.accounts.id.initialize({
+                    client_id: GOOGLE_CLIENT_ID,
+                    callback: handleGoogleCredential,
+                    auto_select: false,
+                    cancel_on_tap_outside: true,
+                    context: 'signin'
+                });
+
+                // Renderizar o botão do Google
+                window.google.accounts.id.renderButton(
+                    document.getElementById('googleButton'),
+                    {
+                        theme: 'outline',
+                        size: 'large',
+                        text: 'continue_with',
+                        shape: 'rectangular',
+                        width: '100%',
+                        logo_alignment: 'left'
+                    }
+                );
+            } catch (error) {
+                console.error('Erro ao carregar Google:', error);
+                // Fallback para clique manual
+                document.getElementById('googleButton').addEventListener('click', () => {
+                    if (window.google?.accounts?.id) {
+                        window.google.accounts.id.prompt();
+                    } else {
+                        mostrarAlerta('error', 'Erro ao carregar Google Login. Tente novamente.');
+                    }
+                });
+            }
+        }
+
+        // Processar resposta do Google
+        async function handleGoogleCredential(response) {
+            const btn = document.querySelector('.btn-social.google');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner"></span> Conectando...';
+            btn.style.pointerEvents = 'none';
+
+            try {
+                // Decodificar o token JWT
+                const decoded = jwt_decode(response.credential);
+                
+                // Verificar se usuário existe na SheetDB
+                const checkResponse = await fetch(`${SHEETDB_URL}/search?email=${decoded.email}`);
+                const existingUsers = await checkResponse.json();
+                
+                if (existingUsers.length > 0) {
+                    // Usuário já existe - fazer login
+                    usuarioLogado = existingUsers[0];
+                    mostrarAlerta('success', `Bem-vindo de volta, ${decoded.name}!`);
+                } else {
+                    // Criar novo usuário
+                    const novoUsuario = {
+                        nome: decoded.name,
+                        email: decoded.email,
+                        senha: '', // Google users don't need password
+                        telefone: '',
+                        cidade: 'Piracicaba',
+                        data_cadastro: new Date().toLocaleDateString('pt-BR'),
+                        pontos: '0',
+                        nivel: '🌱 EcoIniciante',
+                        streak: '1',
+                        desafios: '0',
+                        conquistas: '🌱 Primeiro passo'
+                    };
+
+                    const saveResponse = await fetch(SHEETDB_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ data: [novoUsuario] })
+                    });
+
+                    const result = await saveResponse.json();
+                    
+                    if (result.created) {
+                        usuarioLogado = novoUsuario;
+                        mostrarAlerta('success', `Bem-vindo ao SustentaPira, ${decoded.name}!`);
+                        
+                        // Recarregar lista de usuários
+                        await carregarUsuarios();
+                    } else {
+                        throw new Error('Erro ao criar usuário');
+                    }
+                }
+
+                // Atualizar interface
+                setTimeout(() => {
+                    document.getElementById('loginScreen').classList.add('hidden');
+                    document.getElementById('appScreen').classList.remove('hidden');
+                    atualizarUserInfo();
+                    renderAppContent();
+                }, 1500);
+
+            } catch (error) {
+                console.error('Erro no Google Login:', error);
+                mostrarAlerta('error', 'Erro ao fazer login com Google. Tente novamente.');
+                btn.innerHTML = originalText;
+                btn.style.pointerEvents = 'auto';
+            }
+        }
+
         // Chamar carregamento inicial
         carregarUsuarios();
+
+        // Inicializar Google Login quando a página carregar
+        document.addEventListener('DOMContentLoaded', initGoogleLogin);
 
         // ========== FUNÇÕES DE LOGIN ==========
 
@@ -1330,7 +1483,14 @@
         }
 
         function socialLogin(provider) {
-            mostrarAlerta('info', `Login com ${provider} será implementado em breve!`);
+            if (provider === 'google') {
+                // O botão do Google já está configurado via DOMContentLoaded
+                if (window.google?.accounts?.id) {
+                    window.google.accounts.id.prompt();
+                }
+            } else if (provider === 'facebook') {
+                mostrarAlerta('info', 'Login com Facebook será implementado em breve!');
+            }
         }
 
         function logout() {
