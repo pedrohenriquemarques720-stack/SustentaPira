@@ -33,7 +33,8 @@ html_content = carregar_html()
 # Se o HTML foi carregado com sucesso, exibe no Streamlit
 if html_content:
     # Injetar CSS personalizado para o Streamlit
-    st.markdown("""
+    st.markdown(
+        """
         <style>
             /* Remover padding e margin padrão do Streamlit */
             .main > div {
@@ -63,7 +64,9 @@ if html_content:
                 z-index: 999999 !important;
             }
         </style>
-    """, unsafe_allow_html=True)
+        """,
+        unsafe_allow_html=True
+    )
     
     # Exibir o HTML em um iframe para ocupar a tela inteira
     st.components.v1.html(
@@ -82,7 +85,7 @@ else:
     2. O arquivo deve conter todo o código do seu app SustentaPira
     3. Após colocar o arquivo, reinicie o Streamlit
     
-    **Caminho esperado:** `{}`
+    **Caminho esperado:** {}
     
     ---
     
