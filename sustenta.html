@@ -20,8 +20,8 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #0a1f17 0%, #1a4a3a 100%);
-            color: #FFFFFF;
+            background: #FFFFFF;
+            color: #5d3a1a;
             min-height: 100vh;
             transition: background 0.3s ease;
         }
@@ -37,7 +37,7 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
-            background: linear-gradient(135deg, #0a1f17 0%, #1a4a3a 100%);
+            background: #FFFFFF;
             z-index: 1000;
             transition: opacity 0.5s ease, visibility 0.5s ease;
             overflow-y: auto;
@@ -55,11 +55,11 @@
         }
 
         .auth-card {
-            background: linear-gradient(145deg, #1a3329 0%, #1f4035 100%);
+            background: #F5F5F5;
             border-radius: 32px;
             padding: 40px 30px;
-            border: 1px solid rgba(139, 195, 74, 0.2);
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            border: 1px solid #8b5a2b;
+            box-shadow: 0 10px 30px rgba(93, 58, 26, 0.1);
             backdrop-filter: blur(10px);
             animation: fadeInUp 0.6s ease forwards;
         }
@@ -95,14 +95,14 @@
         .logo-area h1 {
             font-size: 36px;
             font-weight: 700;
-            background: linear-gradient(135deg, #8bc34a, #4caf50);
+            background: linear-gradient(135deg, #8b4513, #b85e3a);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 5px;
         }
 
         .logo-area p {
-            color: #8bc34a;
+            color: #8b4513;
             font-size: 14px;
             letter-spacing: 2px;
             text-transform: uppercase;
@@ -112,7 +112,7 @@
             display: flex;
             gap: 10px;
             margin-bottom: 30px;
-            background: rgba(0, 0, 0, 0.2);
+            background: #3a2a1a;
             padding: 5px;
             border-radius: 60px;
         }
@@ -122,8 +122,8 @@
             padding: 15px 20px;
             border: none;
             background: transparent;
-            color: #e0e0e0;
-            font-weight: 600;
+            color: #FFFFFF;
+            font-weight: 700;
             font-size: 16px;
             border-radius: 50px;
             cursor: pointer;
@@ -136,12 +136,18 @@
 
         .auth-tab i {
             font-size: 18px;
+            color: #FFFFFF;
         }
 
         .auth-tab.active {
-            background: linear-gradient(135deg, #8bc34a 0%, #4caf50 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(139, 195, 74, 0.3);
+            background: #8b4513;
+            color: #FFFFFF;
+            font-weight: 800;
+            box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
+        }
+
+        .auth-tab.active i {
+            color: #FFFFFF;
         }
 
         .auth-pane {
@@ -171,7 +177,7 @@
         .form-group label {
             display: block;
             margin-bottom: 8px;
-            color: #e0e0e0;
+            color: #5d3a1a;
             font-weight: 500;
             font-size: 14px;
         }
@@ -185,32 +191,32 @@
         .input-icon {
             position: absolute;
             left: 16px;
-            color: #8bc34a;
+            color: #8b4513;
             font-size: 16px;
         }
 
         .form-group input {
             width: 100%;
             padding: 15px 15px 15px 48px;
-            background: rgba(10, 31, 23, 0.6);
-            border: 2px solid rgba(139, 195, 74, 0.2);
+            background: #FFFFFF;
+            border: 2px solid #8b5a2b;
             border-radius: 16px;
-            color: white;
+            color: #5d3a1a;
             font-size: 16px;
             transition: all 0.3s ease;
         }
 
         .form-group input:focus {
             outline: none;
-            border-color: #8bc34a;
-            box-shadow: 0 0 0 4px rgba(139, 195, 74, 0.1);
-            background: rgba(10, 31, 23, 0.8);
+            border-color: #8b4513;
+            box-shadow: 0 0 0 4px rgba(139, 69, 19, 0.1);
+            background: #FFFFFF;
         }
 
         .btn-auth {
             width: 100%;
             padding: 16px;
-            background: linear-gradient(135deg, #8bc34a 0%, #4caf50 100%);
+            background: linear-gradient(135deg, #8b4513, #b85e3a);
             border: none;
             border-radius: 16px;
             color: white;
@@ -218,7 +224,7 @@
             font-size: 16px;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(139, 195, 74, 0.3);
+            box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -228,7 +234,7 @@
 
         .btn-auth:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(139, 195, 74, 0.5);
+            box-shadow: 0 6px 20px rgba(139, 69, 19, 0.5);
         }
 
         .checkbox-group {
@@ -241,7 +247,11 @@
         .checkbox-group input[type="checkbox"] {
             width: 20px;
             height: 20px;
-            accent-color: #8bc34a;
+            accent-color: #8b4513;
+        }
+
+        .checkbox-group label {
+            color: #5d3a1a;
         }
 
         .auth-links {
@@ -250,9 +260,10 @@
         }
 
         .auth-links a {
-            color: #8bc34a;
+            color: #8b4513;
             text-decoration: none;
             font-size: 14px;
+            font-weight: 600;
         }
 
         .divider {
@@ -267,12 +278,12 @@
             content: '';
             flex: 1;
             height: 1px;
-            background: linear-gradient(90deg, transparent, #8bc34a, transparent);
+            background: linear-gradient(90deg, transparent, #8b4513, transparent);
         }
 
         .divider span {
             padding: 0 15px;
-            color: #8bc34a;
+            color: #8b4513;
             font-size: 14px;
         }
 
@@ -285,10 +296,10 @@
 
         .btn-social {
             padding: 12px;
-            border: 2px solid rgba(139, 195, 74, 0.2);
-            background: rgba(10, 31, 23, 0.6);
+            border: 2px solid #8b5a2b;
+            background: #FFFFFF;
             border-radius: 16px;
-            color: white;
+            color: #5d3a1a;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -299,8 +310,8 @@
         }
 
         .btn-social:hover {
-            border-color: #8bc34a;
-            background: rgba(10, 31, 23, 0.8);
+            border-color: #8b4513;
+            background: #F5F5F5;
         }
 
         .benefits {
@@ -309,8 +320,9 @@
             gap: 15px;
             margin: 30px 0 0;
             padding: 20px;
-            background: rgba(10, 31, 23, 0.4);
+            background: #F5F5F5;
             border-radius: 24px;
+            border: 1px solid #8b5a2b;
         }
 
         .benefit-item {
@@ -319,14 +331,15 @@
 
         .benefit-item i {
             font-size: 24px;
-            color: #8bc34a;
+            color: #8b4513;
             margin-bottom: 8px;
         }
 
         .benefit-item span {
             display: block;
             font-size: 12px;
-            color: #e0e0e0;
+            color: #5d3a1a;
+            font-weight: 600;
         }
 
         .alert {
@@ -334,14 +347,15 @@
             border-radius: 16px;
             margin: 20px 0;
             border-left: 4px solid;
-            background: rgba(26, 51, 41, 0.9);
+            background: #F5F5F5;
             display: flex;
             align-items: center;
             gap: 10px;
+            color: #5d3a1a;
         }
 
         .alert-success {
-            border-left-color: #8bc34a;
+            border-left-color: #8b4513;
         }
 
         .alert-error {
@@ -351,8 +365,8 @@
         .spinner {
             width: 20px;
             height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-top-color: white;
+            border: 3px solid rgba(139, 69, 19, 0.3);
+            border-top-color: #8b4513;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             display: inline-block;
@@ -389,10 +403,11 @@
         }
 
         .user-info-card {
-            background: linear-gradient(145deg, #1a3329 0%, #1f4035 100%);
+            background: #F5F5F5;
             border-radius: 24px;
             padding: 20px;
-            border: 1px solid rgba(139, 195, 74, 0.2);
+            border: 1px solid #8b5a2b;
+            box-shadow: 0 5px 20px rgba(93, 58, 26, 0.1);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -409,21 +424,23 @@
         .user-avatar {
             width: 60px;
             height: 60px;
-            background: linear-gradient(135deg, #8bc34a, #4caf50);
+            background: linear-gradient(135deg, #8b4513, #b85e3a);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 28px;
+            color: white;
         }
 
         .user-info h2 {
             font-size: 22px;
             margin-bottom: 5px;
+            color: #3a2a1a;
         }
 
         .user-info p {
-            color: #8bc34a;
+            color: #8b4513;
             font-size: 14px;
             font-weight: 600;
         }
@@ -442,17 +459,18 @@
         .stat-value {
             font-size: 28px;
             font-weight: 700;
-            color: #8bc34a;
+            color: #8b4513;
         }
 
         .stat-label {
             font-size: 12px;
-            color: #e0e0e0;
+            color: #5d3a1a;
             text-transform: uppercase;
+            font-weight: 600;
         }
 
         .logout-btn {
-            background: rgba(244, 67, 54, 0.2);
+            background: rgba(244, 67, 54, 0.1);
             border: 1px solid #f44336;
             color: #f44336;
             padding: 10px 20px;
@@ -476,7 +494,7 @@
             gap: 10px;
             margin-bottom: 30px;
             flex-wrap: wrap;
-            background: rgba(0, 0, 0, 0.2);
+            background: #3a2a1a;
             padding: 10px;
             border-radius: 60px;
         }
@@ -485,18 +503,19 @@
             padding: 12px 24px;
             background: transparent;
             border: none;
-            color: #e0e0e0;
+            color: #FFFFFF;
             border-radius: 50px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.3s ease;
             font-size: 14px;
         }
 
         .app-tab.active {
-            background: linear-gradient(135deg, #8bc34a 0%, #4caf50 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(139, 195, 74, 0.3);
+            background: #8b4513;
+            color: #FFFFFF;
+            font-weight: 800;
+            box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
         }
 
         .app-tab-content {
@@ -509,19 +528,20 @@
 
         /* Cards */
         .card-moderno {
-            background: linear-gradient(145deg, #1a3329 0%, #1f4035 100%);
+            background: #F5F5F5;
             border-radius: 24px;
             padding: 25px;
-            border: 1px solid rgba(139, 195, 74, 0.2);
-            box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5);
+            border: 1px solid #8b5a2b;
+            box-shadow: 0 5px 20px rgba(93, 58, 26, 0.1);
             transition: transform 0.3s ease;
-            color: white;
+            color: #5d3a1a;
             margin-bottom: 20px;
         }
 
         .card-moderno:hover {
             transform: translateY(-5px);
-            border-color: rgba(139, 195, 74, 0.5);
+            border-color: #8b4513;
+            box-shadow: 0 8px 25px rgba(139, 69, 19, 0.15);
         }
 
         .card-grid {
@@ -565,6 +585,7 @@
             margin-bottom: 30px;
             position: relative;
             padding-bottom: 15px;
+            color: #3a2a1a;
         }
 
         .titulo-secao:after {
@@ -574,7 +595,7 @@
             left: 0;
             width: 60px;
             height: 4px;
-            background: linear-gradient(90deg, #8bc34a, #4caf50);
+            background: linear-gradient(90deg, #8b4513, #b85e3a);
             border-radius: 2px;
         }
 
@@ -590,23 +611,30 @@
         .perfil-avatar-large {
             width: 100px;
             height: 100px;
-            background: linear-gradient(135deg, #8bc34a, #2e7d32);
+            background: linear-gradient(135deg, #8b4513, #b85e3a);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 48px;
-            border: 3px solid #8bc34a;
+            border: 3px solid #8b4513;
+            color: white;
         }
 
         .perfil-info h3 {
             font-size: 28px;
             margin-bottom: 10px;
+            color: #3a2a1a;
+        }
+
+        .perfil-info p {
+            color: #5d3a1a;
+            margin: 5px 0;
         }
 
         .perfil-level-box {
-            background: rgba(139, 195, 74, 0.1);
-            border: 1px solid #8bc34a;
+            background: #F5F5F5;
+            border: 1px solid #8b5a2b;
             border-radius: 16px;
             padding: 20px;
             margin-bottom: 20px;
@@ -614,7 +642,7 @@
 
         .progress-bar {
             height: 10px;
-            background: #2a4a3a;
+            background: #e0d5c0;
             border-radius: 5px;
             margin: 15px 0;
             overflow: hidden;
@@ -622,7 +650,7 @@
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #8bc34a, #4caf50);
+            background: linear-gradient(90deg, #8b4513, #b85e3a);
             border-radius: 5px;
             transition: width 0.3s ease;
         }
@@ -635,7 +663,8 @@
         }
 
         .conquista-item {
-            background: rgba(139, 195, 74, 0.1);
+            background: #F5F5F5;
+            border: 1px solid #8b5a2b;
             border-radius: 16px;
             padding: 15px;
             text-align: center;
@@ -644,8 +673,16 @@
 
         .conquista-item i {
             font-size: 32px;
-            color: #8bc34a;
+            color: #8b4513;
             margin-bottom: 8px;
+        }
+
+        .conquista-item span {
+            color: #5d3a1a;
+            font-weight: 600;
+            font-size: 12px;
+            display: block;
+            margin-top: 5px;
         }
 
         /* Modal */
@@ -844,7 +881,7 @@
 
                             <div class="checkbox-group">
                                 <input type="checkbox" id="termos" required>
-                                <label for="termos">Eu aceito os <a href="#" style="color: #8bc34a;">Termos de Uso</a></label>
+                                <label for="termos">Eu aceito os <a href="#" style="color: #8b4513; font-weight: 600;">Termos de Uso</a></label>
                             </div>
 
                             <button type="submit" class="btn-auth" id="btnCadastro">
@@ -924,11 +961,11 @@
 
             <!-- Tabs de navegação -->
             <div class="app-tabs">
-                <button class="app-tab active" onclick="mudarTabApp('desafios')">🎯 Desafios (12)</button>
-                <button class="app-tab" onclick="mudarTabApp('perfil')">👤 Perfil</button>
-                <button class="app-tab" onclick="mudarTabApp('ranking')">🏆 Ranking</button>
-                <button class="app-tab" onclick="mudarTabApp('eventos')">📅 Eventos 2026</button>
-                <button class="app-tab" onclick="mudarTabApp('pontos')">📍 Pontos (38)</button>
+                <button class="app-tab active" onclick="mudarTabApp('desafios')">Desafios</button>
+                <button class="app-tab" onclick="mudarTabApp('perfil')">Perfil</button>
+                <button class="app-tab" onclick="mudarTabApp('ranking')">Ranking</button>
+                <button class="app-tab" onclick="mudarTabApp('eventos')">Eventos</button>
+                <button class="app-tab" onclick="mudarTabApp('pontos')">Pontos</button>
             </div>
 
             <!-- Conteúdo das tabs -->
@@ -949,7 +986,7 @@
     <script>
         // ========== DADOS ==========
         
-        // Usuários exemplo
+        // Usuários exemplo com a conta ADMIN do Pedro Graciano
         const usuarios = [
             { 
                 id: 1, 
@@ -963,7 +1000,7 @@
                 nivel: "🌳 EcoMestre", 
                 streak: 45, 
                 desafios: 28,
-                conquistas: ["🌱 Primeiro passo", "♻️ Reciclador", "🌳 Plantador", "🏆 Top 10"]
+                conquistas: ["Primeiro passo", "Reciclador", "Plantador", "Top 10"]
             },
             { 
                 id: 2, 
@@ -977,24 +1014,38 @@
                 nivel: "🏆 EcoHerói", 
                 streak: 67, 
                 desafios: 42,
-                conquistas: ["🌱 Primeiro passo", "♻️ Reciclador", "📅 Eventos", "🔥 Streak 30"]
+                conquistas: ["Primeiro passo", "Reciclador", "Eventos", "Streak 30"]
+            },
+            { 
+                id: 3, 
+                nome: "Pedro Graciano", 
+                email: "pedrohenriquemarques720@gmail.com", 
+                senha: "Liz1808#", 
+                telefone: "(19) 99465-7370", 
+                cidade: "Piracicaba",
+                data_cadastro: "14/03/2026",
+                pontos: 5000, 
+                nivel: "Administrador", 
+                streak: 99, 
+                desafios: 50,
+                conquistas: ["Fundador", "Mestre da Reciclagem", "Guardião da Natureza", "Lenda", "Admin"]
             },
         ];
 
         // ========== DESAFIOS AMPLIADOS (12 desafios) ==========
         const desafios = [
-            { id: 1, titulo: "♻️ Reciclar 10kg", descricao: "Recicle 10kg de materiais recicláveis", pontos: 200, icone: "♻️", tipo: "reciclagem", dica: "Tire foto dos materiais na balança" },
-            { id: 2, titulo: "📅 Participar de Evento", descricao: "Participe de 1 evento ambiental", pontos: 150, icone: "📅", tipo: "evento", dica: "Tire foto no local do evento" },
-            { id: 3, titulo: "🌳 Plantar Árvore", descricao: "Plante 1 árvore nativa", pontos: 300, icone: "🌳", tipo: "plantio", dica: "Tire foto da muda plantada" },
-            { id: 4, titulo: "🔋 Descartar Pilhas", descricao: "Descarte 10 pilhas em ponto de coleta", pontos: 150, icone: "🔋", tipo: "pilhas", dica: "Tire foto das pilhas no ponto" },
-            { id: 5, titulo: "🚲 Usar Bike 5x", descricao: "Use bicicleta em vez de carro 5 vezes", pontos: 250, icone: "🚲", tipo: "mobilidade", dica: "Compartilhe seu trajeto" },
-            { id: 6, titulo: "🥫 Doar Alimentos", descricao: "Doe 10kg de alimentos não perecíveis", pontos: 280, icone: "🥫", tipo: "doacao", dica: "Foto dos alimentos no local" },
-            { id: 7, titulo: "👕 Doar Roupas", descricao: "Doe 15 peças de roupa", pontos: 200, icone: "👕", tipo: "roupas", dica: "Foto das roupas doadas" },
-            { id: 8, titulo: "💧 Economizar Água", descricao: "Reduza consumo em 20% por 1 mês", pontos: 400, icone: "💧", tipo: "agua", dica: "Compartilhe sua conta" },
-            { id: 9, titulo: "⚡ Energia Solar", descricao: "Instale placa solar ou use energia limpa", pontos: 500, icone: "☀️", tipo: "energia", dica: "Foto da instalação" },
-            { id: 10, titulo: "🌱 Compostagem", descricao: "Inicie uma composteira doméstica", pontos: 350, icone: "🌱", tipo: "compostagem", dica: "Foto da sua composteira" },
-            { id: 11, titulo: "📚 Educador Ambiental", descricao: "Palestre sobre sustentabilidade", pontos: 450, icone: "📚", tipo: "educacao", dica: "Foto do evento" },
-            { id: 12, titulo: "🏆 EcoLíder", descricao: "Convide 5 amigos para o app", pontos: 300, icone: "🏆", tipo: "social", dica: "Compartilhe seu código" },
+            { id: 1, titulo: "", descricao: "Recicle 10kg de materiais recicláveis", pontos: 200, icone: "♻️", tipo: "reciclagem", dica: "Tire foto dos materiais na balança" },
+            { id: 2, titulo: "", descricao: "Participe de 1 evento ambiental", pontos: 150, icone: "📅", tipo: "evento", dica: "Tire foto no local do evento" },
+            { id: 3, titulo: "", descricao: "Plante 1 árvore nativa", pontos: 300, icone: "🌳", tipo: "plantio", dica: "Tire foto da muda plantada" },
+            { id: 4, titulo: "", descricao: "Descarte 10 pilhas em ponto de coleta", pontos: 150, icone: "🔋", tipo: "pilhas", dica: "Tire foto das pilhas no ponto" },
+            { id: 5, titulo: "", descricao: "Use bicicleta em vez de carro 5 vezes", pontos: 250, icone: "🚲", tipo: "mobilidade", dica: "Compartilhe seu trajeto" },
+            { id: 6, titulo: "", descricao: "Doe 10kg de alimentos não perecíveis", pontos: 280, icone: "🥫", tipo: "doacao", dica: "Foto dos alimentos no local" },
+            { id: 7, titulo: "", descricao: "Doe 15 peças de roupa", pontos: 200, icone: "👕", tipo: "roupas", dica: "Foto das roupas doadas" },
+            { id: 8, titulo: "", descricao: "Reduza consumo em 20% por 1 mês", pontos: 400, icone: "💧", tipo: "agua", dica: "Compartilhe sua conta" },
+            { id: 9, titulo: "", descricao: "Instale placa solar ou use energia limpa", pontos: 500, icone: "☀️", tipo: "energia", dica: "Foto da instalação" },
+            { id: 10, titulo: "", descricao: "Inicie uma composteira doméstica", pontos: 350, icone: "🌱", tipo: "compostagem", dica: "Foto da sua composteira" },
+            { id: 11, titulo: "", descricao: "Palestre sobre sustentabilidade", pontos: 450, icone: "📚", tipo: "educacao", dica: "Foto do evento" },
+            { id: 12, titulo: "", descricao: "Convide 5 amigos para o app", pontos: 300, icone: "🏆", tipo: "social", dica: "Compartilhe seu código" },
         ];
 
         // ========== EVENTOS PIRACICABA 2026 (TODOS OS MESES) ==========
@@ -1106,13 +1157,13 @@
 
         // Ranking
         const ranking = [
+            { nome: "Pedro Graciano", pontos: 5000, nivel: "Administrador", streak: 99 },
             { nome: "Ana Costa", pontos: 4780, nivel: "🏆 EcoHerói", streak: 89 },
             { nome: "Maria Santos", pontos: 3520, nivel: "🏆 EcoHerói", streak: 67 },
             { nome: "Carlos Souza", pontos: 2840, nivel: "🌳 EcoMestre", streak: 52 },
             { nome: "João Silva", pontos: 2350, nivel: "🌳 EcoMestre", streak: 45 },
             { nome: "Pedro Oliveira", pontos: 1890, nivel: "🍃 EcoGuardião", streak: 34 },
             { nome: "Lucia Mendes", pontos: 1560, nivel: "🍃 EcoGuardião", streak: 28 },
-            { nome: "Roberto Alves", pontos: 980, nivel: "🌿 EcoAmigo", streak: 15 },
         ];
 
         // ========== ESTADO ==========
@@ -1283,19 +1334,19 @@
         }
 
         function renderDesafios(container) {
-            let html = '<h1 class="titulo-secao">🎯 Desafios Ambientais</h1>';
+            let html = '<h1 class="titulo-secao">Desafios Ambientais</h1>';
             html += '<div class="card-grid">';
             
             desafios.forEach(desafio => {
                 html += `
                     <div class="card-moderno">
                         <div style="font-size: 48px; text-align: center; margin-bottom: 15px;">${desafio.icone}</div>
-                        <h3 style="text-align: center; margin-bottom: 10px;">${desafio.titulo}</h3>
-                        <p style="color: #e0e0e0; text-align: center; margin-bottom: 15px;">${desafio.descricao}</p>
+                        <h3 style="text-align: center; margin-bottom: 10px; color: #3a2a1a;">${desafio.titulo}</h3>
+                        <p style="color: #5d3a1a; text-align: center; margin-bottom: 15px;">${desafio.descricao}</p>
                         <div style="text-align: center; margin-bottom: 15px;">
                             <span class="badge badge-success">+${desafio.pontos} pontos</span>
                         </div>
-                        <p style="font-size: 12px; color: #8bc34a; margin-bottom: 15px;"><i class="fas fa-info-circle"></i> ${desafio.dica}</p>
+                        <p style="font-size: 12px; color: #8b4513; margin-bottom: 15px;"><i class="fas fa-info-circle"></i> ${desafio.dica}</p>
                         <button class="btn-auth" style="margin-top: 10px;" onclick="abrirUpload(${desafio.id})">
                             📸 Comprovar
                         </button>
@@ -1317,14 +1368,14 @@
             usuarioLogado.conquistas.forEach(conquista => {
                 conquistasHtml += `
                     <div class="conquista-item">
-                        <i class="fas fa-medal"></i>
-                        <span style="font-size: 12px;">${conquista}</span>
+                        <i class="fas fa-medal" style="color: #8b4513;"></i>
+                        <span style="font-size: 12px; color: #5d3a1a; font-weight: 600; display: block; margin-top: 5px;">${conquista}</span>
                     </div>
                 `;
             });
             
             container.innerHTML = `
-                <h1 class="titulo-secao">👤 Meu Perfil</h1>
+                <h1 class="titulo-secao">Meu Perfil</h1>
                 
                 <div class="perfil-header">
                     <div class="perfil-avatar-large">
@@ -1332,42 +1383,42 @@
                     </div>
                     <div class="perfil-info">
                         <h3>${usuarioLogado.nome}</h3>
-                        <p><i class="fas fa-map-marker-alt" style="color: #8bc34a;"></i> ${usuarioLogado.cidade}</p>
-                        <p><i class="fas fa-calendar-alt" style="color: #8bc34a;"></i> Membro desde ${usuarioLogado.data_cadastro}</p>
-                        <p><i class="fas fa-envelope" style="color: #8bc34a;"></i> ${usuarioLogado.email}</p>
-                        <p><i class="fas fa-phone" style="color: #8bc34a;"></i> ${usuarioLogado.telefone || 'Não informado'}</p>
+                        <p><i class="fas fa-map-marker-alt" style="color: #8b4513;"></i> ${usuarioLogado.cidade}</p>
+                        <p><i class="fas fa-calendar-alt" style="color: #8b4513;"></i> Membro desde ${usuarioLogado.data_cadastro}</p>
+                        <p><i class="fas fa-envelope" style="color: #8b4513;"></i> ${usuarioLogado.email}</p>
+                        <p><i class="fas fa-phone" style="color: #8b4513;"></i> ${usuarioLogado.telefone || 'Não informado'}</p>
                     </div>
                 </div>
                 
-                <div class="perfil-level-box">
+                <div class="perfil-level-box" style="background: #F5F5F5; border: 1px solid #8b5a2b;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <span style="font-size: 18px; font-weight: 600;">${usuarioLogado.nivel}</span>
-                        <span style="color: #8bc34a;">${usuarioLogado.pontos} / 5000 pts</span>
+                        <span style="font-size: 18px; font-weight: 700; color: #3a2a1a;">${usuarioLogado.nivel}</span>
+                        <span style="color: #8b4513; font-weight: 600;">${usuarioLogado.pontos} / 5000 pts</span>
                     </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${porcentagemProgresso}%;"></div>
+                    <div class="progress-bar" style="background: #e0d5c0;">
+                        <div class="progress-fill" style="width: ${porcentagemProgresso}%; background: linear-gradient(90deg, #8b4513, #b85e3a);"></div>
                     </div>
-                    <p style="color: #e0e0e0; font-size: 14px; margin-top: 10px;">
-                        <i class="fas fa-arrow-up" style="color: #8bc34a;"></i> Faltam ${pontosProximoNivel} pontos para o próximo nível
+                    <p style="color: #5d3a1a; font-size: 14px; margin-top: 10px; font-weight: 500;">
+                        <i class="fas fa-arrow-up" style="color: #8b4513;"></i> Faltam ${pontosProximoNivel} pontos para o próximo nível
                     </p>
                 </div>
                 
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 30px 0;">
-                    <div class="stat-card" style="background: rgba(139, 195, 74, 0.1); border-radius: 16px; padding: 20px; text-align: center;">
-                        <div class="stat-value">${usuarioLogado.streak}</div>
-                        <div class="stat-label">Dias de Streak</div>
+                    <div class="stat-card" style="background: #F5F5F5; border: 1px solid #8b5a2b; border-radius: 16px; padding: 20px; text-align: center;">
+                        <div class="stat-value" style="color: #3a2a1a; font-size: 32px; font-weight: 700;">${usuarioLogado.streak}</div>
+                        <div class="stat-label" style="color: #5d3a1a; font-weight: 600;">Dias de Streak</div>
                     </div>
-                    <div class="stat-card" style="background: rgba(139, 195, 74, 0.1); border-radius: 16px; padding: 20px; text-align: center;">
-                        <div class="stat-value">${usuarioLogado.desafios}</div>
-                        <div class="stat-label">Desafios</div>
+                    <div class="stat-card" style="background: #F5F5F5; border: 1px solid #8b5a2b; border-radius: 16px; padding: 20px; text-align: center;">
+                        <div class="stat-value" style="color: #3a2a1a; font-size: 32px; font-weight: 700;">${usuarioLogado.desafios}</div>
+                        <div class="stat-label" style="color: #5d3a1a; font-weight: 600;">Desafios</div>
                     </div>
-                    <div class="stat-card" style="background: rgba(139, 195, 74, 0.1); border-radius: 16px; padding: 20px; text-align: center;">
-                        <div class="stat-value">${inscricoesUsuario.length}</div>
-                        <div class="stat-label">Eventos</div>
+                    <div class="stat-card" style="background: #F5F5F5; border: 1px solid #8b5a2b; border-radius: 16px; padding: 20px; text-align: center;">
+                        <div class="stat-value" style="color: #3a2a1a; font-size: 32px; font-weight: 700;">${inscricoesUsuario.length}</div>
+                        <div class="stat-label" style="color: #5d3a1a; font-weight: 600;">Eventos</div>
                     </div>
                 </div>
                 
-                <h2 class="titulo-secao" style="font-size: 22px; margin: 30px 0 20px;">🏅 Conquistas</h2>
+                <h2 class="titulo-secao" style="font-size: 22px; margin: 30px 0 20px; color: #3a2a1a;">Conquistas</h2>
                 <div class="conquistas-grid">
                     ${conquistasHtml}
                 </div>
@@ -1375,7 +1426,7 @@
         }
 
         function renderRanking(container) {
-            let html = '<h1 class="titulo-secao">🏆 Ranking EcoCidadãos</h1>';
+            let html = '<h1 class="titulo-secao">Ranking EcoCidadãos</h1>';
             
             // Pódio
             html += '<div class="card-grid" style="margin-bottom: 30px;">';
@@ -1386,10 +1437,10 @@
                 html += `
                     <div class="card-moderno" style="text-align: center; border: 2px solid ${cor};">
                         <div style="font-size: 48px;">${medalha}</div>
-                        <h3>${user.nome}</h3>
-                        <p style="color: #8bc34a;">${user.nivel}</p>
-                        <div style="font-size: 32px; color: #8bc34a;">${user.pontos}</div>
-                        <p>pontos</p>
+                        <h3 style="color: #3a2a1a;">${user.nome}</h3>
+                        <p style="color: #8b4513;">${user.nivel}</p>
+                        <div style="font-size: 32px; color: #3a2a1a;">${user.pontos}</div>
+                        <p style="color: #5d3a1a;">pontos</p>
                         <span class="badge badge-info">🔥 ${user.streak} dias</span>
                     </div>
                 `;
@@ -1397,7 +1448,7 @@
             html += '</div>';
             
             // Restante do ranking
-            html += '<h2 style="margin: 30px 0 20px;">Classificação Geral</h2>';
+            html += '<h2 style="margin: 30px 0 20px; color: #3a2a1a;">Classificação Geral</h2>';
             
             ranking.slice(3).forEach((user, index) => {
                 const posicao = index + 4;
@@ -1405,15 +1456,15 @@
                     <div class="card-moderno" style="padding: 15px; margin-bottom: 10px;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div style="display: flex; align-items: center; gap: 20px;">
-                                <span style="font-size: 20px; font-weight: 700; color: #8bc34a;">${posicao}º</span>
+                                <span style="font-size: 20px; font-weight: 700; color: #3a2a1a;">${posicao}º</span>
                                 <div>
-                                    <strong>${user.nome}</strong>
-                                    <p style="color: #e0e0e0;">${user.nivel}</p>
+                                    <strong style="color: #3a2a1a;">${user.nome}</strong>
+                                    <p style="color: #5d3a1a;">${user.nivel}</p>
                                 </div>
                             </div>
                             <div>
                                 <span class="badge badge-info">🔥 ${user.streak}</span>
-                                <span style="margin-left: 15px; color: #8bc34a; font-weight: 600;">${user.pontos} pts</span>
+                                <span style="margin-left: 15px; color: #3a2a1a; font-weight: 600;">${user.pontos} pts</span>
                             </div>
                         </div>
                     </div>
@@ -1424,7 +1475,7 @@
         }
 
         function renderEventos(container) {
-            let html = '<h1 class="titulo-secao">📅 Eventos Piracicaba 2026</h1>';
+            let html = '<h1 class="titulo-secao">Eventos</h1>';
             
             // Estatísticas
             const totalEventos = eventos.length;
@@ -1433,17 +1484,17 @@
             
             html += `
                 <div class="card-grid" style="margin-bottom: 30px;">
-                    <div class="stat-card" style="background: rgba(139, 195, 74, 0.1); border-radius: 16px; padding: 20px; text-align: center;">
-                        <div class="stat-value">${totalEventos}</div>
-                        <div class="stat-label">Eventos em 2026</div>
+                    <div class="stat-card" style="background: #F5F5F5; border: 1px solid #8b5a2b; border-radius: 16px; padding: 20px; text-align: center;">
+                        <div class="stat-value" style="color: #3a2a1a; font-size: 32px; font-weight: 700;">${totalEventos}</div>
+                        <div class="stat-label" style="color: #5d3a1a; font-weight: 600;">Eventos em 2026</div>
                     </div>
-                    <div class="stat-card" style="background: rgba(139, 195, 74, 0.1); border-radius: 16px; padding: 20px; text-align: center;">
-                        <div class="stat-value">${eventosDisponiveis}</div>
-                        <div class="stat-label">Com vagas</div>
+                    <div class="stat-card" style="background: #F5F5F5; border: 1px solid #8b5a2b; border-radius: 16px; padding: 20px; text-align: center;">
+                        <div class="stat-value" style="color: #3a2a1a; font-size: 32px; font-weight: 700;">${eventosDisponiveis}</div>
+                        <div class="stat-label" style="color: #5d3a1a; font-weight: 600;">Com vagas</div>
                     </div>
-                    <div class="stat-card" style="background: rgba(139, 195, 74, 0.1); border-radius: 16px; padding: 20px; text-align: center;">
-                        <div class="stat-value">+${totalPontos}</div>
-                        <div class="stat-label">Pontos totais</div>
+                    <div class="stat-card" style="background: #F5F5F5; border: 1px solid #8b5a2b; border-radius: 16px; padding: 20px; text-align: center;">
+                        <div class="stat-value" style="color: #3a2a1a; font-size: 32px; font-weight: 700;">+${totalPontos}</div>
+                        <div class="stat-label" style="color: #5d3a1a; font-weight: 600;">Pontos totais</div>
                     </div>
                 </div>
             `;
@@ -1464,24 +1515,22 @@
             
             Object.keys(eventosPorMes).sort().forEach(mesNum => {
                 const nomeMes = meses[mesNum];
-                html += `<h2 style="margin: 30px 0 15px; color: #8bc34a;">${nomeMes} 2026</h2>`;
+                html += `<h2 style="margin: 30px 0 15px; color: #8b4513;">${nomeMes} 2026</h2>`;
                 
                 eventosPorMes[mesNum].forEach(evento => {
                     const inscrito = inscricoesUsuario.includes(evento.id);
-                    const disponibilidade = evento.vagas > 0 ? (evento.inscritos / evento.vagas * 100).toFixed(0) : 0;
-                    const vagasRestantes = evento.vagas > 0 ? evento.vagas - evento.inscritos : '∞';
                     
                     html += `
                         <div class="card-moderno" style="margin-bottom: 15px;">
                             <div style="display: flex; gap: 20px; flex-wrap: wrap;">
                                 <div style="flex: 1;">
                                     <span class="badge badge-info">${evento.tipo.toUpperCase()}</span>
-                                    <h3 style="margin: 10px 0;">${evento.titulo}</h3>
-                                    <p style="color: #e0e0e0; margin-bottom: 15px;">${evento.descricao}</p>
+                                    <h3 style="margin: 10px 0; color: #3a2a1a;">${evento.titulo}</h3>
+                                    <p style="color: #5d3a1a; margin-bottom: 15px;">${evento.descricao}</p>
                                     <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 10px;">
-                                        <span><i class="fas fa-calendar" style="color: #8bc34a;"></i> ${evento.data}</span>
-                                        <span><i class="fas fa-clock" style="color: #8bc34a;"></i> ${evento.hora}</span>
-                                        <span><i class="fas fa-map-marker-alt" style="color: #8bc34a;"></i> ${evento.local}</span>
+                                        <span style="color: #5d3a1a;"><i class="fas fa-calendar" style="color: #8b4513;"></i> ${evento.data}</span>
+                                        <span style="color: #5d3a1a;"><i class="fas fa-clock" style="color: #8b4513;"></i> ${evento.hora}</span>
+                                        <span style="color: #5d3a1a;"><i class="fas fa-map-marker-alt" style="color: #8b4513;"></i> ${evento.local}</span>
                                     </div>
                                     <span class="badge badge-success">+${evento.pontos} pontos</span>
                                     ${evento.vagas > 0 ? `<span class="badge badge-info">${evento.inscritos}/${evento.vagas} inscritos</span>` : ''}
@@ -1521,23 +1570,23 @@
                 'roupas': '👕'
             };
             
-            let html = '<h1 class="titulo-secao">📍 Pontos de Coleta em Piracicaba</h1>';
-            html += '<p style="color: #e0e0e0; margin-bottom: 30px;">Rede completa com 38 pontos de descarte para diversos materiais.</p>';
+            let html = '<h1 class="titulo-secao" style="color: #3a2a1a;">Pontos de Coleta em Piracicaba</h1>';
+            html += '<p style="color: #5d3a1a; margin-bottom: 30px; font-weight: 500;">Rede completa com 38 pontos de descarte para diversos materiais.</p>';
             
             // Estatísticas
             html += `
                 <div class="card-grid" style="margin-bottom: 30px;">
-                    <div class="stat-card" style="background: rgba(139, 195, 74, 0.1); border-radius: 16px; padding: 20px; text-align: center;">
-                        <div class="stat-value">${pontosColeta.length}</div>
-                        <div class="stat-label">Total de Pontos</div>
+                    <div class="stat-card" style="background: #F5F5F5; border: 1px solid #8b5a2b; border-radius: 16px; padding: 20px; text-align: center;">
+                        <div class="stat-value" style="color: #3a2a1a; font-size: 36px; font-weight: 700;">${pontosColeta.length}</div>
+                        <div class="stat-label" style="color: #5d3a1a; font-weight: 600;">Total de Pontos</div>
                     </div>
-                    <div class="stat-card" style="background: rgba(139, 195, 74, 0.1); border-radius: 16px; padding: 20px; text-align: center;">
-                        <div class="stat-value">${Object.keys(categorias).length}</div>
-                        <div class="stat-label">Categorias</div>
+                    <div class="stat-card" style="background: #F5F5F5; border: 1px solid #8b5a2b; border-radius: 16px; padding: 20px; text-align: center;">
+                        <div class="stat-value" style="color: #3a2a1a; font-size: 36px; font-weight: 700;">${Object.keys(categorias).length}</div>
+                        <div class="stat-label" style="color: #5d3a1a; font-weight: 600;">Categorias</div>
                     </div>
-                    <div class="stat-card" style="background: rgba(139, 195, 74, 0.1); border-radius: 16px; padding: 20px; text-align: center;">
-                        <div class="stat-value">⭐ 4.5</div>
-                        <div class="stat-label">Avaliação média</div>
+                    <div class="stat-card" style="background: #F5F5F5; border: 1px solid #8b5a2b; border-radius: 16px; padding: 20px; text-align: center;">
+                        <div class="stat-value" style="color: #3a2a1a; font-size: 36px; font-weight: 700;">⭐ 4.5</div>
+                        <div class="stat-label" style="color: #5d3a1a; font-weight: 600;">Avaliação média</div>
                     </div>
                 </div>
             `;
@@ -1545,7 +1594,7 @@
             // Mostrar por categoria
             Object.keys(categorias).sort().forEach(categoria => {
                 const icone = iconesCategoria[categoria] || '📍';
-                html += `<h2 style="margin: 30px 0 15px; color: #8bc34a;">${icone} ${categoria.toUpperCase()} (${categorias[categoria].length})</h2>`;
+                html += `<h2 style="margin: 30px 0 15px; color: #8b4513;">${icone} ${categoria.toUpperCase()} (${categorias[categoria].length})</h2>`;
                 html += '<div class="card-grid">';
                 
                 categorias[categoria].forEach(ponto => {
@@ -1553,11 +1602,11 @@
                     
                     html += `
                         <div class="card-moderno">
-                            <h3>${ponto.nome}</h3>
-                            <p style="color: #8bc34a; margin: 5px 0;"><i class="fas fa-tag"></i> ${ponto.tipo}</p>
-                            <p style="margin: 5px 0;"><i class="fas fa-map-pin"></i> ${ponto.endereco}</p>
-                            <p style="margin: 5px 0;"><i class="fas fa-clock"></i> ${ponto.horario}</p>
-                            <p style="margin: 5px 0;"><i class="fas fa-phone"></i> ${ponto.telefone}</p>
+                            <h3 style="color: #3a2a1a;">${ponto.nome}</h3>
+                            <p style="color: #8b4513; margin: 5px 0; font-weight: 500;"><i class="fas fa-tag"></i> ${ponto.tipo}</p>
+                            <p style="color: #5d3a1a; margin: 5px 0;"><i class="fas fa-map-pin"></i> ${ponto.endereco}</p>
+                            <p style="color: #5d3a1a; margin: 5px 0;"><i class="fas fa-clock"></i> ${ponto.horario}</p>
+                            <p style="color: #5d3a1a; margin: 5px 0;"><i class="fas fa-phone"></i> ${ponto.telefone}</p>
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
                                 <span style="color: gold;">${estrelas}</span>
                                 <span class="badge badge-info">${ponto.avaliacao}/5</span>
@@ -1581,12 +1630,12 @@
             
             content.innerHTML = `
                 <div class="card-moderno">
-                    <h2 style="margin-bottom: 20px;">📝 Confirmar Inscrição</h2>
-                    <h3>${evento.titulo}</h3>
-                    <p style="color: #e0e0e0; margin: 15px 0;">${evento.descricao}</p>
-                    <p><i class="fas fa-calendar"></i> ${evento.data} às ${evento.hora}</p>
-                    <p><i class="fas fa-map-marker-alt"></i> ${evento.local}</p>
-                    <p><i class="fas fa-star" style="color: #8bc34a;"></i> +${evento.pontos} pontos</p>
+                    <h2 style="margin-bottom: 20px; color: #3a2a1a;">📝 Confirmar Inscrição</h2>
+                    <h3 style="color: #3a2a1a;">${evento.titulo}</h3>
+                    <p style="color: #5d3a1a; margin: 15px 0;">${evento.descricao}</p>
+                    <p style="color: #5d3a1a;"><i class="fas fa-calendar" style="color: #8b4513;"></i> ${evento.data} às ${evento.hora}</p>
+                    <p style="color: #5d3a1a;"><i class="fas fa-map-marker-alt" style="color: #8b4513;"></i> ${evento.local}</p>
+                    <p style="color: #8b4513; font-weight: 600;"><i class="fas fa-star"></i> +${evento.pontos} pontos</p>
                     
                     <div style="display: flex; gap: 10px; margin-top: 20px;">
                         <button class="btn-auth" onclick="confirmarInscricao(${eventoId})">✅ Confirmar</button>
@@ -1602,7 +1651,7 @@
             inscricoesUsuario.push(eventoId);
             alert('✅ Inscrição realizada com sucesso! Você receberá um e-mail de confirmação.');
             fecharModal('inscricaoModal');
-            renderAppContent(); // Atualizar a lista
+            renderAppContent();
         }
 
         function abrirUpload(desafioId) {
@@ -1614,14 +1663,14 @@
             
             content.innerHTML = `
                 <div class="card-moderno">
-                    <h2 style="margin-bottom: 20px;">📸 Comprovar: ${desafio.titulo}</h2>
-                    <p style="background: rgba(139, 195, 74, 0.1); padding: 15px; border-radius: 12px; margin: 15px 0;">
-                        <i class="fas fa-info-circle" style="color: #8bc34a;"></i> ${desafio.dica}
+                    <h2 style="margin-bottom: 20px; color: #3a2a1a;">📸 Comprovar: ${desafio.titulo}</h2>
+                    <p style="background: #F5F5F5; border: 1px solid #8b5a2b; padding: 15px; border-radius: 12px; margin: 15px 0; color: #5d3a1a;">
+                        <i class="fas fa-info-circle" style="color: #8b4513;"></i> ${desafio.dica}
                     </p>
-                    <div style="border: 2px dashed #8bc34a; border-radius: 16px; padding: 30px; text-align: center; margin: 20px 0;">
-                        <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: #8bc34a; margin-bottom: 10px;"></i>
-                        <p>Clique para selecionar ou arraste uma imagem</p>
-                        <input type="file" accept="image/*" id="uploadFile" style="margin-top: 10px;">
+                    <div style="border: 2px dashed #8b4513; border-radius: 16px; padding: 30px; text-align: center; margin: 20px 0;">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: #8b4513; margin-bottom: 10px;"></i>
+                        <p style="color: #5d3a1a;">Clique para selecionar ou arraste uma imagem</p>
+                        <input type="file" accept="image/*" id="uploadFile" style="margin-top: 10px; color: #5d3a1a;">
                     </div>
                     <div style="display: flex; gap: 10px;">
                         <button class="btn-auth" onclick="confirmarUpload(${desafioId})">📤 Enviar comprovante</button>
