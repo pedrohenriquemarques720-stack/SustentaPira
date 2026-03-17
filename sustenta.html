@@ -15,6 +15,63 @@
     <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
     
     <style>
+
+       /* Melhorias nas abas de login/cadastro */
+        .auth-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            background: #2a2a2a; /* Preto mais suave */
+            padding: 6px;
+            border-radius: 60px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid #3a3a3a;
+        }
+        
+        .auth-tab {
+            flex: 1;
+            padding: 16px 20px;
+            border: none;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 600;
+            font-size: 16px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            letter-spacing: 0.5px;
+        }
+        
+        .auth-tab i {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.7);
+            transition: all 0.3s ease;
+        }
+        
+        .auth-tab.active {
+            background: #8b4513; /* Marrom para a aba ativa */
+            color: #FFFFFF;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(139, 69, 19, 0.4);
+            transform: scale(1.02);
+        }
+        
+        .auth-tab.active i {
+            color: #FFFFFF;
+        }
+        
+        .auth-tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.1);
+            color: #FFFFFF;
+        }
+        
+        .auth-tab:hover:not(.active) i {
+            color: #FFFFFF;
+        }
         * {
             margin: 0;
             padding: 0;
