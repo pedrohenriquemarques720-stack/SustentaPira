@@ -11,7 +11,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
-    <!-- Biblioteca para decodificar JWT (opcional, mas vamos usar decodificação manual) -->
     <style>
         * {
             margin: 0;
@@ -109,7 +108,7 @@
             text-transform: uppercase;
         }
 
-        /* ===== ESTILOS CORRIGIDOS DAS ABAS ===== */
+        /* ===== ESTILOS DAS ABAS ===== */
         .auth-tabs {
             display: flex;
             gap: 10px;
@@ -804,7 +803,6 @@
             }
         }
 
-        /* Estilo para o botão do Google quando renderizado */
         .btn-social.google .nsm7Bb-HzV7m-LgbsSe {
             width: 100% !important;
             min-width: 100% !important;
@@ -1223,28 +1221,27 @@
             }
         }
 
-        // ========== GOOGLE LOGIN SIMPLIFICADO (FUNCIONAL) ==========
+        // ========== GOOGLE LOGIN FUNCIONAL ==========
         
-        // Função chamada ao clicar no botão
         function loginComGoogle() {
-            const redirectUri = window.location.origin + window.location.pathname; // ex: http://localhost:8501/
+            const redirectUri = window.location.origin + window.location.pathname;
             const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' +
                 'client_id=' + encodeURIComponent(GOOGLE_CLIENT_ID) + '&' +
                 'redirect_uri=' + encodeURIComponent(redirectUri) + '&' +
                 'response_type=id_token&' +
                 'scope=openid%20email%20profile&' +
                 'nonce=' + Math.random().toString(36).substring(2);
-            window.location.href = authUrl; // Redireciona para o Google
+            
+            window.location.href = authUrl;
         }
 
-        // Processa o retorno quando o usuário é redirecionado de volta
         function handleGoogleRedirect() {
-            const hash = window.location.hash.substring(1); // Remove o # inicial
+            const hash = window.location.hash.substring(1);
             if (hash && hash.includes('id_token')) {
                 const params = new URLSearchParams(hash);
                 const idToken = params.get('id_token');
+                
                 if (idToken) {
-                    // Decodifica o token JWT manualmente
                     try {
                         const base64Url = idToken.split('.')[1];
                         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -1253,10 +1250,8 @@
                         }).join(''));
                         const userData = JSON.parse(jsonPayload);
                         
-                        // Verifica ou cria o usuário na SheetDB
                         verificarOuCriarUsuarioGoogle(userData);
                         
-                        // Limpa a hash da URL para não ficar feio
                         window.history.replaceState({}, document.title, window.location.pathname);
                     } catch (e) {
                         console.error('Erro ao decodificar token', e);
@@ -1266,23 +1261,19 @@
             }
         }
 
-        // Função para verificar/criar usuário na SheetDB
         async function verificarOuCriarUsuarioGoogle(userData) {
             try {
-                // Busca usuário pelo email
                 const response = await fetch(`${SHEETDB_URL}/search?email=${userData.email}`);
                 const existingUsers = await response.json();
                 
                 if (existingUsers.length > 0) {
-                    // Usuário já existe
                     usuarioLogado = existingUsers[0];
                     mostrarAlerta('success', `Bem-vindo de volta, ${userData.name}!`);
                 } else {
-                    // Cria novo usuário
                     const novoUsuario = {
                         nome: userData.name,
                         email: userData.email,
-                        senha: '', // Google users não usam senha
+                        senha: '',
                         telefone: '',
                         cidade: 'Piracicaba',
                         data_cadastro: new Date().toLocaleDateString('pt-BR'),
@@ -1303,13 +1294,12 @@
                     if (result.created) {
                         usuarioLogado = novoUsuario;
                         mostrarAlerta('success', `Bem-vindo ao SustentaPira, ${userData.name}!`);
-                        await carregarUsuarios(); // Atualiza a lista de usuários
+                        await carregarUsuarios();
                     } else {
                         throw new Error('Erro ao criar usuário');
                     }
                 }
                 
-                // Entra no app
                 document.getElementById('loginScreen').classList.add('hidden');
                 document.getElementById('appScreen').classList.remove('hidden');
                 atualizarUserInfo();
@@ -1326,7 +1316,7 @@
 
         // Inicializa no carregamento da página
         document.addEventListener('DOMContentLoaded', function() {
-            handleGoogleRedirect(); // Verifica se há token na URL
+            handleGoogleRedirect();
             
             const googleBtn = document.getElementById('googleButton');
             if (googleBtn) {
@@ -1364,7 +1354,6 @@
             btn.disabled = true;
 
             try {
-                // Buscar usuário na SheetDB
                 const response = await fetch(`${SHEETDB_URL}/search?email=${email}`);
                 const usuariosEncontrados = await response.json();
                 
@@ -1406,7 +1395,6 @@
                 return;
             }
 
-            // Verificar se email já existe
             const response = await fetch(`${SHEETDB_URL}/search?email=${email}`);
             const usuariosExistentes = await response.json();
             
@@ -1434,7 +1422,6 @@
             };
 
             try {
-                // Salvar na SheetDB
                 const saveResponse = await fetch(SHEETDB_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1446,14 +1433,12 @@
                 if (resultado.created) {
                     mostrarAlerta('success', 'Conta criada com sucesso! Faça o login.');
                     
-                    // Limpar formulário
                     document.getElementById('cadastroNome').value = '';
                     document.getElementById('cadastroEmail').value = '';
                     document.getElementById('cadastroTelefone').value = '';
                     document.getElementById('cadastroSenha').value = '';
                     document.getElementById('cadastroConfirmar').value = '';
                     
-                    // Recarregar usuários
                     await carregarUsuarios();
                     
                     switchTab('login');
@@ -1474,7 +1459,6 @@
         }
 
         function socialLogin(provider) {
-            // Esta função será substituída pelo novo sistema, mas mantida para compatibilidade
             if (provider === 'google') {
                 loginComGoogle();
             }
