@@ -66,11 +66,11 @@ st.markdown("""
             max-width: 100% !important;
             width: 100vw !important;
             height: 100vh !important;
-            overflow: hidden !important;
+            overflow: auto !important; /* ← MUDADO DE 'hidden' PARA 'auto' */
         }
         
         /* Remove o padding do Streamlit */
-    .block-container {
+        .block-container {
             padding: 0 !important;
             margin: 0 !important;
             max-width: 100% !important;
@@ -81,7 +81,7 @@ st.markdown("""
             display: none !important;
         }
         
-        /* Garante que o iframe ocupe toda a tela */
+        /* Garante que o iframe ocupe toda a tela mas com scroll */
         iframe {
             width: 100vw !important;
             height: 100vh !important;
@@ -96,9 +96,9 @@ st.markdown("""
             z-index: 9999 !important;
         }
         
-        /* Remove scroll do Streamlit */
+        /* Remove scroll do Streamlit MAS PERMITE SCROLL DO CONTEÚDO */
         .stApp {
-            overflow: hidden !important;
+            overflow: hidden !important; /* Mantém o Streamlit sem scroll */
         }
         
         /* Remove qualquer background extra */
@@ -114,7 +114,7 @@ if html_content:
     st.components.v1.html(
         html_content,
         height=1000,
-        scrolling=False
+        scrolling=True  ← MUDADO PARA True
     )
 else:
     # Mensagem de erro simplificada
