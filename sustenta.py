@@ -66,7 +66,7 @@ st.markdown("""
             max-width: 100% !important;
             width: 100vw !important;
             height: 100vh !important;
-            overflow: auto !important; /* ← MUDADO DE 'hidden' PARA 'auto' */
+            overflow: auto !important;
         }
         
         /* Remove o padding do Streamlit */
@@ -98,7 +98,7 @@ st.markdown("""
         
         /* Remove scroll do Streamlit MAS PERMITE SCROLL DO CONTEÚDO */
         .stApp {
-            overflow: hidden !important; /* Mantém o Streamlit sem scroll */
+            overflow: hidden !important;
         }
         
         /* Remove qualquer background extra */
@@ -114,7 +114,7 @@ if html_content:
     st.components.v1.html(
         html_content,
         height=1000,
-        scrolling=True  ← MUDADO PARA True
+        scrolling=True
     )
 else:
     # Mensagem de erro simplificada
