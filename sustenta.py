@@ -1,7 +1,7 @@
 import streamlit as st
 from pathlib import Path
 
-# Configuração da página
+# Configuração da página - MUST BE THE FIRST STREAMLIT COMMAND
 st.set_page_config(
     page_title="SustentaPira",
     page_icon="🌿",
@@ -24,22 +24,98 @@ def carregar_html():
 # Carregar o HTML
 html_content, caminho = carregar_html()
 
+# CSS personalizado para remover TODOS os elementos do Streamlit
+st.markdown("""
+    <style>
+        /* Remove todos os elementos padrão do Streamlit */
+        .main > div {
+            padding: 0 !important;
+            margin: 0 !important;
+            max-width: 100% !important;
+        }
+        
+        /* Remove o cabeçalho e menu */
+        header {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+        }
+        
+        /* Remove o footer */
+        footer {
+            display: none !important;
+            visibility: hidden !important;
+        }
+        
+        /* Remove o menu hamburger */
+        .stApp > header {
+            display: none !important;
+        }
+        
+        /* Remove qualquer padding/margin do body */
+        .stApp {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #FFFFFF;
+        }
+        
+        /* Container principal ocupa toda a tela */
+        .stApp > div:first-child {
+            padding: 0 !important;
+            margin: 0 !important;
+            max-width: 100% !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            overflow: hidden !important;
+        }
+        
+        /* Remove o padding do Streamlit */
+    .block-container {
+            padding: 0 !important;
+            margin: 0 !important;
+            max-width: 100% !important;
+        }
+        
+        /* Esconde qualquer elemento indesejado */
+        #MainMenu {
+            display: none !important;
+        }
+        
+        /* Garante que o iframe ocupe toda a tela */
+        iframe {
+            width: 100vw !important;
+            height: 100vh !important;
+            border: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            z-index: 9999 !important;
+        }
+        
+        /* Remove scroll do Streamlit */
+        .stApp {
+            overflow: hidden !important;
+        }
+        
+        /* Remove qualquer background extra */
+        .stApp, .main, .block-container {
+            background: #FFFFFF !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 # Se o HTML foi carregado com sucesso
 if html_content:
-    # CSS para remover elementos do Streamlit
-    st.markdown("""
-        <style>
-            .main > div { padding: 0 !important; margin: 0 !important; }
-            .stApp { margin-top: -70px !important; }
-            #MainMenu { visibility: hidden; }
-            footer { visibility: hidden; }
-            header { visibility: hidden; }
-        </style>
-    """, unsafe_allow_html=True)
-    
-    # Mostrar o HTML
-    st.components.v1.html(html_content, height=1000, scrolling=True)
-
+    # Exibir o HTML em um iframe que ocupa a tela inteira
+    st.components.v1.html(
+        html_content,
+        height=1000,
+        scrolling=False
+    )
 else:
     # Mensagem de erro simplificada
     st.error(f"❌ Arquivo sustenta.html não encontrado em: {caminho}")
