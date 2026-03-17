@@ -302,46 +302,6 @@
             font-size: 14px;
         }
 
-        .social-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .btn-social {
-            padding: 12px 30px;
-            border: 2px solid #8b5a2b;
-            background: #FFFFFF;
-            border-radius: 16px;
-            color: #5d3a1a;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            position: relative;
-            z-index: 10;
-            width: 100%;
-            max-width: 300px;
-        }
-
-        .btn-social:hover {
-            border-color: #8b4513;
-            background: #F5F5F5;
-        }
-
-        .btn-social.google {
-            background: #FFFFFF;
-            color: #5d3a1a;
-        }
-
-        .btn-social.google i {
-            color: #DB4437;
-        }
-
         .benefits {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -783,10 +743,6 @@
                 font-size: 14px;
             }
 
-            .social-buttons {
-                grid-template-columns: 1fr;
-            }
-
             .benefits {
                 grid-template-columns: 1fr;
             }
@@ -801,13 +757,6 @@
             .stat-value {
                 font-size: 22px;
             }
-        }
-
-        .btn-social.google .nsm7Bb-HzV7m-LgbsSe {
-            width: 100% !important;
-            min-width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
         }
     </style>
 </head>
@@ -927,17 +876,6 @@
                     </div>
                 </div>
 
-                <div class="divider">
-                    <span>ou continue com</span>
-                </div>
-
-                <div class="social-buttons">
-                    <div class="btn-social google" id="googleButton">
-                        <i class="fab fa-google"></i>
-                        <span>Google</span>
-                    </div>
-                </div>
-
                 <div class="benefits">
                     <div class="benefit-item">
                         <i class="fas fa-calendar-alt"></i>
@@ -1017,9 +955,6 @@
     <script>
         // ========== CONFIGURAÇÃO SHEETDB ==========
         const SHEETDB_URL = 'https://sheetdb.io/api/v1/pxcozyw0d91x8';
-        
-        // ========== CONFIGURAÇÃO GOOGLE LOGIN ==========
-        const GOOGLE_CLIENT_ID = '90349703902-sda2ga75pgctr9gh5qe2dg4fs9658c2v.apps.googleusercontent.com';
         
         // ========== DADOS ==========
         
@@ -1221,110 +1156,45 @@
             }
         }
 
-        // ========== GOOGLE LOGIN FUNCIONAL ==========
-        
-        function loginComGoogle() {
-            const redirectUri = window.location.origin + window.location.pathname;
-            const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' +
-                'client_id=' + encodeURIComponent(GOOGLE_CLIENT_ID) + '&' +
-                'redirect_uri=' + encodeURIComponent(redirectUri) + '&' +
-                'response_type=id_token&' +
-                'scope=openid%20email%20profile&' +
-                'nonce=' + Math.random().toString(36).substring(2);
-            
-            window.location.href = authUrl;
-        }
+        // ========== FUNÇÕES DE LOGIN COM LEMBRAR ACESSO ==========
 
-        function handleGoogleRedirect() {
-            const hash = window.location.hash.substring(1);
-            if (hash && hash.includes('id_token')) {
-                const params = new URLSearchParams(hash);
-                const idToken = params.get('id_token');
-                
-                if (idToken) {
-                    try {
-                        const base64Url = idToken.split('.')[1];
-                        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
-                            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                        }).join(''));
-                        const userData = JSON.parse(jsonPayload);
-                        
-                        verificarOuCriarUsuarioGoogle(userData);
-                        
-                        window.history.replaceState({}, document.title, window.location.pathname);
-                    } catch (e) {
-                        console.error('Erro ao decodificar token', e);
-                        mostrarAlerta('error', 'Erro ao processar login com Google');
-                    }
+        // Verificar se já existe login salvo ao carregar a página
+        function verificarLoginSalvo() {
+            const savedUser = localStorage.getItem('sustentapira_user');
+            
+            if (savedUser) {
+                try {
+                    const user = JSON.parse(savedUser);
+                    
+                    // Verificar se o usuário ainda existe na base de dados
+                    fetch(`${SHEETDB_URL}/search?email=${user.email}`)
+                        .then(response => response.json())
+                        .then(usuariosEncontrados => {
+                            if (usuariosEncontrados.length > 0) {
+                                usuarioLogado = usuariosEncontrados[0];
+                                
+                                // Fazer login automático
+                                document.getElementById('loginScreen').classList.add('hidden');
+                                document.getElementById('appScreen').classList.remove('hidden');
+                                atualizarUserInfo();
+                                renderAppContent();
+                                
+                                mostrarAlerta('success', `Bem-vindo de volta, ${usuarioLogado.nome}!`);
+                            } else {
+                                // Usuário não encontrado na base, limpar localStorage
+                                localStorage.removeItem('sustentapira_user');
+                            }
+                        })
+                        .catch(() => {
+                            // Erro ao verificar, apenas limpa o localStorage
+                            localStorage.removeItem('sustentapira_user');
+                        });
+                } catch (e) {
+                    console.error('Erro ao processar login salvo:', e);
+                    localStorage.removeItem('sustentapira_user');
                 }
             }
         }
-
-        async function verificarOuCriarUsuarioGoogle(userData) {
-            try {
-                const response = await fetch(`${SHEETDB_URL}/search?email=${userData.email}`);
-                const existingUsers = await response.json();
-                
-                if (existingUsers.length > 0) {
-                    usuarioLogado = existingUsers[0];
-                    mostrarAlerta('success', `Bem-vindo de volta, ${userData.name}!`);
-                } else {
-                    const novoUsuario = {
-                        nome: userData.name,
-                        email: userData.email,
-                        senha: '',
-                        telefone: '',
-                        cidade: 'Piracicaba',
-                        data_cadastro: new Date().toLocaleDateString('pt-BR'),
-                        pontos: '0',
-                        nivel: '🌱 EcoIniciante',
-                        streak: '1',
-                        desafios: '0',
-                        conquistas: '🌱 Primeiro passo'
-                    };
-                    
-                    const saveResponse = await fetch(SHEETDB_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ data: [novoUsuario] })
-                    });
-                    
-                    const result = await saveResponse.json();
-                    if (result.created) {
-                        usuarioLogado = novoUsuario;
-                        mostrarAlerta('success', `Bem-vindo ao SustentaPira, ${userData.name}!`);
-                        await carregarUsuarios();
-                    } else {
-                        throw new Error('Erro ao criar usuário');
-                    }
-                }
-                
-                document.getElementById('loginScreen').classList.add('hidden');
-                document.getElementById('appScreen').classList.remove('hidden');
-                atualizarUserInfo();
-                renderAppContent();
-                
-            } catch (error) {
-                console.error('Erro no Google Login:', error);
-                mostrarAlerta('error', 'Erro ao fazer login com Google');
-            }
-        }
-
-        // Chamar carregamento inicial
-        carregarUsuarios();
-
-        // Inicializa no carregamento da página
-        document.addEventListener('DOMContentLoaded', function() {
-            handleGoogleRedirect();
-            
-            const googleBtn = document.getElementById('googleButton');
-            if (googleBtn) {
-                googleBtn.addEventListener('click', loginComGoogle);
-            }
-        });
-
-        // ========== FUNÇÕES DE LOGIN ==========
 
         function switchTab(tab) {
             document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
@@ -1348,12 +1218,15 @@
             event.preventDefault();
             const email = document.getElementById('loginEmail').value;
             const senha = document.getElementById('loginSenha').value;
+            const lembrar = document.getElementById('lembrar').checked;
 
             const btn = document.getElementById('btnLogin');
+            const originalText = btn.innerHTML;
             btn.innerHTML = '<span class="spinner"></span> Entrando...';
             btn.disabled = true;
 
             try {
+                // Buscar usuário na SheetDB
                 const response = await fetch(`${SHEETDB_URL}/search?email=${email}`);
                 const usuariosEncontrados = await response.json();
                 
@@ -1361,6 +1234,26 @@
                 
                 if (usuario) {
                     usuarioLogado = usuario;
+                    
+                    // Se "Lembrar meu acesso" estiver marcado, salvar no localStorage
+                    if (lembrar) {
+                        // Salvar apenas informações não sensíveis
+                        const userToSave = {
+                            id: usuario.id || usuario._id,
+                            nome: usuario.nome,
+                            email: usuario.email,
+                            pontos: usuario.pontos,
+                            nivel: usuario.nivel,
+                            streak: usuario.streak,
+                            desafios: usuario.desafios,
+                            data_cadastro: usuario.data_cadastro
+                        };
+                        localStorage.setItem('sustentapira_user', JSON.stringify(userToSave));
+                    } else {
+                        // Se não estiver marcado, remover qualquer login salvo
+                        localStorage.removeItem('sustentapira_user');
+                    }
+                    
                     mostrarAlerta('success', `Bem-vindo, ${usuario.nome}!`);
                     
                     setTimeout(() => {
@@ -1371,12 +1264,13 @@
                     }, 1500);
                 } else {
                     mostrarAlerta('error', 'E-mail ou senha inválidos!');
-                    btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Entrar no SustentaPira';
+                    btn.innerHTML = originalText;
                     btn.disabled = false;
                 }
             } catch (error) {
+                console.error('Erro no login:', error);
                 mostrarAlerta('error', 'Erro ao conectar com o servidor');
-                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Entrar no SustentaPira';
+                btn.innerHTML = originalText;
                 btn.disabled = false;
             }
         }
@@ -1395,33 +1289,38 @@
                 return;
             }
 
-            const response = await fetch(`${SHEETDB_URL}/search?email=${email}`);
-            const usuariosExistentes = await response.json();
-            
-            if (usuariosExistentes.length > 0) {
-                mostrarAlerta('error', 'E-mail já cadastrado!');
-                return;
-            }
-
             const btn = document.getElementById('btnCadastro');
+            const originalText = btn.innerHTML;
             btn.innerHTML = '<span class="spinner"></span> Criando conta...';
             btn.disabled = true;
 
-            const novoUsuario = {
-                nome: nome,
-                email: email,
-                senha: senha,
-                telefone: telefone || '',
-                cidade: "Piracicaba",
-                data_cadastro: new Date().toLocaleDateString('pt-BR'),
-                pontos: "0",
-                nivel: "🌱 EcoIniciante",
-                streak: "1",
-                desafios: "0",
-                conquistas: "🌱 Primeiro passo"
-            };
-
             try {
+                // Verificar se email já existe
+                const response = await fetch(`${SHEETDB_URL}/search?email=${email}`);
+                const usuariosExistentes = await response.json();
+                
+                if (usuariosExistentes.length > 0) {
+                    mostrarAlerta('error', 'E-mail já cadastrado!');
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    return;
+                }
+
+                const novoUsuario = {
+                    nome: nome,
+                    email: email,
+                    senha: senha,
+                    telefone: telefone || '',
+                    cidade: "Piracicaba",
+                    data_cadastro: new Date().toLocaleDateString('pt-BR'),
+                    pontos: "0",
+                    nivel: "🌱 EcoIniciante",
+                    streak: "1",
+                    desafios: "0",
+                    conquistas: "🌱 Primeiro passo"
+                };
+
+                // Salvar na SheetDB
                 const saveResponse = await fetch(SHEETDB_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1433,12 +1332,14 @@
                 if (resultado.created) {
                     mostrarAlerta('success', 'Conta criada com sucesso! Faça o login.');
                     
+                    // Limpar formulário
                     document.getElementById('cadastroNome').value = '';
                     document.getElementById('cadastroEmail').value = '';
                     document.getElementById('cadastroTelefone').value = '';
                     document.getElementById('cadastroSenha').value = '';
                     document.getElementById('cadastroConfirmar').value = '';
                     
+                    // Recarregar usuários
                     await carregarUsuarios();
                     
                     switchTab('login');
@@ -1446,10 +1347,11 @@
                     mostrarAlerta('error', 'Erro ao criar conta');
                 }
             } catch (error) {
+                console.error('Erro no cadastro:', error);
                 mostrarAlerta('error', 'Erro ao conectar com o servidor');
             }
 
-            btn.innerHTML = '<i class="fas fa-user-plus"></i> Criar minha conta';
+            btn.innerHTML = originalText;
             btn.disabled = false;
         }
 
@@ -1458,17 +1360,26 @@
             mostrarAlerta('info', 'Funcionalidade em desenvolvimento!');
         }
 
-        function socialLogin(provider) {
-            if (provider === 'google') {
-                loginComGoogle();
-            }
-        }
-
         function logout() {
             usuarioLogado = null;
+            // Limpar login salvo ao fazer logout
+            localStorage.removeItem('sustentapira_user');
             document.getElementById('appScreen').classList.add('hidden');
             document.getElementById('loginScreen').classList.remove('hidden');
+            
+            // Limpar campos de login
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginSenha').value = '';
+            document.getElementById('lembrar').checked = false;
         }
+
+        // Chamar carregamento inicial
+        carregarUsuarios();
+        
+        // Verificar se existe login salvo ao carregar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            verificarLoginSalvo();
+        });
 
         // ========== FUNÇÕES DO APP ==========
 
