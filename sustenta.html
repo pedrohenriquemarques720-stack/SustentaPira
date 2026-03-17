@@ -291,14 +291,14 @@
         }
 
         .social-buttons {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            display: flex;
+            justify-content: center;
             gap: 10px;
             margin-top: 20px;
         }
 
         .btn-social {
-            padding: 12px;
+            padding: 12px 30px;
             border: 2px solid #8b5a2b;
             background: #FFFFFF;
             border-radius: 16px;
@@ -312,6 +312,8 @@
             gap: 8px;
             position: relative;
             z-index: 10;
+            width: 100%;
+            max-width: 300px;
         }
 
         .btn-social:hover {
@@ -319,7 +321,6 @@
             background: #F5F5F5;
         }
 
-        /* Estilo para o botão do Google personalizado */
         .btn-social.google {
             background: #FFFFFF;
             color: #5d3a1a;
@@ -924,10 +925,6 @@
                         <i class="fab fa-google"></i>
                         <span>Google</span>
                     </div>
-                    <button class="btn-social facebook" onclick="socialLogin('facebook')">
-                        <i class="fab fa-facebook-f"></i>
-                        Facebook
-                    </button>
                 </div>
 
                 <div class="benefits">
@@ -1011,7 +1008,6 @@
         const SHEETDB_URL = 'https://sheetdb.io/api/v1/pxcozyw0d91x8';
         
         // ========== CONFIGURAÇÃO GOOGLE LOGIN ==========
-        // SUBSTITUA PELO SEU CLIENT ID DO GOOGLE CLOUD CONSOLE
         const GOOGLE_CLIENT_ID = '90349703902-usmmhh4s6fa49lgoh0ddpqcdn252p93t.apps.googleusercontent.com';
         
         // ========== DADOS ==========
@@ -1484,12 +1480,9 @@
 
         function socialLogin(provider) {
             if (provider === 'google') {
-                // O botão do Google já está configurado via DOMContentLoaded
                 if (window.google?.accounts?.id) {
                     window.google.accounts.id.prompt();
                 }
-            } else if (provider === 'facebook') {
-                mostrarAlerta('info', 'Login com Facebook será implementado em breve!');
             }
         }
 
