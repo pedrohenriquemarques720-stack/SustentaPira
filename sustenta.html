@@ -1225,7 +1225,7 @@
             }
         }
 
-        // ========== FUNÇÕES DO GOOGLE LOGIN ==========
+        // ========== FUNÇÕES DO GOOGLE LOGIN - VERSÃO CORRIGIDA DEFINITIVA ==========
         
         // Função para carregar o script do Google
         function loadGoogleScript() {
@@ -1240,17 +1240,23 @@
             });
         }
 
-        // Inicializar Google Login
+        // Inicializar Google Login - VERSÃO CORRIGIDA PARA origin=null
         async function initGoogleLogin() {
             try {
                 await loadGoogleScript();
                 
+                // CONFIGURAÇÃO OTIMIZADA PARA EVITAR origin=null
                 window.google.accounts.id.initialize({
                     client_id: GOOGLE_CLIENT_ID,
                     callback: handleGoogleCredential,
                     auto_select: false,
                     cancel_on_tap_outside: true,
-                    context: 'signin'
+                    context: 'signin',
+                    ux_mode: 'popup', // Força o modo popup (mais compatível)
+                    // NÃO definir redirect_uri - deixa o Google decidir
+                    // NÃO definir flow_name - deixa o Google gerenciar
+                    // NÃO definir state - deixa o Google gerar automaticamente
+                    // NÃO usar itp_support - compatibilidade padrão
                 });
 
                 // Renderizar o botão do Google
@@ -1265,6 +1271,8 @@
                         logo_alignment: 'left'
                     }
                 );
+                
+                console.log('Google Login inicializado com sucesso');
             } catch (error) {
                 console.error('Erro ao carregar Google:', error);
                 // Fallback para clique manual
