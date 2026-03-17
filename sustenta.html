@@ -1225,142 +1225,52 @@
             }
         }
 
-        // ========== FUNÇÕES DO GOOGLE LOGIN - VERSÃO CORRIGIDA DEFINITIVA ==========
+        // ========== GOOGLE LOGIN SIMPLIFICADO ==========
         
-        // Função para carregar o script do Google
-        function loadGoogleScript() {
-            return new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = 'https://accounts.google.com/gsi/client';
-                script.async = true;
-                script.defer = true;
-                script.onload = resolve;
-                script.onerror = reject;
-                document.head.appendChild(script);
-            });
+        // Configuração
+        const GOOGLE_CLIENT_ID = '90349703902-sda2ga75pgctr9gh5qe2dg4fs9658c2v.apps.googleusercontent.com';
+        
+        // Função超级 simples - abre janela e pronto
+        function loginComGoogle() {
+            const redirectUri = window.location.origin + window.location.pathname;
+            
+            // URL direta do Google (sem biblioteca, sem complicação)
+            const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' +
+                'client_id=' + GOOGLE_CLIENT_ID + '&' +
+                'redirect_uri=' + encodeURIComponent(redirectUri) + '&' +
+                'response_type=id_token&' +
+                'scope=openid email profile&' +
+                'nonce=' + Math.random().toString(36).substring(2);
+            
+            // Abre em nova janela (mais simples que popup)
+            window.open(authUrl, '_blank');
         }
-
-        // Inicializar Google Login - VERSÃO CORRIGIDA PARA origin=null
-        async function initGoogleLogin() {
-            try {
-                await loadGoogleScript();
+        
+        // Verificar se voltou do Google
+        function verificarRetornoGoogle() {
+            const hash = window.location.hash.substring(1);
+            if (hash && hash.includes('id_token')) {
+                const params = new URLSearchParams(hash);
+                const idToken = params.get('id_token');
                 
-                // CONFIGURAÇÃO OTIMIZADA PARA EVITAR origin=null
-                window.google.accounts.id.initialize({
-                    client_id: GOOGLE_CLIENT_ID,
-                    callback: handleGoogleCredential,
-                    auto_select: false,
-                    cancel_on_tap_outside: true,
-                    context: 'signin',
-                    ux_mode: 'popup', // Força o modo popup (mais compatível)
-                    // NÃO definir redirect_uri - deixa o Google decidir
-                    // NÃO definir flow_name - deixa o Google gerenciar
-                    // NÃO definir state - deixa o Google gerar automaticamente
-                    // NÃO usar itp_support - compatibilidade padrão
-                });
-
-                // Renderizar o botão do Google
-                window.google.accounts.id.renderButton(
-                    document.getElementById('googleButton'),
-                    {
-                        theme: 'outline',
-                        size: 'large',
-                        text: 'continue_with',
-                        shape: 'rectangular',
-                        width: '100%',
-                        logo_alignment: 'left'
-                    }
-                );
-                
-                console.log('Google Login inicializado com sucesso');
-            } catch (error) {
-                console.error('Erro ao carregar Google:', error);
-                // Fallback para clique manual
-                document.getElementById('googleButton').addEventListener('click', () => {
-                    if (window.google?.accounts?.id) {
-                        window.google.accounts.id.prompt();
-                    } else {
-                        mostrarAlerta('error', 'Erro ao carregar Google Login. Tente novamente.');
-                    }
-                });
-            }
-        }
-
-        // Processar resposta do Google
-        async function handleGoogleCredential(response) {
-            const btn = document.querySelector('.btn-social.google');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<span class="spinner"></span> Conectando...';
-            btn.style.pointerEvents = 'none';
-
-            try {
-                // Decodificar o token JWT
-                const decoded = jwt_decode(response.credential);
-                
-                // Verificar se usuário existe na SheetDB
-                const checkResponse = await fetch(`${SHEETDB_URL}/search?email=${decoded.email}`);
-                const existingUsers = await checkResponse.json();
-                
-                if (existingUsers.length > 0) {
-                    // Usuário já existe - fazer login
-                    usuarioLogado = existingUsers[0];
-                    mostrarAlerta('success', `Bem-vindo de volta, ${decoded.name}!`);
-                } else {
-                    // Criar novo usuário
-                    const novoUsuario = {
-                        nome: decoded.name,
-                        email: decoded.email,
-                        senha: '', // Google users don't need password
-                        telefone: '',
-                        cidade: 'Piracicaba',
-                        data_cadastro: new Date().toLocaleDateString('pt-BR'),
-                        pontos: '0',
-                        nivel: '🌱 EcoIniciante',
-                        streak: '1',
-                        desafios: '0',
-                        conquistas: '🌱 Primeiro passo'
-                    };
-
-                    const saveResponse = await fetch(SHEETDB_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ data: [novoUsuario] })
-                    });
-
-                    const result = await saveResponse.json();
-                    
-                    if (result.created) {
-                        usuarioLogado = novoUsuario;
-                        mostrarAlerta('success', `Bem-vindo ao SustentaPira, ${decoded.name}!`);
-                        
-                        // Recarregar lista de usuários
-                        await carregarUsuarios();
-                    } else {
-                        throw new Error('Erro ao criar usuário');
+                if (idToken) {
+                    try {
+                        const decoded = jwt_decode(idToken);
+                        alert('Login com Google bem-sucedido! Bem-vindo, ' + decoded.name);
+                        // Limpa a URL
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    } catch (e) {
+                        alert('Erro ao processar login');
                     }
                 }
-
-                // Atualizar interface
-                setTimeout(() => {
-                    document.getElementById('loginScreen').classList.add('hidden');
-                    document.getElementById('appScreen').classList.remove('hidden');
-                    atualizarUserInfo();
-                    renderAppContent();
-                }, 1500);
-
-            } catch (error) {
-                console.error('Erro no Google Login:', error);
-                mostrarAlerta('error', 'Erro ao fazer login com Google. Tente novamente.');
-                btn.innerHTML = originalText;
-                btn.style.pointerEvents = 'auto';
             }
         }
-
-        // Chamar carregamento inicial
-        carregarUsuarios();
-
-        // Inicializar Google Login quando a página carregar
-        document.addEventListener('DOMContentLoaded', initGoogleLogin);
+        
+        // Chamar no carregamento
+        window.onload = verificarRetornoGoogle;
+        
+        // Modificar o botão existente
+        document.getElementById('googleButton').addEventListener('click', loginComGoogle);
 
         // ========== FUNÇÕES DE LOGIN ==========
 
