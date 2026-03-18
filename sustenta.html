@@ -123,6 +123,12 @@
             100% { background-position: 1000px 0; }
         }
 
+        @keyframes logoGlow {
+            0% { filter: drop-shadow(0 0 5px rgba(139, 69, 19, 0.3)); }
+            50% { filter: drop-shadow(0 0 20px rgba(139, 69, 19, 0.6)); }
+            100% { filter: drop-shadow(0 0 5px rgba(139, 69, 19, 0.3)); }
+        }
+
         .logo-area {
             text-align: center;
             margin-bottom: 30px;
@@ -417,7 +423,153 @@
             margin: 0 auto;
         }
 
-        /* Header do app */
+        /* ===== HEADER SUPERIOR MELHORADO COM LOGO ===== */
+        .top-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            padding: 15px 20px;
+            background: linear-gradient(145deg, #F5F5F5, #f0e9e0);
+            border-radius: 50px;
+            border: 1px solid #8b5a2b;
+            box-shadow: 0 5px 20px rgba(93, 58, 26, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .top-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(139,69,19,0.08) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: glow 4s infinite;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 2;
+        }
+
+        .logo-image {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #8b4513, #b85e3a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
+            animation: logoGlow 3s infinite;
+            transition: all 0.3s ease;
+        }
+
+        .logo-image:hover {
+            transform: scale(1.05) rotate(5deg);
+            box-shadow: 0 6px 20px rgba(139, 69, 19, 0.5);
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-text h1 {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #8b4513, #b85e3a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+
+        .logo-text p {
+            font-size: 12px;
+            color: #5d3a1a;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 2;
+        }
+
+        .header-stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(139, 69, 19, 0.1);
+            padding: 8px 16px;
+            border-radius: 50px;
+            border: 1px solid #8b5a2b;
+            transition: all 0.3s ease;
+        }
+
+        .header-stat:hover {
+            background: rgba(139, 69, 19, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .header-stat i {
+            color: #8b4513;
+            font-size: 18px;
+        }
+
+        .header-stat span {
+            font-weight: 600;
+            color: #3a2a1a;
+        }
+
+        .header-stat .stat-highlight {
+            color: #8b4513;
+            font-weight: 700;
+            margin-left: 5px;
+        }
+
+        .header-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #8b4513, #b85e3a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+            border: 2px solid #8b4513;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .header-avatar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.3);
+        }
+
+        .header-avatar .online-indicator {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 12px;
+            height: 12px;
+            background: #4caf50;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        /* Header do app (antigo, mantido para compatibilidade) */
         .app-header {
             margin-bottom: 30px;
         }
@@ -1724,6 +1876,21 @@
                 padding: 30px 20px;
             }
 
+            .top-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .logo-container {
+                flex-direction: column;
+            }
+
+            .header-actions {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
             .user-info-card {
                 flex-direction: column;
                 text-align: center;
@@ -1822,6 +1989,16 @@
             .podium-spot.first .podium-avatar-giant {
                 width: 100px;
                 height: 100px;
+            }
+
+            .logo-image {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
+            }
+
+            .logo-text h1 {
+                font-size: 22px;
             }
         }
     </style>
@@ -1963,7 +2140,35 @@
     <!-- TELA PRINCIPAL DO APP -->
     <div class="app-screen hidden" id="appScreen">
         <div class="app-container">
-            <!-- Header com informações do usuário -->
+            <!-- HEADER SUPERIOR MELHORADO COM LOGO -->
+            <div class="top-header">
+                <div class="logo-container">
+                    <div class="logo-image">
+                        🌿
+                    </div>
+                    <div class="logo-text">
+                        <h1>SustentaPira</h1>
+                        <p>Sustentabilidade em ação</p>
+                    </div>
+                </div>
+                
+                <div class="header-actions">
+                    <div class="header-stat">
+                        <i class="fas fa-fire"></i>
+                        <span>Streak <span class="stat-highlight" id="headerStreak">0</span></span>
+                    </div>
+                    <div class="header-stat">
+                        <i class="fas fa-star"></i>
+                        <span>Pontos <span class="stat-highlight" id="headerPoints">0</span></span>
+                    </div>
+                    <div class="header-avatar" id="headerAvatar">
+                        👤
+                        <span class="online-indicator"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Header com informações do usuário (mantido para compatibilidade) -->
             <div class="app-header">
                 <div class="user-info-card" id="userInfoCard">
                     <div class="user-greeting">
@@ -2243,6 +2448,7 @@
                                 document.getElementById('loginScreen').classList.add('hidden');
                                 document.getElementById('appScreen').classList.remove('hidden');
                                 atualizarUserInfo();
+                                atualizarHeaderInfo();
                                 renderAppContent();
                                 
                                 mostrarAlerta('success', `Bem-vindo de volta, ${usuarioLogado.nome}!`);
@@ -2326,6 +2532,7 @@
                         document.getElementById('loginScreen').classList.add('hidden');
                         document.getElementById('appScreen').classList.remove('hidden');
                         atualizarUserInfo();
+                        atualizarHeaderInfo();
                         renderAppContent();
                     }, 1500);
                 } else {
@@ -2457,6 +2664,22 @@
             document.getElementById('userPoints').textContent = usuarioLogado.pontos;
             document.getElementById('userStreak').textContent = usuarioLogado.streak;
             document.getElementById('userChallenges').textContent = usuarioLogado.desafios;
+        }
+
+        function atualizarHeaderInfo() {
+            if (!usuarioLogado) return;
+            
+            document.getElementById('headerStreak').textContent = usuarioLogado.streak;
+            document.getElementById('headerPoints').textContent = usuarioLogado.pontos;
+            
+            // Atualizar avatar com a primeira letra do nome
+            const headerAvatar = document.getElementById('headerAvatar');
+            headerAvatar.textContent = usuarioLogado.nome.charAt(0).toUpperCase();
+            
+            // Adicionar indicador online de volta
+            const onlineIndicator = document.createElement('span');
+            onlineIndicator.className = 'online-indicator';
+            headerAvatar.appendChild(onlineIndicator);
         }
 
         function mudarTabApp(tab) {
@@ -2708,11 +2931,10 @@
                     <div class="ranking-stat-card">
                         <div class="ranking-stat-value">${mediaPontos}</div>
                         <div class="ranking-stat-label">Média de pontos</div>
-                        <div class="ranking-stat-trend"><i class="fas fa-chart-line"></i> 
-                                            </div>
+                        <div class="ranking-stat-trend"><i class="fas fa-chart-line"></i> +5%</div>
                     </div>
                     <div class="ranking-stat-card">
-                        <div class="ranking-stat-value">🔥 45</div>
+                        <div class="ranking-stat-value">🔥 99</div>
                         <div class="ranking-stat-label">Maior streak</div>
                         <div class="ranking-stat-trend"><i class="fas fa-crown"></i> Pedro Graciano</div>
                     </div>
@@ -3103,6 +3325,7 @@
             else if (pontos >= 100) usuarioLogado.nivel = "🌿 EcoAmigo";
             
             atualizarUserInfo();
+            atualizarHeaderInfo();
             
             alert(`✅ Comprovante validado! Você ganhou ${desafio.pontos} pontos.`);
             fecharModal('uploadModal');
