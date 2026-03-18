@@ -102,6 +102,12 @@
             40%, 100% { background-position: 200px; }
         }
 
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px rgba(139, 69, 19, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(139, 69, 19, 0.6); }
+            100% { box-shadow: 0 0 5px rgba(139, 69, 19, 0.3); }
+        }
+
         .logo-area {
             text-align: center;
             margin-bottom: 30px;
@@ -402,7 +408,7 @@
         }
 
         .user-info-card {
-            background: #F5F5F5;
+            background: linear-gradient(145deg, #F5F5F5, #f0e9e0);
             border-radius: 24px;
             padding: 20px;
             border: 1px solid #8b5a2b;
@@ -430,18 +436,29 @@
             justify-content: center;
             font-size: 28px;
             color: white;
+            box-shadow: 0 4px 10px rgba(139, 69, 19, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(139, 69, 19, 0.4);
         }
 
         .user-info h2 {
             font-size: 22px;
             margin-bottom: 5px;
             color: #3a2a1a;
+            font-weight: 700;
         }
 
         .user-info p {
             color: #8b4513;
             font-size: 14px;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .user-stats {
@@ -453,6 +470,11 @@
         .stat {
             text-align: center;
             min-width: 80px;
+            transition: all 0.3s ease;
+        }
+
+        .stat:hover {
+            transform: translateY(-3px);
         }
 
         .stat-value {
@@ -616,7 +638,454 @@
             border-radius: 2px;
         }
 
-        /* ===== RANKING MELHORADO ===== */
+        /* ===== PERFIL DETALHADO MELHORADO ===== */
+        .perfil-container {
+            padding: 20px 0;
+        }
+
+        .perfil-card-destaque {
+            background: linear-gradient(145deg, #F5F5F5, #f0e9e0);
+            border-radius: 32px;
+            padding: 30px;
+            border: 1px solid #8b5a2b;
+            box-shadow: 0 10px 30px rgba(93, 58, 26, 0.15);
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .perfil-card-destaque::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(139,69,19,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: glow 4s infinite;
+        }
+
+        .perfil-header-melhorado {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 2;
+        }
+
+        .perfil-avatar-melhorado {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #8b4513, #b85e3a, #8b4513);
+            background-size: 200% 200%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 64px;
+            border: 4px solid #8b4513;
+            color: white;
+            box-shadow: 0 10px 20px rgba(139, 69, 19, 0.3);
+            animation: gradientShift 5s ease infinite;
+            transition: all 0.3s ease;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .perfil-avatar-melhorado:hover {
+            transform: scale(1.05) rotate(5deg);
+            box-shadow: 0 15px 30px rgba(139, 69, 19, 0.4);
+        }
+
+        .perfil-info-melhorado h3 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #3a2a1a;
+            font-weight: 800;
+        }
+
+        .perfil-badge-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+
+        .perfil-badge {
+            background: rgba(139, 69, 19, 0.1);
+            border-radius: 50px;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #8b5a2b;
+        }
+
+        .perfil-badge i {
+            color: #8b4513;
+        }
+
+        .perfil-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px dashed #8b5a2b;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #8b4513, #b85e3a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+
+        .info-text {
+            flex: 1;
+        }
+
+        .info-text strong {
+            display: block;
+            font-size: 12px;
+            color: #8b4513;
+            text-transform: uppercase;
+        }
+
+        .info-text span {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .perfil-level-box-melhorado {
+            background: linear-gradient(145deg, #f0e9e0, #F5F5F5);
+            border: 2px solid #8b4513;
+            border-radius: 24px;
+            padding: 25px;
+            margin: 30px 0;
+            position: relative;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .level-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .level-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: #3a2a1a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .level-title i {
+            color: #8b4513;
+            font-size: 28px;
+        }
+
+        .level-points {
+            font-size: 20px;
+            font-weight: 700;
+            color: #8b4513;
+            background: rgba(139, 69, 19, 0.1);
+            padding: 8px 16px;
+            border-radius: 50px;
+        }
+
+        .progress-container {
+            margin: 20px 0;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .progress-bar-melhorado {
+            height: 15px;
+            background: #e0d5c0;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .progress-fill-melhorado {
+            height: 100%;
+            background: linear-gradient(90deg, #8b4513, #b85e3a, #8b4513);
+            background-size: 200% 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 200% 0%; }
+        }
+
+        .next-level-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #5d3a1a;
+            background: rgba(139, 69, 19, 0.05);
+            padding: 10px;
+            border-radius: 12px;
+        }
+
+        .stat-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-card-melhorado {
+            background: linear-gradient(145deg, #fafafa, #f0f0f0);
+            border: 1px solid #8b5a2b;
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card-melhorado::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            width: 60px;
+            height: 60px;
+            background: rgba(139, 69, 19, 0.05);
+            border-radius: 50%;
+        }
+
+        .stat-card-melhorado:hover {
+            transform: translateY(-5px);
+            border-color: #8b4513;
+            box-shadow: 0 10px 20px rgba(139, 69, 19, 0.2);
+        }
+
+        .stat-icon {
+            font-size: 36px;
+            color: #8b4513;
+            margin-bottom: 15px;
+            background: rgba(139, 69, 19, 0.1);
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+        }
+
+        .stat-card-melhorado .stat-value {
+            font-size: 36px;
+            font-weight: 800;
+            color: #3a2a1a;
+            margin-bottom: 5px;
+        }
+
+        .stat-card-melhorado .stat-label {
+            font-size: 14px;
+            color: #8b4513;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .conquistas-section {
+            margin: 40px 0;
+        }
+
+        .conquistas-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: 700;
+            color: #3a2a1a;
+            margin-bottom: 20px;
+        }
+
+        .conquistas-title i {
+            color: #8b4513;
+            font-size: 28px;
+        }
+
+        .conquistas-grid-melhorado {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .conquista-card {
+            background: linear-gradient(145deg, #FFFFFF, #f8f8f8);
+            border: 1px solid #8b5a2b;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .conquista-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            border-color: #8b4513;
+            box-shadow: 0 10px 20px rgba(139, 69, 19, 0.2);
+        }
+
+        .conquista-card:hover .conquista-icon {
+            animation: pulse 0.5s ease;
+        }
+
+        .conquista-icon {
+            font-size: 36px;
+            color: #8b4513;
+            margin-bottom: 15px;
+            background: rgba(139, 69, 19, 0.1);
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            transition: all 0.3s ease;
+        }
+
+        .conquista-card.locked {
+            opacity: 0.7;
+            filter: grayscale(0.5);
+        }
+
+        .conquista-card.locked .conquista-icon {
+            background: rgba(100, 100, 100, 0.1);
+            color: #999;
+        }
+
+        .conquista-name {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .conquista-desc {
+            font-size: 12px;
+            color: #5d3a1a;
+        }
+
+        .conquista-progress {
+            margin-top: 10px;
+            font-size: 11px;
+            color: #8b4513;
+            font-weight: 600;
+        }
+
+        .badge-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #8b4513;
+            color: white;
+            border-radius: 50px;
+            font-size: 10px;
+            font-weight: 700;
+            margin-top: 10px;
+        }
+
+        .atividade-recente {
+            background: linear-gradient(145deg, #fafafa, #f0f0f0);
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 30px;
+            border: 1px solid #8b5a2b;
+        }
+
+        .atividade-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 0;
+            border-bottom: 1px dashed #8b5a2b;
+        }
+
+        .atividade-item:last-child {
+            border-bottom: none;
+        }
+
+        .atividade-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(139, 69, 19, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8b4513;
+        }
+
+        .atividade-details {
+            flex: 1;
+        }
+
+        .atividade-titulo {
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .atividade-data {
+            font-size: 12px;
+            color: #8b4513;
+        }
+
+        .atividade-pontos {
+            background: linear-gradient(135deg, #8b4513, #b85e3a);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Ranking melhorado */
         .ranking-container {
             padding: 10px 0;
         }
@@ -889,14 +1358,6 @@
             transition: width 0.3s ease;
         }
 
-        .next-level-info {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            color: #5d3a1a;
-            margin-top: 5px;
-        }
-
         /* Modal */
         .modal-overlay {
             position: fixed;
@@ -955,9 +1416,17 @@
                 grid-template-columns: 1fr;
             }
 
-            .perfil-header {
+            .perfil-header-melhorado {
                 flex-direction: column;
                 text-align: center;
+            }
+
+            .perfil-info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-cards-grid {
+                grid-template-columns: 1fr;
             }
 
             .podium {
@@ -998,6 +1467,12 @@
 
             .stat-value {
                 font-size: 22px;
+            }
+
+            .perfil-avatar-melhorado {
+                width: 100px;
+                height: 100px;
+                font-size: 48px;
             }
         }
     </style>
@@ -1337,11 +1812,26 @@
             { nome: "Lucia Mendes", pontos: 1560, nivel: "🍃 EcoGuardião", streak: 28 },
         ];
 
+        // Conquistas disponíveis
+        const conquistasDisponiveis = [
+            { id: 1, nome: "🌱 Primeiro Passo", descricao: "Complete seu primeiro desafio", icone: "🌱", pontos: 50 },
+            { id: 2, nome: "♻️ Reciclador Iniciante", descricao: "Recicle 50kg de materiais", icone: "♻️", pontos: 100 },
+            { id: 3, nome: "🌳 Plantador", descricao: "Plante 5 árvores", icone: "🌳", pontos: 200 },
+            { id: 4, nome: "🔥 Streak 7 dias", descricao: "Mantenha streak por 7 dias", icone: "🔥", pontos: 150 },
+            { id: 5, nome: "📅 Participante", descricao: "Participe de 3 eventos", icone: "📅", pontos: 150 },
+            { id: 6, nome: "🔋 EcoBateria", descricao: "Descarte 50 pilhas", icone: "🔋", pontos: 100 },
+            { id: 7, nome: "🚲 Ciclista Verde", descricao: "Use bike 20 vezes", icone: "🚲", pontos: 200 },
+            { id: 8, nome: "🥫 Solidário", descricao: "Doe 30kg de alimentos", icone: "🥫", pontos: 250 },
+            { id: 9, nome: "💧 Economista", descricao: "Economize 1000L de água", icone: "💧", pontos: 300 },
+            { id: 10, nome: "⚡ Energético", descricao: "Use energia solar", icone: "☀️", pontos: 400 },
+        ];
+
         // ========== ESTADO ==========
         let usuarioLogado = null;
         let tabAppAtiva = 'desafios';
         let inscricoesUsuario = [];
         let comprovantesHoje = [];
+        let conquistasUsuario = [];
 
         // ========== FUNÇÕES DE INICIALIZAÇÃO ==========
         
@@ -1700,65 +2190,170 @@
             
             const conquistasArray = usuarioLogado.conquistas ? usuarioLogado.conquistas.split(',') : [];
             
+            // Simular atividades recentes
+            const atividadesRecentes = [
+                { tipo: "desafio", nome: "Reciclar 10kg", pontos: 200, data: "Hoje" },
+                { tipo: "evento", nome: "Mutirão de Limpeza", pontos: 150, data: "Ontem" },
+                { tipo: "desafio", nome: "Plantar Árvore", pontos: 300, data: "3 dias atrás" }
+            ];
+            
             let conquistasHtml = '';
             conquistasArray.forEach(conquista => {
                 conquistasHtml += `
-                    <div class="conquista-item">
-                        <i class="fas fa-medal" style="color: #8b4513;"></i>
-                        <span style="font-size: 12px; color: #5d3a1a; font-weight: 600; display: block; margin-top: 5px;">${conquista}</span>
+                    <div class="conquista-card">
+                        <div class="conquista-icon">🏆</div>
+                        <div class="conquista-name">${conquista}</div>
+                        <div class="conquista-desc">Conquista desbloqueada</div>
+                        <span class="badge-tag">+50 pts</span>
+                    </div>
+                `;
+            });
+            
+            // Adicionar conquistas bloqueadas como exemplo
+            for (let i = 0; i < 3; i++) {
+                conquistasHtml += `
+                    <div class="conquista-card locked">
+                        <div class="conquista-icon">🔒</div>
+                        <div class="conquista-name">???</div>
+                        <div class="conquista-desc">Continue progredindo</div>
+                        <div class="conquista-progress">75% completo</div>
+                    </div>
+                `;
+            }
+            
+            let atividadesHtml = '';
+            atividadesRecentes.forEach(atividade => {
+                atividadesHtml += `
+                    <div class="atividade-item">
+                        <div class="atividade-icon">
+                            <i class="fas ${atividade.tipo === 'desafio' ? 'fa-tasks' : 'fa-calendar-alt'}"></i>
+                        </div>
+                        <div class="atividade-details">
+                            <div class="atividade-titulo">${atividade.nome}</div>
+                            <div class="atividade-data">${atividade.data}</div>
+                        </div>
+                        <div class="atividade-pontos">+${atividade.pontos}</div>
                     </div>
                 `;
             });
             
             container.innerHTML = `
-                <h1 class="titulo-secao">Meu Perfil</h1>
-                
-                <div class="perfil-header">
-                    <div class="perfil-avatar-large">
-                        👤
+                <div class="perfil-container">
+                    <h1 class="titulo-secao">👤 Meu Perfil</h1>
+                    
+                    <div class="perfil-card-destaque">
+                        <div class="perfil-header-melhorado">
+                            <div class="perfil-avatar-melhorado">
+                                ${usuarioLogado.nome.charAt(0)}
+                            </div>
+                            <div class="perfil-info-melhorado">
+                                <h3>${usuarioLogado.nome}</h3>
+                                <div class="perfil-badge-container">
+                                    <span class="perfil-badge"><i class="fas fa-map-marker-alt"></i> ${usuarioLogado.cidade || 'Piracicaba'}</span>
+                                    <span class="perfil-badge"><i class="fas fa-calendar-alt"></i> Membro desde ${usuarioLogado.data_cadastro}</span>
+                                    <span class="perfil-badge"><i class="fas fa-envelope"></i> ${usuarioLogado.email}</span>
+                                    <span class="perfil-badge"><i class="fas fa-phone"></i> ${usuarioLogado.telefone || 'Não informado'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="perfil-info-grid">
+                            <div class="info-item">
+                                <div class="info-icon"><i class="fas fa-trophy"></i></div>
+                                <div class="info-text">
+                                    <strong>Ranking</strong>
+                                    <span>#4</span>
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-icon"><i class="fas fa-fire"></i></div>
+                                <div class="info-text">
+                                    <strong>Streak</strong>
+                                    <span>${usuarioLogado.streak} dias</span>
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-icon"><i class="fas fa-check-circle"></i></div>
+                                <div class="info-text">
+                                    <strong>Desafios</strong>
+                                    <span>${usuarioLogado.desafios}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="perfil-info">
-                        <h3>${usuarioLogado.nome}</h3>
-                        <p><i class="fas fa-map-marker-alt" style="color: #8b4513;"></i> ${usuarioLogado.cidade || 'Piracicaba'}</p>
-                        <p><i class="fas fa-calendar-alt" style="color: #8b4513;"></i> Membro desde ${usuarioLogado.data_cadastro}</p>
-                        <p><i class="fas fa-envelope" style="color: #8b4513;"></i> ${usuarioLogado.email}</p>
-                        <p><i class="fas fa-phone" style="color: #8b4513;"></i> ${usuarioLogado.telefone || 'Não informado'}</p>
+                    
+                    <div class="perfil-level-box-melhorado">
+                        <div class="level-header">
+                            <div class="level-title">
+                                <i class="fas fa-chart-line"></i>
+                                ${usuarioLogado.nivel}
+                            </div>
+                            <div class="level-points">
+                                ${usuarioLogado.pontos} / 5000
+                            </div>
+                        </div>
+                        
+                        <div class="progress-container">
+                            <div class="progress-label">
+                                <span>Progresso para próximo nível</span>
+                                <span>${porcentagemProgresso.toFixed(1)}%</span>
+                            </div>
+                            <div class="progress-bar-melhorado">
+                                <div class="progress-fill-melhorado" style="width: ${porcentagemProgresso}%;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="next-level-info">
+                            <span><i class="fas fa-arrow-up"></i> Faltam ${pontosProximoNivel} pontos</span>
+                            <span>Próximo nível: ${pontos < 5000 ? getProximoNivelNome(pontos) : 'Nível máximo'}</span>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="perfil-level-box" style="background: #F5F5F5; border: 1px solid #8b5a2b;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <span style="font-size: 18px; font-weight: 700; color: #3a2a1a;">${usuarioLogado.nivel}</span>
-                        <span style="color: #8b4513; font-weight: 600;">${usuarioLogado.pontos} / 5000 pts</span>
+                    
+                    <div class="stat-cards-grid">
+                        <div class="stat-card-melhorado">
+                            <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+                            <div class="stat-value">${inscricoesUsuario.length}</div>
+                            <div class="stat-label">Eventos</div>
+                        </div>
+                        <div class="stat-card-melhorado">
+                            <div class="stat-icon"><i class="fas fa-leaf"></i></div>
+                            <div class="stat-value">${usuarioLogado.desafios || 0}</div>
+                            <div class="stat-label">Desafios</div>
+                        </div>
+                        <div class="stat-card-melhorado">
+                            <div class="stat-icon"><i class="fas fa-map-pin"></i></div>
+                            <div class="stat-value">${Math.floor(Math.random() * 10) + 5}</div>
+                            <div class="stat-label">Visitas</div>
+                        </div>
                     </div>
-                    <div class="progress-bar" style="background: #e0d5c0;">
-                        <div class="progress-fill" style="width: ${porcentagemProgresso}%; background: linear-gradient(90deg, #8b4513, #b85e3a);"></div>
+                    
+                    <div class="conquistas-section">
+                        <div class="conquistas-title">
+                            <i class="fas fa-medal"></i>
+                            Conquistas
+                        </div>
+                        <div class="conquistas-grid-melhorado">
+                            ${conquistasHtml}
+                        </div>
                     </div>
-                    <p style="color: #5d3a1a; font-size: 14px; margin-top: 10px; font-weight: 500;">
-                        <i class="fas fa-arrow-up" style="color: #8b4513;"></i> Faltam ${pontosProximoNivel} pontos para o próximo nível
-                    </p>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 30px 0;">
-                    <div class="stat-card" style="background: #F5F5F5; border: 1px solid #8b5a2b; border-radius: 16px; padding: 20px; text-align: center;">
-                        <div class="stat-value" style="color: #3a2a1a; font-size: 32px; font-weight: 700;">${usuarioLogado.streak}</div>
-                        <div class="stat-label" style="color: #5d3a1a; font-weight: 600;">Dias de Streak</div>
+                    
+                    <div class="atividade-recente">
+                        <div class="conquistas-title" style="margin-bottom: 15px;">
+                            <i class="fas fa-history"></i>
+                            Atividade Recente
+                        </div>
+                        ${atividadesHtml}
                     </div>
-                    <div class="stat-card" style="background: #F5F5F5; border: 1px solid #8b5a2b; border-radius: 16px; padding: 20px; text-align: center;">
-                        <div class="stat-value" style="color: #3a2a1a; font-size: 32px; font-weight: 700;">${usuarioLogado.desafios}</div>
-                        <div class="stat-label" style="color: #5d3a1a; font-weight: 600;">Desafios</div>
-                    </div>
-                    <div class="stat-card" style="background: #F5F5F5; border: 1px solid #8b5a2b; border-radius: 16px; padding: 20px; text-align: center;">
-                        <div class="stat-value" style="color: #3a2a1a; font-size: 32px; font-weight: 700;">${inscricoesUsuario.length}</div>
-                        <div class="stat-label" style="color: #5d3a1a; font-weight: 600;">Eventos</div>
-                    </div>
-                </div>
-                
-                <h2 class="titulo-secao" style="font-size: 22px; margin: 30px 0 20px; color: #3a2a1a;">Conquistas</h2>
-                <div class="conquistas-grid">
-                    ${conquistasHtml}
                 </div>
             `;
+        }
+
+        function getProximoNivelNome(pontos) {
+            if (pontos < 100) return "EcoAmigo";
+            if (pontos < 500) return "EcoGuardião";
+            if (pontos < 1000) return "EcoMestre";
+            if (pontos < 5000) return "EcoHerói";
+            return "Nível Máximo";
         }
 
         function renderRanking(container) {
