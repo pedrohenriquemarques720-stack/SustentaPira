@@ -108,21 +108,6 @@
             100% { box-shadow: 0 0 5px rgba(139, 69, 19, 0.3); }
         }
 
-        @keyframes confetti {
-            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(-100px) rotate(720deg); opacity: 0; }
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        @keyframes shimmer {
-            0% { background-position: -1000px 0; }
-            100% { background-position: 1000px 0; }
-        }
-
         @keyframes logoGlow {
             0% { filter: drop-shadow(0 0 5px rgba(139, 69, 19, 0.3)); }
             50% { filter: drop-shadow(0 0 20px rgba(139, 69, 19, 0.6)); }
@@ -455,6 +440,11 @@
             align-items: center;
             gap: 15px;
             z-index: 2;
+            cursor: pointer;
+        }
+
+        .logo-container:hover .logo-image {
+            transform: scale(1.05) rotate(5deg);
         }
 
         .logo-image {
@@ -470,11 +460,6 @@
             box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
             animation: logoGlow 3s infinite;
             transition: all 0.3s ease;
-        }
-
-        .logo-image:hover {
-            transform: scale(1.05) rotate(5deg);
-            box-shadow: 0 6px 20px rgba(139, 69, 19, 0.5);
         }
 
         .logo-text {
@@ -569,95 +554,7 @@
             border: 2px solid white;
         }
 
-        /* Header do app (antigo, mantido para compatibilidade) */
-        .app-header {
-            margin-bottom: 30px;
-        }
-
-        .user-info-card {
-            background: linear-gradient(145deg, #F5F5F5, #f0e9e0);
-            border-radius: 24px;
-            padding: 20px;
-            border: 1px solid #8b5a2b;
-            box-shadow: 0 5px 20px rgba(93, 58, 26, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
-        .user-greeting {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .user-avatar {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #8b4513, #b85e3a);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            color: white;
-            box-shadow: 0 4px 10px rgba(139, 69, 19, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        .user-avatar:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 15px rgba(139, 69, 19, 0.4);
-        }
-
-        .user-info h2 {
-            font-size: 22px;
-            margin-bottom: 5px;
-            color: #3a2a1a;
-            font-weight: 700;
-        }
-
-        .user-info p {
-            color: #8b4513;
-            font-size: 14px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .user-stats {
-            display: flex;
-            gap: 40px;
-            flex-wrap: wrap;
-        }
-
-        .stat {
-            text-align: center;
-            min-width: 80px;
-            transition: all 0.3s ease;
-        }
-
-        .stat:hover {
-            transform: translateY(-3px);
-        }
-
-        .stat-value {
-            font-size: 28px;
-            font-weight: 700;
-            color: #8b4513;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: #5d3a1a;
-            text-transform: uppercase;
-            font-weight: 600;
-        }
-
-        .logout-btn {
+        .logout-btn-header {
             background: rgba(244, 67, 54, 0.1);
             border: 1px solid #f44336;
             color: #f44336;
@@ -669,9 +566,10 @@
             align-items: center;
             gap: 8px;
             font-weight: 600;
+            font-size: 14px;
         }
 
-        .logout-btn:hover {
+        .logout-btn-header:hover {
             background: #f44336;
             color: white;
         }
@@ -1891,20 +1789,6 @@
                 justify-content: center;
             }
 
-            .user-info-card {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .user-greeting {
-                flex-direction: column;
-            }
-
-            .user-stats {
-                justify-content: center;
-                gap: 20px;
-            }
-
             .app-tabs {
                 justify-content: center;
             }
@@ -2142,7 +2026,7 @@
         <div class="app-container">
             <!-- HEADER SUPERIOR MELHORADO COM LOGO -->
             <div class="top-header">
-                <div class="logo-container">
+                <div class="logo-container" onclick="mudarTabApp('perfil')">
                     <div class="logo-image">
                         🌿
                     </div>
@@ -2161,38 +2045,11 @@
                         <i class="fas fa-star"></i>
                         <span>Pontos <span class="stat-highlight" id="headerPoints">0</span></span>
                     </div>
-                    <div class="header-avatar" id="headerAvatar">
+                    <div class="header-avatar" id="headerAvatar" onclick="mudarTabApp('perfil')">
                         👤
                         <span class="online-indicator"></span>
                     </div>
-                </div>
-            </div>
-
-            <!-- Header com informações do usuário (mantido para compatibilidade) -->
-            <div class="app-header">
-                <div class="user-info-card" id="userInfoCard">
-                    <div class="user-greeting">
-                        <div class="user-avatar" id="userAvatar">👤</div>
-                        <div class="user-info">
-                            <h2 id="userName">Carregando...</h2>
-                            <p id="userLevel">🌱 EcoIniciante</p>
-                        </div>
-                    </div>
-                    <div class="user-stats">
-                        <div class="stat">
-                            <div class="stat-value" id="userPoints">0</div>
-                            <div class="stat-label">Pontos</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-value" id="userStreak">0</div>
-                            <div class="stat-label">Streak</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-value" id="userChallenges">0</div>
-                            <div class="stat-label">Desafios</div>
-                        </div>
-                    </div>
-                    <button class="logout-btn" onclick="logout()">
+                    <button class="logout-btn-header" onclick="logout()">
                         <i class="fas fa-sign-out-alt"></i>
                         Sair
                     </button>
@@ -2674,12 +2531,7 @@
             
             // Atualizar avatar com a primeira letra do nome
             const headerAvatar = document.getElementById('headerAvatar');
-            headerAvatar.textContent = usuarioLogado.nome.charAt(0).toUpperCase();
-            
-            // Adicionar indicador online de volta
-            const onlineIndicator = document.createElement('span');
-            onlineIndicator.className = 'online-indicator';
-            headerAvatar.appendChild(onlineIndicator);
+            headerAvatar.innerHTML = usuarioLogado.nome.charAt(0).toUpperCase() + '<span class="online-indicator"></span>';
         }
 
         function mudarTabApp(tab) {
