@@ -75,6 +75,33 @@
             }
         }
 
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shine {
+            0% { background-position: -100px; }
+            40%, 100% { background-position: 200px; }
+        }
+
         .logo-area {
             text-align: center;
             margin-bottom: 30px;
@@ -85,11 +112,6 @@
             margin-bottom: 10px;
             display: inline-block;
             animation: float 3s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
         }
 
         .logo-area h1 {
@@ -172,17 +194,6 @@
 
         .auth-pane.active {
             display: block;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
         }
 
         .form-group {
@@ -521,7 +532,7 @@
             padding: 25px;
             border: 1px solid #8b5a2b;
             box-shadow: 0 5px 20px rgba(93, 58, 26, 0.1);
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             color: #5d3a1a;
             margin-bottom: 20px;
         }
@@ -567,6 +578,24 @@
             color: white;
         }
 
+        .badge-gold {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #5d3a1a;
+            font-weight: 700;
+        }
+
+        .badge-silver {
+            background: linear-gradient(135deg, #C0C0C0 0%, #A9A9A9 100%);
+            color: #5d3a1a;
+            font-weight: 700;
+        }
+
+        .badge-bronze {
+            background: linear-gradient(135deg, #CD7F32 0%, #B87333 100%);
+            color: white;
+            font-weight: 700;
+        }
+
         .titulo-secao {
             font-size: 28px;
             font-weight: 700;
@@ -587,89 +616,284 @@
             border-radius: 2px;
         }
 
-        /* Perfil detalhado */
-        .perfil-header {
+        /* ===== RANKING MELHORADO ===== */
+        .ranking-container {
+            padding: 10px 0;
+        }
+
+        .podium {
             display: flex;
-            align-items: center;
-            gap: 30px;
-            margin-bottom: 30px;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 15px;
+            margin: 40px 0 50px;
             flex-wrap: wrap;
         }
 
-        .perfil-avatar-large {
-            width: 100px;
-            height: 100px;
+        .podium-item {
+            flex: 1;
+            min-width: 150px;
+            text-align: center;
+            position: relative;
+            border-radius: 24px 24px 0 0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .podium-item:hover {
+            transform: translateY(-10px);
+        }
+
+        .podium-item.first {
+            background: linear-gradient(180deg, rgba(255,215,0,0.2) 0%, rgba(255,215,0,0.05) 100%);
+            border-top: 3px solid #FFD700;
+            box-shadow: 0 -10px 20px -10px rgba(255,215,0,0.3);
+            order: 2;
+        }
+
+        .podium-item.second {
+            background: linear-gradient(180deg, rgba(192,192,192,0.2) 0%, rgba(192,192,192,0.05) 100%);
+            border-top: 3px solid #C0C0C0;
+            box-shadow: 0 -10px 20px -10px rgba(192,192,192,0.3);
+            order: 1;
+        }
+
+        .podium-item.third {
+            background: linear-gradient(180deg, rgba(205,127,50,0.2) 0%, rgba(205,127,50,0.05) 100%);
+            border-top: 3px solid #CD7F32;
+            box-shadow: 0 -10px 20px -10px rgba(205,127,50,0.3);
+            order: 3;
+        }
+
+        .podium-medal {
+            font-size: 48px;
+            margin: 10px 0;
+            animation: pulse 2s infinite;
+        }
+
+        .podium-item.first .podium-medal {
+            animation: pulse 2s infinite;
+            filter: drop-shadow(0 0 10px rgba(255,215,0,0.5));
+        }
+
+        .podium-avatar {
+            width: 80px;
+            height: 80px;
             background: linear-gradient(135deg, #8b4513, #b85e3a);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 40px;
+            color: white;
+            margin: 0 auto 15px;
+            border: 3px solid currentColor;
+        }
+
+        .podium-item.first .podium-avatar {
+            width: 100px;
+            height: 100px;
             font-size: 48px;
-            border: 3px solid #8b4513;
+            border-color: #FFD700;
+            box-shadow: 0 0 20px rgba(255,215,0,0.3);
+        }
+
+        .podium-name {
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .podium-item.first .podium-name {
+            font-size: 22px;
+            color: #3a2a1a;
+        }
+
+        .podium-level {
+            font-size: 14px;
+            color: #8b4513;
+            margin-bottom: 10px;
+        }
+
+        .podium-points {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #8b4513, #b85e3a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 10px 0;
+        }
+
+        .podium-streak {
+            display: inline-block;
+            padding: 5px 15px;
+            background: rgba(139, 69, 19, 0.1);
+            border-radius: 50px;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .podium-streak i {
+            color: #ff9800;
+            margin-right: 5px;
+        }
+
+        .ranking-list {
+            margin-top: 30px;
+        }
+
+        .ranking-card {
+            background: #F5F5F5;
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid #8b5a2b;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .ranking-card:hover {
+            transform: translateX(5px);
+            border-color: #8b4513;
+            box-shadow: 0 5px 15px rgba(139, 69, 19, 0.1);
+            background: #fafafa;
+        }
+
+        .ranking-card-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .ranking-user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex: 1;
+        }
+
+        .ranking-position {
+            font-size: 24px;
+            font-weight: 800;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .ranking-position.top-4 {
+            color: #8b4513;
+        }
+
+        .ranking-position.top-5 {
+            color: #5d3a1a;
+        }
+
+        .ranking-avatar-small {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #8b4513, #b85e3a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
             color: white;
         }
 
-        .perfil-info h3 {
-            font-size: 28px;
+        .ranking-details {
+            flex: 1;
+        }
+
+        .ranking-name {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .ranking-level {
+            font-size: 12px;
+            color: #8b4513;
+            margin-bottom: 5px;
+        }
+
+        .ranking-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 12px;
+        }
+
+        .ranking-stats i {
+            margin-right: 5px;
+        }
+
+        .ranking-stats .fa-fire {
+            color: #ff9800;
+        }
+
+        .ranking-stats .fa-star {
+            color: #8b4513;
+        }
+
+        .ranking-points-badge {
+            background: linear-gradient(135deg, #8b4513, #b85e3a);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 14px;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .ranking-motivation {
+            margin: 30px 0 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f9f5f0, #f0e9e0);
+            border-radius: 16px;
+            border: 1px solid #8b5a2b;
+            text-align: center;
+            animation: pulse 2s infinite;
+        }
+
+        .ranking-motivation i {
+            font-size: 32px;
+            color: #8b4513;
+            margin-bottom: 10px;
+        }
+
+        .ranking-motivation h3 {
+            font-size: 20px;
             margin-bottom: 10px;
             color: #3a2a1a;
         }
 
-        .perfil-info p {
+        .ranking-motivation p {
             color: #5d3a1a;
-            margin: 5px 0;
+            margin-bottom: 15px;
         }
 
-        .perfil-level-box {
-            background: #F5F5F5;
-            border: 1px solid #8b5a2b;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .progress-bar {
-            height: 10px;
+        .progress-challenge {
+            width: 100%;
+            height: 8px;
             background: #e0d5c0;
-            border-radius: 5px;
+            border-radius: 4px;
             margin: 15px 0;
             overflow: hidden;
         }
 
-        .progress-fill {
+        .progress-challenge-fill {
             height: 100%;
             background: linear-gradient(90deg, #8b4513, #b85e3a);
-            border-radius: 5px;
+            border-radius: 4px;
             transition: width 0.3s ease;
         }
 
-        .conquistas-grid {
+        .next-level-info {
             display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            margin-top: 20px;
-        }
-
-        .conquista-item {
-            background: #F5F5F5;
-            border: 1px solid #8b5a2b;
-            border-radius: 16px;
-            padding: 15px;
-            text-align: center;
-            min-width: 100px;
-        }
-
-        .conquista-item i {
-            font-size: 32px;
-            color: #8b4513;
-            margin-bottom: 8px;
-        }
-
-        .conquista-item span {
-            color: #5d3a1a;
-            font-weight: 600;
+            justify-content: space-between;
             font-size: 12px;
-            display: block;
+            color: #5d3a1a;
             margin-top: 5px;
         }
 
@@ -734,6 +958,24 @@
             .perfil-header {
                 flex-direction: column;
                 text-align: center;
+            }
+
+            .podium {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .podium-item {
+                width: 100%;
+            }
+
+            .ranking-card-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .ranking-points-badge {
+                align-self: flex-end;
             }
         }
 
@@ -1086,7 +1328,7 @@
 
         // Ranking
         const ranking = [
-            { nome: "Pedro Graciano", pontos: 5000, nivel: "Administrador", streak: 99 },
+            { nome: "Pedro Graciano", pontos: 5000, nivel: "👑 Administrador", streak: 99 },
             { nome: "Ana Costa", pontos: 4780, nivel: "🏆 EcoHerói", streak: 89 },
             { nome: "Maria Santos", pontos: 3520, nivel: "🏆 EcoHerói", streak: 67 },
             { nome: "Carlos Souza", pontos: 2840, nivel: "🌳 EcoMestre", streak: 52 },
@@ -1147,7 +1389,7 @@
                         cidade: "Piracicaba",
                         data_cadastro: "14/03/2026",
                         pontos: "5000", 
-                        nivel: "Administrador", 
+                        nivel: "👑 Administrador", 
                         streak: "99", 
                         desafios: "50",
                         conquistas: "Fundador,Mestre da Reciclagem,Guardião da Natureza,Lenda,Admin"
@@ -1520,52 +1762,96 @@
         }
 
         function renderRanking(container) {
-            let html = '<h1 class="titulo-secao">Ranking EcoCidadãos</h1>';
+            let html = '<h1 class="titulo-secao">🏆 Ranking EcoCidadãos</h1>';
             
             // Pódio
-            html += '<div class="card-grid" style="margin-bottom: 30px;">';
+            html += '<div class="podium">';
+            
             ranking.slice(0, 3).forEach((user, index) => {
+                const posicao = index === 0 ? "first" : index === 1 ? "second" : "third";
                 const medalha = index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉";
-                const cor = index === 0 ? "#ffd700" : index === 1 ? "#c0c0c0" : "#cd7f32";
+                const avatarIcon = index === 0 ? "👑" : index === 1 ? "🌟" : "✨";
                 
                 html += `
-                    <div class="card-moderno" style="text-align: center; border: 2px solid ${cor};">
-                        <div style="font-size: 48px;">${medalha}</div>
-                        <h3 style="color: #3a2a1a;">${user.nome}</h3>
-                        <p style="color: #8b4513;">${user.nivel}</p>
-                        <div style="font-size: 32px; color: #3a2a1a;">${user.pontos}</div>
-                        <p style="color: #5d3a1a;">pontos</p>
-                        <span class="badge badge-info">🔥 ${user.streak} dias</span>
+                    <div class="podium-item ${posicao}" onclick="mostrarMensagemMotivacional('${user.nome}', ${user.pontos})">
+                        <div class="podium-medal">${medalha}</div>
+                        <div class="podium-avatar">${avatarIcon}</div>
+                        <div class="podium-name">${user.nome}</div>
+                        <div class="podium-level">${user.nivel}</div>
+                        <div class="podium-points">${user.pontos} pts</div>
+                        <div class="podium-streak">
+                            <i class="fas fa-fire"></i> ${user.streak} dias
+                        </div>
                     </div>
                 `;
             });
+            
             html += '</div>';
             
+            // Mensagem motivacional
+            html += `
+                <div class="ranking-motivation" onclick="mostrarMensagemMotivacional()">
+                    <i class="fas fa-trophy"></i>
+                    <h3>🚀 Você pode chegar lá!</h3>
+                    <p>Complete desafios e participe de eventos para ganhar pontos e subir no ranking!</p>
+                    <div class="progress-challenge">
+                        <div class="progress-challenge-fill" style="width: 65%;"></div>
+                    </div>
+                    <div class="next-level-info">
+                        <span>Faltam 1.750 pontos</span>
+                        <span>Próximo nível: EcoMestre</span>
+                    </div>
+                </div>
+            `;
+            
             // Restante do ranking
-            html += '<h2 style="margin: 30px 0 20px; color: #3a2a1a;">Classificação Geral</h2>';
+            html += '<div class="ranking-list">';
             
             ranking.slice(3).forEach((user, index) => {
                 const posicao = index + 4;
+                const medalClass = posicao <= 5 ? "top-4" : "top-5";
+                
                 html += `
-                    <div class="card-moderno" style="padding: 15px; margin-bottom: 10px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div style="display: flex; align-items: center; gap: 20px;">
-                                <span style="font-size: 20px; font-weight: 700; color: #3a2a1a;">${posicao}º</span>
-                                <div>
-                                    <strong style="color: #3a2a1a;">${user.nome}</strong>
-                                    <p style="color: #5d3a1a;">${user.nivel}</p>
+                    <div class="ranking-card" onclick="mostrarMensagemMotivacional('${user.nome}', ${user.pontos})">
+                        <div class="ranking-card-content">
+                            <div class="ranking-user-info">
+                                <div class="ranking-position ${medalClass}">${posicao}º</div>
+                                <div class="ranking-avatar-small">👤</div>
+                                <div class="ranking-details">
+                                    <div class="ranking-name">${user.nome}</div>
+                                    <div class="ranking-level">${user.nivel}</div>
+                                    <div class="ranking-stats">
+                                        <span><i class="fas fa-fire"></i> ${user.streak} dias</span>
+                                        <span><i class="fas fa-star"></i> ${user.pontos} pts</span>
+                                    </div>
                                 </div>
                             </div>
-                            <div>
-                                <span class="badge badge-info">🔥 ${user.streak}</span>
-                                <span style="margin-left: 15px; color: #3a2a1a; font-weight: 600;">${user.pontos} pts</span>
+                            <div class="ranking-points-badge">
+                                ${user.pontos} pts
                             </div>
                         </div>
                     </div>
                 `;
             });
             
+            html += '</div>';
+            
             container.innerHTML = html;
+        }
+
+        function mostrarMensagemMotivacional(nome, pontos) {
+            const mensagens = [
+                "💪 Continue assim! Você está fazendo a diferença!",
+                "🌱 Cada ponto conta para um futuro mais sustentável!",
+                "🌟 Você é um exemplo para a comunidade!",
+                "🚀 Continue subindo no ranking! O topo te espera!",
+                "💚 Sua dedicação está transformando Piracicaba!",
+                "🎯 Foque nos desafios e acumule mais pontos!",
+                "🌿 A natureza agradece sua contribuição!"
+            ];
+            
+            const mensagemAleatoria = mensagens[Math.floor(Math.random() * mensagens.length)];
+            mostrarAlerta('success', mensagemAleatoria);
         }
 
         function renderEventos(container) {
