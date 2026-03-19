@@ -2306,6 +2306,15 @@
                                 document.getElementById('appScreen').classList.remove('hidden');
                                 atualizarUserInfo();
                                 atualizarHeaderInfo();
+                                
+                                // Garantir que a aba de desafios seja mostrada
+                                tabAppAtiva = 'desafios';
+                                document.querySelectorAll('.app-tab').forEach(btn => {
+                                    btn.classList.remove('active');
+                                    if (btn.textContent.includes('Desafios')) {
+                                        btn.classList.add('active');
+                                    }
+                                });
                                 renderAppContent();
                                 
                                 mostrarAlerta('success', `Bem-vindo de volta, ${usuarioLogado.nome}!`);
@@ -2390,6 +2399,15 @@
                         document.getElementById('appScreen').classList.remove('hidden');
                         atualizarUserInfo();
                         atualizarHeaderInfo();
+                        
+                        // Garantir que a aba de desafios seja mostrada
+                        tabAppAtiva = 'desafios';
+                        document.querySelectorAll('.app-tab').forEach(btn => {
+                            btn.classList.remove('active');
+                            if (btn.textContent.includes('Desafios')) {
+                                btn.classList.add('active');
+                            }
+                        });
                         renderAppContent();
                     }, 1500);
                 } else {
