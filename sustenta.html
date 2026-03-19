@@ -2225,7 +2225,7 @@
 
         // ========== ESTADO ==========
         let usuarioLogado = null;
-        let tabAppAtiva = 'desafios';
+        let tabAppAtiva = 'desafios'; // Já inicia como desafios
         let inscricoesUsuario = [];
         let comprovantesHoje = [];
 
@@ -2307,7 +2307,7 @@
                                 atualizarUserInfo();
                                 atualizarHeaderInfo();
                                 
-                                // Garantir que a aba de desafios seja mostrada
+                                // Garantir que a aba de desafios seja mostrada imediatamente
                                 tabAppAtiva = 'desafios';
                                 document.querySelectorAll('.app-tab').forEach(btn => {
                                     btn.classList.remove('active');
@@ -2315,6 +2315,8 @@
                                         btn.classList.add('active');
                                     }
                                 });
+                                
+                                // Renderizar o conteúdo imediatamente
                                 renderAppContent();
                                 
                                 mostrarAlerta('success', `Bem-vindo de volta, ${usuarioLogado.nome}!`);
@@ -2400,7 +2402,7 @@
                         atualizarUserInfo();
                         atualizarHeaderInfo();
                         
-                        // Garantir que a aba de desafios seja mostrada
+                        // Garantir que a aba de desafios seja mostrada imediatamente
                         tabAppAtiva = 'desafios';
                         document.querySelectorAll('.app-tab').forEach(btn => {
                             btn.classList.remove('active');
@@ -2408,6 +2410,8 @@
                                 btn.classList.add('active');
                             }
                         });
+                        
+                        // Renderizar o conteúdo imediatamente
                         renderAppContent();
                     }, 1500);
                 } else {
@@ -2523,10 +2527,23 @@
 
         // Chamar carregamento inicial
         carregarUsuarios();
-        
-        // Verificar se existe login salvo ao carregar a página
+
+        // Garantir que quando a página carregar, a aba de desafios seja a ativa
         document.addEventListener('DOMContentLoaded', function() {
             verificarLoginSalvo();
+            
+            // Mesmo sem usuário logado, garantir que a aba de desafios seja a ativa
+            if (!usuarioLogado) {
+                tabAppAtiva = 'desafios';
+                document.querySelectorAll('.app-tab').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.textContent.includes('Desafios')) {
+                        btn.classList.add('active');
+                    }
+                });
+                // Renderizar desafios mesmo sem usuário logado (opcional)
+                // renderAppContent();
+            }
         });
 
         // ========== FUNÇÕES DO APP ==========
@@ -2580,6 +2597,8 @@
                 case 'pontos':
                     renderPontos(content);
                     break;
+                default:
+                    renderDesafios(content);
             }
         }
 
