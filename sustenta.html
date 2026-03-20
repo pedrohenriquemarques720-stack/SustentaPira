@@ -2,14 +2,18 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>SustentaPira · App Sustentável</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Mapa Sustentável Piracicaba - Pontos de Coleta</title>
     
-    <!-- Fontes e ícones -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS e JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Font Awesome para ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
         * {
@@ -20,2713 +24,521 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: #FFFFFF;
-            color: #5d3a1a;
-            min-height: 100vh;
-            transition: background 0.3s ease;
-        }
-
-        /* ===== TELA DE LOGIN ===== */
-        .login-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            background: #FFFFFF;
-            z-index: 1000;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
-            overflow-y: auto;
-        }
-
-        .login-screen.hidden {
-            opacity: 0;
-            visibility: hidden;
-        }
-
-        .auth-wrapper {
-            width: 100%;
-            max-width: 500px;
-            margin: auto;
-        }
-
-        .auth-card {
-            background: #F5F5F5;
-            border-radius: 32px;
-            padding: 40px 30px;
-            border: 1px solid #8b5a2b;
-            box-shadow: 0 10px 30px rgba(93, 58, 26, 0.1);
-            backdrop-filter: blur(10px);
-            animation: fadeInUp 0.6s ease forwards;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        @keyframes shine {
-            0% { background-position: -100px; }
-            40%, 100% { background-position: 200px; }
-        }
-
-        @keyframes glow {
-            0% { box-shadow: 0 0 5px rgba(139, 69, 19, 0.3); }
-            50% { box-shadow: 0 0 20px rgba(139, 69, 19, 0.6); }
-            100% { box-shadow: 0 0 5px rgba(139, 69, 19, 0.3); }
-        }
-
-        @keyframes logoGlow {
-            0% { filter: drop-shadow(0 0 5px rgba(139, 69, 19, 0.3)); }
-            50% { filter: drop-shadow(0 0 20px rgba(139, 69, 19, 0.6)); }
-            100% { filter: drop-shadow(0 0 5px rgba(139, 69, 19, 0.3)); }
-        }
-
-        .logo-area {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .logo-icon {
-            font-size: 64px;
-            margin-bottom: 10px;
-            display: inline-block;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        .logo-area h1 {
-            font-size: 36px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #8b4513, #b85e3a);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 5px;
-        }
-
-        .logo-area p {
-            color: #8b4513;
-            font-size: 14px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
-        /* ===== ESTILOS DAS ABAS ===== */
-        .auth-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            background: #2a2a2a;
-            padding: 6px;
-            border-radius: 60px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            border: 1px solid #3a3a3a;
-        }
-        
-        .auth-tab {
-            flex: 1;
-            padding: 16px 20px;
-            border: none;
-            background: transparent;
-            color: rgba(255, 255, 255, 0.7);
-            font-weight: 600;
-            font-size: 16px;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            letter-spacing: 0.5px;
-        }
-        
-        .auth-tab i {
-            font-size: 18px;
-            color: rgba(255, 255, 255, 0.7);
-            transition: all 0.3s ease;
-        }
-        
-        .auth-tab.active {
-            background: #8b4513;
-            color: #FFFFFF;
-            font-weight: 700;
-            box-shadow: 0 4px 15px rgba(139, 69, 19, 0.4);
-            transform: scale(1.02);
-        }
-        
-        .auth-tab.active i {
-            color: #FFFFFF;
-        }
-        
-        .auth-tab:hover:not(.active) {
-            background: rgba(255, 255, 255, 0.1);
-            color: #FFFFFF;
-        }
-        
-        .auth-tab:hover:not(.active) i {
-            color: #FFFFFF;
-        }
-
-        .auth-pane {
-            display: none;
-            animation: slideIn 0.4s ease;
-        }
-
-        .auth-pane.active {
-            display: block;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #5d3a1a;
-            font-weight: 500;
-            font-size: 14px;
-        }
-
-        .input-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .input-icon {
-            position: absolute;
-            left: 16px;
-            color: #8b4513;
-            font-size: 16px;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 15px 15px 15px 48px;
-            background: #FFFFFF;
-            border: 2px solid #8b5a2b;
-            border-radius: 16px;
-            color: #5d3a1a;
-            font-size: 16px;
-            transition: all 0.3s ease;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #8b4513;
-            box-shadow: 0 0 0 4px rgba(139, 69, 19, 0.1);
-            background: #FFFFFF;
-        }
-
-        .btn-auth {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, #8b4513, #b85e3a);
-            border: none;
-            border-radius: 16px;
-            color: white;
-            font-weight: 700;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .btn-auth:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(139, 69, 19, 0.5);
-        }
-
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 20px 0;
-        }
-
-        .checkbox-group input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            accent-color: #8b4513;
-        }
-
-        .checkbox-group label {
-            color: #5d3a1a;
-        }
-
-        .auth-links {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .auth-links a {
-            color: #8b4513;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .divider {
-            display: flex;
-            align-items: center;
-            text-align: center;
-            margin: 30px 0 20px;
-        }
-
-        .divider::before,
-        .divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, #8b4513, transparent);
-        }
-
-        .divider span {
-            padding: 0 15px;
-            color: #8b4513;
-            font-size: 14px;
-        }
-
-        .benefits {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin: 30px 0 0;
-            padding: 20px;
-            background: #F5F5F5;
-            border-radius: 24px;
-            border: 1px solid #8b5a2b;
-        }
-
-        .benefit-item {
-            text-align: center;
-        }
-
-        .benefit-item i {
-            font-size: 24px;
-            color: #8b4513;
-            margin-bottom: 8px;
-        }
-
-        .benefit-item span {
-            display: block;
-            font-size: 12px;
-            color: #5d3a1a;
-            font-weight: 600;
-        }
-
-        .alert {
-            padding: 15px 20px;
-            border-radius: 16px;
-            margin: 20px 0;
-            border-left: 4px solid;
-            background: #F5F5F5;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #5d3a1a;
-        }
-
-        .alert-success {
-            border-left-color: #8b4513;
-        }
-
-        .alert-error {
-            border-left-color: #f44336;
-        }
-
-        .spinner {
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(139, 69, 19, 0.3);
-            border-top-color: #8b4513;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* ===== TELA PRINCIPAL DO APP ===== */
-        .app-screen {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            opacity: 1;
-            transition: opacity 0.5s ease;
-        }
-
-        .app-screen.hidden {
-            display: none;
-            opacity: 0;
-        }
-
-        .app-container {
-            width: 100%;
-            max-width: 1400px;
-            padding: 20px;
-            margin: 0 auto;
-        }
-
-        /* ===== HEADER SUPERIOR MELHORADO COM LOGO ===== */
-        .top-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 25px;
-            padding: 15px 20px;
-            background: linear-gradient(145deg, #F5F5F5, #f0e9e0);
-            border-radius: 50px;
-            border: 1px solid #8b5a2b;
-            box-shadow: 0 5px 20px rgba(93, 58, 26, 0.1);
-            position: relative;
+            background: #f8f5f0;
+            color: #3a2a1a;
+            height: 100vh;
             overflow: hidden;
         }
 
-        .top-header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -10%;
-            width: 200px;
-            height: 200px;
-            background: radial-gradient(circle, rgba(139,69,19,0.08) 0%, transparent 70%);
-            border-radius: 50%;
-            animation: glow 4s infinite;
-        }
-
-        .logo-container {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            z-index: 2;
-            cursor: pointer;
-        }
-
-        .logo-container:hover .logo-image {
-            transform: scale(1.05) rotate(5deg);
-        }
-
-        .logo-image {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #8b4513, #b85e3a);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            color: white;
-            box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
-            animation: logoGlow 3s infinite;
-            transition: all 0.3s ease;
-        }
-
-        .logo-text {
+        /* Container principal */
+        .map-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
             display: flex;
             flex-direction: column;
         }
 
+        /* Header estilizado */
+        .map-header {
+            background: linear-gradient(135deg, #2c5e2e, #1e3a1e);
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+            z-index: 10;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            font-size: 32px;
+            background: #ffd966;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2c5e2e;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
         .logo-text h1 {
-            font-size: 28px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #8b4513, #b85e3a);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            line-height: 1.2;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
         }
 
         .logo-text p {
             font-size: 12px;
-            color: #5d3a1a;
-            letter-spacing: 1px;
-            text-transform: uppercase;
+            opacity: 0.9;
         }
 
-        .header-actions {
+        .stats-bar {
             display: flex;
-            align-items: center;
             gap: 20px;
-            z-index: 2;
+            background: rgba(255,255,255,0.15);
+            padding: 8px 18px;
+            border-radius: 40px;
+            backdrop-filter: blur(4px);
         }
 
-        .header-stat {
+        .stat {
             display: flex;
             align-items: center;
             gap: 8px;
-            background: rgba(139, 69, 19, 0.1);
-            padding: 8px 16px;
-            border-radius: 50px;
-            border: 1px solid #8b5a2b;
-            transition: all 0.3s ease;
-        }
-
-        .header-stat:hover {
-            background: rgba(139, 69, 19, 0.15);
-            transform: translateY(-2px);
-        }
-
-        .header-stat i {
-            color: #8b4513;
-            font-size: 18px;
-        }
-
-        .header-stat span {
-            font-weight: 600;
-            color: #3a2a1a;
-        }
-
-        .header-stat .stat-highlight {
-            color: #8b4513;
-            font-weight: 700;
-            margin-left: 5px;
-        }
-
-        .header-avatar {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #8b4513, #b85e3a);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: white;
-            cursor: pointer;
-            border: 2px solid #8b4513;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .header-avatar:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.3);
-        }
-
-        .header-avatar .online-indicator {
-            position: absolute;
-            bottom: 2px;
-            right: 2px;
-            width: 12px;
-            height: 12px;
-            background: #4caf50;
-            border-radius: 50%;
-            border: 2px solid white;
-        }
-
-        .logout-btn-header {
-            background: rgba(244, 67, 54, 0.1);
-            border: 1px solid #f44336;
-            color: #f44336;
-            padding: 10px 20px;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 600;
             font-size: 14px;
+            font-weight: 500;
         }
 
-        .logout-btn-header:hover {
-            background: #f44336;
-            color: white;
+        .stat i {
+            font-size: 16px;
         }
 
-        /* Tabs do app */
-        .app-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            background: #3a2a1a;
-            padding: 10px;
-            border-radius: 60px;
-        }
-
-        .app-tab {
-            padding: 12px 24px;
-            background: transparent;
-            border: none;
-            color: #FFFFFF;
-            border-radius: 50px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 14px;
-        }
-
-        .app-tab.active {
-            background: #8b4513;
-            color: #FFFFFF;
-            font-weight: 800;
-            box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
-        }
-
-        .app-tab-content {
-            display: none;
-        }
-
-        .app-tab-content.active {
-            display: block;
-        }
-
-        /* Cards */
-        .card-moderno {
-            background: #F5F5F5;
-            border-radius: 24px;
-            padding: 25px;
-            border: 1px solid #8b5a2b;
-            box-shadow: 0 5px 20px rgba(93, 58, 26, 0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            color: #5d3a1a;
-            margin-bottom: 20px;
-        }
-
-        .card-moderno:hover {
-            transform: translateY(-5px);
-            border-color: #8b4513;
-            box-shadow: 0 8px 25px rgba(139, 69, 19, 0.15);
-        }
-
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 20px;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 6px 14px;
-            border-radius: 50px;
-            font-size: 12px;
-            font-weight: 600;
-            margin: 5px;
-        }
-
-        .badge-success {
-            background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
-            color: white;
-        }
-
-        .badge-info {
-            background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
-            color: white;
-        }
-
-        .badge-warning {
-            background: linear-gradient(135deg, #ff8f00 0%, #ff6f00 100%);
-            color: white;
-        }
-
-        .badge-premium {
-            background: linear-gradient(135deg, #7b1fa2 0%, #4a148c 100%);
-            color: white;
-        }
-
-        .badge-gold {
-            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-            color: #5d3a1a;
-            font-weight: 700;
-        }
-
-        .badge-silver {
-            background: linear-gradient(135deg, #C0C0C0 0%, #A9A9A9 100%);
-            color: #5d3a1a;
-            font-weight: 700;
-        }
-
-        .badge-bronze {
-            background: linear-gradient(135deg, #CD7F32 0%, #B87333 100%);
-            color: white;
-            font-weight: 700;
-        }
-
-        .titulo-secao {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 30px;
-            position: relative;
-            padding-bottom: 15px;
-            color: #3a2a1a;
-        }
-
-        .titulo-secao:after {
-            content: '';
+        /* Controles de zoom customizados */
+        .custom-zoom {
             position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 60px;
-            height: 4px;
-            background: linear-gradient(90deg, #8b4513, #b85e3a);
-            border-radius: 2px;
-        }
-
-        /* ===== CHATBOT DE SUSTENTABILIDADE ===== */
-        .chatbot-button {
-            position: fixed;
             bottom: 30px;
-            right: 30px;
-            width: 70px;
-            height: 70px;
-            background: linear-gradient(135deg, #8b4513, #b85e3a);
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: white;
+            border-radius: 50px;
+            padding: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+            border: 1px solid #ccc;
+        }
+
+        .zoom-btn {
+            width: 48px;
+            height: 48px;
+            background: white;
+            border: none;
             border-radius: 50%;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            color: #2c5e2e;
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+
+        .zoom-btn:hover {
+            background: #2c5e2e;
             color: white;
-            font-size: 30px;
-            cursor: pointer;
-            box-shadow: 0 5px 20px rgba(139, 69, 19, 0.4);
-            transition: all 0.3s ease;
-            z-index: 1000;
-            border: 3px solid #8b5a2b;
+            transform: scale(1.05);
         }
 
-        .chatbot-button:hover {
-            transform: scale(1.1);
-            box-shadow: 0 8px 25px rgba(139, 69, 19, 0.6);
+        /* Mapa ocupa todo espaço restante */
+        #map {
+            flex: 1;
+            width: 100%;
+            background: #e9e2d4;
         }
 
-        .chatbot-container {
-            position: fixed;
-            bottom: 120px;
-            right: 30px;
-            width: 380px;
-            height: 550px;
-            background: linear-gradient(145deg, #F5F5F5, #f0e9e0);
-            border-radius: 25px;
-            border: 2px solid #8b4513;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            display: none;
-            flex-direction: column;
-            overflow: hidden;
-            z-index: 1001;
-            backdrop-filter: blur(10px);
-        }
-
-        .chatbot-container.open {
-            display: flex;
-            animation: slideInUp 0.3s ease;
-        }
-
-        @keyframes slideInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .chatbot-header {
-            background: linear-gradient(135deg, #8b4513, #b85e3a);
-            color: white;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 2px solid #8b5a2b;
-        }
-
-        .chatbot-header h3 {
+        /* Popup personalizado */
+        .custom-popup .popup-title {
             font-size: 18px;
+            font-weight: 800;
+            color: #2c5e2e;
+            margin-bottom: 8px;
+            border-bottom: 2px solid #ffd966;
+            display: inline-block;
+        }
+
+        .custom-popup .popup-detail {
+            margin: 8px 0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .custom-popup .popup-detail i {
+            width: 22px;
+            color: #ff8c42;
+        }
+
+        .custom-popup .badge-cat {
+            display: inline-block;
+            background: #e8f0e8;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 8px;
+            color: #2c5e2e;
+        }
+
+        .popup-footer {
+            margin-top: 12px;
+            font-size: 11px;
+            color: #777;
+            text-align: right;
+            border-top: 1px solid #eee;
+            padding-top: 6px;
+        }
+
+        /* Filtro lateral */
+        .filter-panel {
+            position: absolute;
+            top: 100px;
+            left: 20px;
+            z-index: 1000;
+            background: white;
+            border-radius: 24px;
+            padding: 15px;
+            box-shadow: 0 8px 28px rgba(0,0,0,0.2);
+            width: 220px;
+            backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.95);
+            border: 1px solid #ddd;
+            transition: all 0.3s;
+        }
+
+        .filter-panel h4 {
+            margin-bottom: 12px;
+            color: #2c5e2e;
             font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
-        .chatbot-header i {
-            font-size: 24px;
-        }
-
-        .chatbot-close {
-            background: transparent;
-            border: none;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .chatbot-close:hover {
-            transform: scale(1.1);
-        }
-
-        .chatbot-messages {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
+        .filter-group {
             display: flex;
             flex-direction: column;
-            gap: 15px;
-        }
-
-        .message {
-            max-width: 80%;
-            padding: 12px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            line-height: 1.5;
-            word-wrap: break-word;
-        }
-
-        .message.bot {
-            background: linear-gradient(145deg, #ffffff, #f8f8f8);
-            border: 1px solid #8b5a2b;
-            align-self: flex-start;
-            border-bottom-left-radius: 5px;
-        }
-
-        .message.user {
-            background: linear-gradient(135deg, #8b4513, #b85e3a);
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 5px;
-        }
-
-        .chatbot-input-area {
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.5);
-            border-top: 1px solid #8b5a2b;
-            display: flex;
             gap: 10px;
         }
 
-        .chatbot-input {
-            flex: 1;
-            padding: 12px 16px;
-            border: 2px solid #8b5a2b;
-            border-radius: 50px;
-            font-size: 14px;
-            outline: none;
-            transition: all 0.3s ease;
-            background: white;
-        }
-
-        .chatbot-input:focus {
-            border-color: #8b4513;
-            box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.1);
-        }
-
-        .chatbot-send {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #8b4513, #b85e3a);
+        .filter-btn {
+            background: #f0f0f0;
             border: none;
-            border-radius: 50%;
-            color: white;
-            font-size: 20px;
+            padding: 8px 12px;
+            border-radius: 40px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-align: left;
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 8px;
         }
 
-        .chatbot-send:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(139, 69, 19, 0.3);
+        .filter-btn.active {
+            background: #2c5e2e;
+            color: white;
         }
 
-        /* Upload com IA */
-        .upload-preview {
-            margin: 20px 0;
+        .filter-btn:hover {
+            background: #ffd966;
+            color: #2c5e2e;
+        }
+
+        .reset-filter {
+            margin-top: 12px;
+            background: #ff8c42;
+            color: white;
             text-align: center;
-        }
-
-        .upload-preview img {
-            max-width: 100%;
-            max-height: 200px;
-            border-radius: 12px;
-            border: 2px solid #8b4513;
-            box-shadow: 0 5px 15px rgba(139, 69, 19, 0.2);
-        }
-
-        .ai-analysis {
-            margin: 20px 0;
-            padding: 15px;
-            background: rgba(139, 69, 19, 0.05);
-            border-radius: 12px;
-            border: 1px solid #8b5a2b;
-            font-size: 14px;
-            color: #5d3a1a;
-        }
-
-        .ai-analysis .loading {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #8b4513;
-        }
-
-        .ai-analysis .success {
-            color: #2e7d32;
+            border: none;
+            padding: 8px;
+            border-radius: 40px;
             font-weight: 600;
+            cursor: pointer;
+            font-size: 12px;
         }
 
-        .ai-analysis .error {
-            color: #f44336;
-            font-weight: 600;
-        }
-
-        /* Modal */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(5px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .modal-content {
-            max-width: 600px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        /* Responsividade */
+        /* Responsivo */
         @media (max-width: 768px) {
-            .auth-card {
-                padding: 30px 20px;
-            }
-
-            .top-header {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
-            }
-
-            .logo-container {
-                flex-direction: column;
-            }
-
-            .header-actions {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-
-            .app-tabs {
-                justify-content: center;
-            }
-
-            .card-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .perfil-header-melhorado {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .perfil-info-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .stat-cards-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .podium-spectacular {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .podium-spot {
-                width: 100%;
-            }
-
-            .ranking-stats-bar {
-                grid-template-columns: 1fr;
-            }
-
-            .ranking-achievements {
-                grid-template-columns: 1fr;
-            }
-
-            .ranking-item-premium {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .ranking-points-premium {
-                align-self: flex-end;
-            }
-
-            .chatbot-container {
-                width: 90%;
-                right: 5%;
+            .filter-panel {
+                top: auto;
                 bottom: 100px;
+                left: 10px;
+                right: auto;
+                width: 190px;
+                padding: 12px;
+            }
+            .stats-bar {
+                display: none;
+            }
+            .map-header {
+                padding: 12px 16px;
+            }
+            .logo-text h1 {
+                font-size: 18px;
             }
         }
-
-        @media (max-width: 480px) {
-            .auth-tab {
-                padding: 12px;
-                font-size: 14px;
-            }
-
-            .benefits {
-                grid-template-columns: 1fr;
-            }
-
-            .benefit-item {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                text-align: left;
-            }
-
-            .stat-value {
-                font-size: 22px;
-            }
-
-            .perfil-avatar-melhorado {
-                width: 100px;
-                height: 100px;
-                font-size: 48px;
-            }
-
-            .podium-avatar-giant {
-                width: 80px;
-                height: 80px;
-                font-size: 40px;
-            }
-
-            .podium-spot.first .podium-avatar-giant {
-                width: 100px;
-                height: 100px;
-            }
-
-            .logo-image {
-                width: 50px;
-                height: 50px;
-                font-size: 24px;
-            }
-
-            .logo-text h1 {
-                font-size: 22px;
-            }
+        
+        /* Tooltip info */
+        .leaflet-popup-content {
+            min-width: 260px;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .leaflet-control-attribution {
+            font-size: 9px;
         }
     </style>
 </head>
 <body>
-    <!-- TELA DE LOGIN -->
-    <div class="login-screen" id="loginScreen">
-        <div class="auth-wrapper">
-            <div class="auth-card">
-                <div class="logo-area">
-                    <div class="logo-icon">🌿</div>
-                    <h1>SustentaPira</h1>
-                    <p>Sustentabilidade em ação</p>
-                </div>
-
-                <div class="auth-tabs">
-                    <button class="auth-tab active" onclick="switchTab('login')" id="tabLogin">
-                        <i class="fas fa-sign-in-alt"></i>
-                        <span>Entrar</span>
-                    </button>
-                    <button class="auth-tab" onclick="switchTab('cadastro')" id="tabCadastro">
-                        <i class="fas fa-user-plus"></i>
-                        <span>Criar conta</span>
-                    </button>
-                </div>
-
-                <div id="alertArea"></div>
-
-                <div class="auth-content">
-                    <!-- Painel de Login -->
-                    <div class="auth-pane active" id="paneLogin">
-                        <form onsubmit="handleLogin(event)">
-                            <div class="form-group">
-                                <label>E-mail</label>
-                                <div class="input-wrapper">
-                                    <i class="fas fa-envelope input-icon"></i>
-                                    <input type="email" id="loginEmail" placeholder="seu@email.com" required>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Senha</label>
-                                <div class="input-wrapper">
-                                    <i class="fas fa-lock input-icon"></i>
-                                    <input type="password" id="loginSenha" placeholder="••••••••" required>
-                                </div>
-                            </div>
-
-                            <div class="checkbox-group">
-                                <input type="checkbox" id="lembrar">
-                                <label for="lembrar">Lembrar meu acesso</label>
-                            </div>
-
-                            <button type="submit" class="btn-auth" id="btnLogin">
-                                <i class="fas fa-sign-in-alt"></i>
-                                Entrar no SustentaPira
-                            </button>
-
-                            <div class="auth-links">
-                                <a href="#" onclick="esqueciSenha(event)">Esqueceu sua senha?</a>
-                            </div>
-                        </form>
-                    </div>
-
-                    <!-- Painel de Cadastro -->
-                    <div class="auth-pane" id="paneCadastro">
-                        <form onsubmit="handleCadastro(event)">
-                            <div class="form-group">
-                                <label>Nome completo</label>
-                                <div class="input-wrapper">
-                                    <i class="fas fa-user input-icon"></i>
-                                    <input type="text" id="cadastroNome" placeholder="João Silva" required>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label>E-mail</label>
-                                <div class="input-wrapper">
-                                    <i class="fas fa-envelope input-icon"></i>
-                                    <input type="email" id="cadastroEmail" placeholder="joao@email.com" required>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Telefone</label>
-                                <div class="input-wrapper">
-                                    <i class="fas fa-phone input-icon"></i>
-                                    <input type="tel" id="cadastroTelefone" placeholder="(19) 99999-9999">
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Senha</label>
-                                <div class="input-wrapper">
-                                    <i class="fas fa-lock input-icon"></i>
-                                    <input type="password" id="cadastroSenha" placeholder="Mínimo 6 caracteres" required minlength="6">
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Confirmar senha</label>
-                                <div class="input-wrapper">
-                                    <i class="fas fa-lock input-icon"></i>
-                                    <input type="password" id="cadastroConfirmar" placeholder="Digite novamente" required>
-                                </div>
-                            </div>
-
-                            <div class="checkbox-group">
-                                <input type="checkbox" id="termos" required>
-                                <label for="termos">Eu aceito os <a href="#" style="color: #8b4513; font-weight: 600;">Termos de Uso</a></label>
-                            </div>
-
-                            <button type="submit" class="btn-auth" id="btnCadastro">
-                                <i class="fas fa-user-plus"></i>
-                                Criar minha conta
-                            </button>
-                        </form>
-                    </div>
-                </div>
-
-                <div class="benefits">
-                    <div class="benefit-item">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span>Eventos exclusivos</span>
-                    </div>
-                    <div class="benefit-item">
-                        <i class="fas fa-trophy"></i>
-                        <span>Sistema de níveis</span>
-                    </div>
-                    <div class="benefit-item">
-                        <i class="fas fa-leaf"></i>
-                        <span>Impacto real</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- TELA PRINCIPAL DO APP -->
-    <div class="app-screen hidden" id="appScreen">
-        <div class="app-container">
-            <!-- HEADER SUPERIOR MELHORADO COM LOGO -->
-            <div class="top-header">
-                <div class="logo-container" onclick="mudarTabApp('perfil')">
-                    <div class="logo-image">
-                        🌿
-                    </div>
-                    <div class="logo-text">
-                        <h1>SustentaPira</h1>
-                        <p>Sustentabilidade em ação</p>
-                    </div>
-                </div>
-                
-                <div class="header-actions">
-                    <div class="header-stat">
-                        <i class="fas fa-fire"></i>
-                        <span>Streak <span class="stat-highlight" id="headerStreak">0</span></span>
-                    </div>
-                    <div class="header-stat">
-                        <i class="fas fa-star"></i>
-                        <span>Pontos <span class="stat-highlight" id="headerPoints">0</span></span>
-                    </div>
-                    <div class="header-avatar" id="headerAvatar" onclick="mudarTabApp('perfil')">
-                        👤
-                        <span class="online-indicator"></span>
-                    </div>
-                    <button class="logout-btn-header" onclick="logout()">
-                        <i class="fas fa-sign-out-alt"></i>
-                        Sair
-                    </button>
-                </div>
-            </div>
-
-            <!-- Tabs de navegação -->
-            <div class="app-tabs">
-                <button class="app-tab active" onclick="mudarTabApp('desafios')">Desafios</button>
-                <button class="app-tab" onclick="mudarTabApp('perfil')">Perfil</button>
-                <button class="app-tab" onclick="mudarTabApp('ranking')">Ranking</button>
-                <button class="app-tab" onclick="mudarTabApp('eventos')">Eventos</button>
-                <button class="app-tab" onclick="mudarTabApp('pontos')">Pontos</button>
-            </div>
-
-            <!-- Conteúdo das tabs -->
-            <div id="appContent"></div>
-        </div>
-    </div>
-
-    <!-- Modal de inscrição -->
-    <div class="modal-overlay" id="inscricaoModal">
-        <div class="modal-content" id="inscricaoContent"></div>
-    </div>
-
-    <!-- Modal de upload -->
-    <div class="modal-overlay" id="uploadModal">
-        <div class="modal-content" id="uploadContent"></div>
-    </div>
-
-    <!-- Chatbot de Sustentabilidade -->
-    <div class="chatbot-button" id="chatbotButton" onclick="toggleChatbot()">
-        <i class="fas fa-robot"></i>
-    </div>
-
-    <div class="chatbot-container" id="chatbotContainer">
-        <div class="chatbot-header">
-            <h3>
+<div class="map-container">
+    <div class="map-header">
+        <div class="logo-area">
+            <div class="logo-icon">
                 <i class="fas fa-leaf"></i>
-                EcoBot Sustentável
-            </h3>
-            <button class="chatbot-close" onclick="toggleChatbot()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="chatbot-messages" id="chatbotMessages">
-            <div class="message bot">
-                Olá! Sou o EcoBot, seu assistente de sustentabilidade. 🌿
-                Posso responder perguntas sobre:
-                • Reciclagem e resíduos
-                • Energias renováveis
-                • Compostagem
-                • Preservação ambiental
-                • Dicas sustentáveis
-                • Eventos ecológicos
-                
-                Como posso ajudar você hoje?
+            </div>
+            <div class="logo-text">
+                <h1>Piracicaba Sustentável</h1>
+                <p>Pontos de coleta e reciclagem</p>
             </div>
         </div>
-        <div class="chatbot-input-area">
-            <input type="text" class="chatbot-input" id="chatbotInput" placeholder="Digite sua pergunta..." onkeypress="if(event.key === 'Enter') enviarMensagem()">
-            <button class="chatbot-send" onclick="enviarMensagem()">
-                <i class="fas fa-paper-plane"></i>
-            </button>
+        <div class="stats-bar">
+            <div class="stat"><i class="fas fa-map-marker-alt"></i> <span id="totalPontos">38</span> pontos</div>
+            <div class="stat"><i class="fas fa-recycle"></i> <span id="categoriasCount">8</span> categorias</div>
+            <div class="stat"><i class="fas fa-star"></i> 4.5 ★ média</div>
         </div>
     </div>
 
-    <script>
-        // ========== CONFIGURAÇÃO SHEETDB ==========
-        const SHEETDB_URL = 'https://sheetdb.io/api/v1/pxcozyw0d91x8';
-        
-        // ========== DADOS ==========
-        
-        // Usuários exemplo (serão carregados da planilha)
-        let usuarios = [];
-        
-        // ========== DESAFIOS AMPLIADOS (12 desafios) ==========
-        const desafios = [
-            { id: 1, titulo: "♻️ Reciclar 10kg", descricao: "Recicle 10kg de materiais recicláveis", pontos: 200, icone: "♻️", tipo: "reciclagem", dica: "Tire foto dos materiais na balança" },
-            { id: 2, titulo: "📅 Participar de Evento", descricao: "Participe de 1 evento ambiental", pontos: 150, icone: "📅", tipo: "evento", dica: "Tire foto no local do evento" },
-            { id: 3, titulo: "🌳 Plantar Árvore", descricao: "Plante 1 árvore nativa", pontos: 300, icone: "🌳", tipo: "plantio", dica: "Tire foto da muda plantada" },
-            { id: 4, titulo: "🔋 Descartar Pilhas", descricao: "Descarte 10 pilhas em ponto de coleta", pontos: 150, icone: "🔋", tipo: "pilhas", dica: "Tire foto das pilhas no ponto" },
-            { id: 5, titulo: "🚲 Usar Bike 5x", descricao: "Use bicicleta em vez de carro 5 vezes", pontos: 250, icone: "🚲", tipo: "mobilidade", dica: "Compartilhe seu trajeto" },
-            { id: 6, titulo: "🥫 Doar Alimentos", descricao: "Doe 10kg de alimentos não perecíveis", pontos: 280, icone: "🥫", tipo: "doacao", dica: "Foto dos alimentos no local" },
-            { id: 7, titulo: "👕 Doar Roupas", descricao: "Doe 15 peças de roupa", pontos: 200, icone: "👕", tipo: "roupas", dica: "Foto das roupas doadas" },
-            { id: 8, titulo: "💧 Economizar Água", descricao: "Reduza consumo em 20% por 1 mês", pontos: 400, icone: "💧", tipo: "agua", dica: "Compartilhe sua conta" },
-            { id: 9, titulo: "⚡ Energia Solar", descricao: "Instale placa solar ou use energia limpa", pontos: 500, icone: "☀️", tipo: "energia", dica: "Foto da instalação" },
-            { id: 10, titulo: "🌱 Compostagem", descricao: "Inicie uma composteira doméstica", pontos: 350, icone: "🌱", tipo: "compostagem", dica: "Foto da sua composteira" },
-            { id: 11, titulo: "📚 Educador Ambiental", descricao: "Palestre sobre sustentabilidade", pontos: 450, icone: "📚", tipo: "educacao", dica: "Foto do evento" },
-            { id: 12, titulo: "🏆 EcoLíder", descricao: "Convide 5 amigos para o app", pontos: 300, icone: "🏆", tipo: "social", dica: "Compartilhe seu código" },
-        ];
+    <div id="map"></div>
 
-        // ========== EVENTOS PIRACICABA 2026 (TODOS OS MESES) ==========
-        const eventos = [
-            // JANEIRO
-            { id: 1, titulo: "🌱 1º Mutirão de Limpeza 2026", descricao: "Inicie o ano contribuindo com a limpeza das margens do Rio Piracicaba. Haverá café da manhã comunitário.", data: "10/01/2026", hora: "08:00", local: "Rua do Porto", tipo: "mutirão", vagas: 200, inscritos: 78, organizador: "SOS Rio Piracicaba", pontos: 200 },
-            { id: 2, titulo: "♻️ Oficina de Reciclagem de Papel", descricao: "Aprenda a fazer papel reciclado artesanal. Traga papéis usados.", data: "17/01/2026", hora: "14:00", local: "SENAI Piracicaba", tipo: "oficina", vagas: 40, inscritos: 35, organizador: "SENAI", pontos: 150 },
-            { id: 3, titulo: "🌿 Palestra: Agricultura Urbana", descricao: "Como cultivar alimentos em pequenos espaços na cidade.", data: "24/01/2026", hora: "10:00", local: "Horto Municipal", tipo: "palestra", vagas: 100, inscritos: 62, organizador: "Horto Municipal", pontos: 120 },
-            { id: 4, titulo: "🚴 Pedal do Sol Nascente", descricao: "Passeio ciclístico ao amanhecer para celebrar o início do ano.", data: "31/01/2026", hora: "06:00", local: "Largo dos Pescadores", tipo: "passeio", vagas: 150, inscritos: 89, organizador: "Ciclovida", pontos: 180 },
-            
-            // FEVEREIRO
-            { id: 5, titulo: "🌊 Expedição Rio Piracicaba", descricao: "Passeio de barco educativo com biólogos, observação de aves.", data: "07/02/2026", hora: "09:00", local: "Rua do Porto", tipo: "passeio", vagas: 60, inscritos: 42, organizador: "Comitê PCJ", pontos: 200 },
-            { id: 6, titulo: "🌱 Feira de Orgânicos Especial", descricao: "Edição de verão da feira orgânica com produtos sazonais.", data: "14/02/2026", hora: "08:00", local: "Mercado Municipal", tipo: "feira", vagas: 0, inscritos: 0, organizador: "Associação Orgânicos", pontos: 120 },
-            { id: 7, titulo: "♻️ Workshop de Compostagem", descricao: "Técnicas de compostagem para apartamentos, com minhocas.", data: "21/02/2026", hora: "15:00", local: "SESC Piracicaba", tipo: "workshop", vagas: 50, inscritos: 38, organizador: "SESC", pontos: 180 },
-            { id: 8, titulo: "🌿 Trilha Ecológica Noturna", descricao: "Trilha guiada no Parque Ecológico para observação de animais noturnos.", data: "28/02/2026", hora: "19:00", local: "Parque Ecológico", tipo: "trilha", vagas: 60, inscritos: 45, organizador: "Parque Ecológico", pontos: 200 },
-            
-            // MARÇO
-            { id: 9, titulo: "🌱 Feira de Sustentabilidade", descricao: "Feira com produtos orgânicos, artesanato sustentável e startups verdes.", data: "15/03/2026", hora: "09:00", local: "Engenho Central", tipo: "feira", vagas: 1000, inscritos: 342, organizador: "Prefeitura de Piracicaba", pontos: 150 },
-            { id: 10, titulo: "💧 Dia Mundial da Água", descricao: "Palestras e atividades sobre preservação dos recursos hídricos.", data: "22/03/2026", hora: "09:00", local: "ESALQ/USP", tipo: "palestra", vagas: 300, inscritos: 187, organizador: "ESALQ/USP", pontos: 180 },
-            
-            // ABRIL
-            { id: 11, titulo: "🌊 Mutirão Rio Piracicaba", descricao: "Limpeza das margens do rio com atividades educativas.", data: "05/04/2026", hora: "08:00", local: "Rua do Porto", tipo: "mutirão", vagas: 200, inscritos: 95, organizador: "SOS Rio Piracicaba", pontos: 200 },
-            { id: 12, titulo: "🍃 Feira de Trocas Sustentáveis", descricao: "Traga objetos que não usa mais e troque por outros.", data: "10/04/2026", hora: "10:00", local: "Praça José Bonifácio", tipo: "feira", vagas: 0, inscritos: 0, organizador: "Coletivo Transition", pontos: 120 },
-            { id: 13, titulo: "🌳 Plantio do Dia da Terra", descricao: "Mutirão de plantio de 500 árvores nativas.", data: "22/04/2026", hora: "08:30", local: "Parque Ecológico", tipo: "mutirão", vagas: 400, inscritos: 256, organizador: "SOS Mata Atlântica", pontos: 250 },
-            
-            // MAIO
-            { id: 14, titulo: "🔋 Descarte de Eletrônicos", descricao: "Campanha de coleta de lixo eletrônico: computadores, pilhas.", data: "15/05/2026", hora: "09:00", local: "Shopping Piracicaba", tipo: "campanha", vagas: 0, inscritos: 0, organizador: "Green Eletronics", pontos: 100 },
-            { id: 15, titulo: "🚴 Pedal Verde", descricao: "Passeio ciclístico ecológico de 15km pelas áreas verdes.", data: "23/05/2026", hora: "08:00", local: "Largo dos Pescadores", tipo: "passeio", vagas: 200, inscritos: 112, organizador: "Ciclovida", pontos: 180 },
-            
-            // JUNHO
-            { id: 16, titulo: "🌍 Dia Mundial do Meio Ambiente", descricao: "Evento especial com shows, palestras, oficinas e feira.", data: "05/06/2026", hora: "09:00", local: "Engenho Central", tipo: "evento", vagas: 2000, inscritos: 843, organizador: "Prefeitura", pontos: 200 },
-            { id: 17, titulo: "🌱 Oficina de Compostagem", descricao: "Aprenda a fazer compostagem doméstica com minhocas.", data: "15/06/2026", hora: "14:00", local: "Horto Municipal", tipo: "oficina", vagas: 50, inscritos: 42, organizador: "Horto Municipal", pontos: 150 },
-            
-            // JULHO
-            { id: 18, titulo: "🌿 Palestra: Energia Solar", descricao: "Como instalar e economizar com energia solar residencial.", data: "05/07/2026", hora: "19:00", local: "Teatro Municipal", tipo: "palestra", vagas: 200, inscritos: 134, organizador: "CPFL", pontos: 120 },
-            { id: 19, titulo: "💧 Expedição Rio Piracicaba", descricao: "Passeio de barco educativo com biólogos.", data: "18/07/2026", hora: "09:00", local: "Rua do Porto", tipo: "passeio", vagas: 80, inscritos: 67, organizador: "Comitê PCJ", pontos: 200 },
-            
-            // AGOSTO
-            { id: 20, titulo: "🐝 Dia das Abelhas", descricao: "Palestra sobre a importância das abelhas e como criar abelhas sem ferrão.", data: "29/08/2026", hora: "14:00", local: "ESALQ/USP", tipo: "palestra", vagas: 150, inscritos: 98, organizador: "USP", pontos: 150 },
-            
-            // SETEMBRO
-            { id: 21, titulo: "🌳 Semana da Árvore", descricao: "Eventos durante toda a semana sobre a importância das árvores.", data: "21/09/2026", hora: "09:00", local: "Vários locais", tipo: "evento", vagas: 0, inscritos: 0, organizador: "SOS Mata Atlântica", pontos: 200 },
-            
-            // OUTUBRO
-            { id: 22, titulo: "💧 Fórum das Águas", descricao: "Encontro com especialistas discutindo a preservação dos recursos hídricos.", data: "18/10/2026", hora: "08:30", local: "Acadêmico", tipo: "palestra", vagas: 150, inscritos: 87, organizador: "Comitê PCJ", pontos: 180 },
-            
-            // NOVEMBRO
-            { id: 23, titulo: "🌿 Encontro de Sustentabilidade", descricao: "Palestras e debates com líderes ambientais.", data: "22/11/2026", hora: "09:00", local: "Teatro Municipal", tipo: "evento", vagas: 400, inscritos: 215, organizador: "ONG Planeta Verde", pontos: 180 },
-            
-            // DEZEMBRO
-            { id: 24, titulo: "♻️ Feira de Natal Sustentável", descricao: "Presentes sustentáveis, artesanato ecológico.", data: "05/12/2026", hora: "10:00", local: "Engenho Central", tipo: "feira", vagas: 0, inscritos: 0, organizador: "Prefeitura", pontos: 150 },
-            { id: 25, titulo: "🌿 Reveillon Sustentável", descricao: "Celebração de Ano Novo com fogos silenciosos.", data: "31/12/2026", hora: "22:00", local: "Engenho Central", tipo: "evento", vagas: 2000, inscritos: 1234, organizador: "Prefeitura", pontos: 200 },
-        ];
+    <!-- Controles de zoom customizados (pra + e pra -) -->
+    <div class="custom-zoom">
+        <button class="zoom-btn" id="zoomInBtn"><i class="fas fa-plus"></i></button>
+        <button class="zoom-btn" id="zoomOutBtn"><i class="fas fa-minus"></i></button>
+    </div>
 
-        // ========== PONTOS DE COLETA PIRACICABA (38 pontos oficiais) ==========
-        const pontosColeta = [
-            // ECOPONTOS (8)
-            { id: 1, nome: "Ecoponto Centro", endereco: "Av. Rui Barbosa, 800 - Centro", categoria: "geral", horario: "Seg-Sex 8h-17h, Sáb 8h-12h", telefone: "(19) 3403-1100", avaliacao: 4.5, icone: "🗑️", tipo: "Ecoponto" },
-            { id: 2, nome: "Ecoponto Paulicéia", endereco: "R. Javari, 150 - Paulicéia", categoria: "geral", horario: "Ter-Sáb 8h-16h", telefone: "(19) 3403-2200", avaliacao: 4.3, icone: "🗑️", tipo: "Ecoponto" },
-            { id: 3, nome: "Ecoponto Santa Terezinha", endereco: "Av. Dr. Paulo de Moraes, 1500", categoria: "geral", horario: "Seg-Sáb 8h-17h", telefone: "(19) 3403-2300", avaliacao: 4.4, icone: "🗑️", tipo: "Ecoponto" },
-            { id: 4, nome: "Ecoponto Vila Sônia", endereco: "R. Benedito Tolosa, 500 - Vila Sônia", categoria: "geral", horario: "Seg-Sáb 8h-17h", telefone: "(19) 3403-2400", avaliacao: 4.2, icone: "🗑️", tipo: "Ecoponto" },
-            { id: 5, nome: "Ecoponto Nova Piracicaba", endereco: "Av. Cruzeiro do Sul, 2000", categoria: "geral", horario: "Seg-Sáb 8h-17h", telefone: "(19) 3403-2500", avaliacao: 4.6, icone: "🗑️", tipo: "Ecoponto" },
-            { id: 6, nome: "Ecoponto Vila Rezende", endereco: "R. dos Operários, 500 - Vila Rezende", categoria: "geral", horario: "Seg-Sáb 8h-16h", telefone: "(19) 3403-2600", avaliacao: 4.3, icone: "🗑️", tipo: "Ecoponto" },
-            { id: 7, nome: "Ecoponto Ártemis", endereco: "Av. 1º de Agosto, 1000 - Ártemis", categoria: "geral", horario: "Seg-Sáb 8h-16h", telefone: "(19) 3403-2700", avaliacao: 4.2, icone: "🗑️", tipo: "Ecoponto" },
-            { id: 8, nome: "Ecoponto Tupi", endereco: "R. Tiradentes, 300 - Tupi", categoria: "geral", horario: "Seg-Sáb 8h-16h", telefone: "(19) 3403-2800", avaliacao: 4.1, icone: "🗑️", tipo: "Ecoponto" },
+    <!-- Painel de filtros -->
+    <div class="filter-panel">
+        <h4><i class="fas fa-filter"></i> Filtrar por tipo</h4>
+        <div class="filter-group" id="filterGroup">
+            <button class="filter-btn active" data-filter="todos"><i class="fas fa-globe"></i> Todos (38)</button>
+            <button class="filter-btn" data-filter="Ecoponto"><i class="fas fa-building"></i> Ecopontos</button>
+            <button class="filter-btn" data-filter="Pilhas"><i class="fas fa-battery-full"></i> Pilhas/Baterias</button>
+            <button class="filter-btn" data-filter="Eletrônicos"><i class="fas fa-laptop"></i> Eletrônicos</button>
+            <button class="filter-btn" data-filter="Óleo"><i class="fas fa-oil-can"></i> Óleo de cozinha</button>
+            <button class="filter-btn" data-filter="Vidros"><i class="fas fa-wine-bottle"></i> Vidros</button>
+            <button class="filter-btn" data-filter="Papel"><i class="fas fa-newspaper"></i> Papel/Papelão</button>
+            <button class="filter-btn" data-filter="Roupas"><i class="fas fa-tshirt"></i> Roupas</button>
+        </div>
+        <button class="reset-filter" id="resetFilterBtn"><i class="fas fa-sync-alt"></i> Mostrar todos</button>
+    </div>
+</div>
 
-            // PILHAS E BATERIAS (8)
-            { id: 9, nome: "Shopping Piracicaba", endereco: "Av. Limeira, 700 - Areão", categoria: "pilhas", horario: "Seg-Sáb 10h-22h, Dom 14h-20h", telefone: "(19) 3432-4545", avaliacao: 4.8, icone: "🔋", tipo: "Pilhas" },
-            { id: 10, nome: "Unimed Sede", endereco: "R. Voluntários, 450 - Centro", categoria: "pilhas", horario: "Seg-Sex 7h-19h", telefone: "(19) 3432-9000", avaliacao: 4.6, icone: "🔋", tipo: "Pilhas" },
-            { id: 11, nome: "Santa Casa", endereco: "Av. Independência, 950 - Centro", categoria: "pilhas", horario: "Seg-Sex 8h-18h", telefone: "(19) 3412-2000", avaliacao: 4.4, icone: "🔋", tipo: "Pilhas" },
-            { id: 12, nome: "Prefeitura Municipal", endereco: "R. Antônio Corrêa Barbosa, 2233", categoria: "pilhas", horario: "Seg-Sex 8h-17h", telefone: "(19) 3403-1000", avaliacao: 4.5, icone: "🔋", tipo: "Pilhas" },
-            { id: 13, nome: "Câmara Municipal", endereco: "R. do Rosário, 833 - Centro", categoria: "pilhas", horario: "Seg-Sex 8h-17h", telefone: "(19) 3403-1500", avaliacao: 4.4, icone: "🔋", tipo: "Pilhas" },
-            { id: 14, nome: "Terminal Central", endereco: "Av. Dr. Paulo de Moraes, 200", categoria: "pilhas", horario: "Seg-Dom 5h-23h", telefone: "(19) 3403-3000", avaliacao: 4.3, icone: "🔋", tipo: "Pilhas" },
-            { id: 15, nome: "Estação da Paulista", endereco: "Av. Rio Claro, 500 - Paulista", categoria: "pilhas", horario: "Seg-Dom 5h-23h", telefone: "(19) 3403-3100", avaliacao: 4.2, icone: "🔋", tipo: "Pilhas" },
-            { id: 16, nome: "Farmácias Pague Menos", endereco: "Av. Independência, 1000", categoria: "pilhas", horario: "Seg-Dom 8h-22h", telefone: "(19) 3412-9000", avaliacao: 4.6, icone: "🔋", tipo: "Pilhas" },
+<script>
+    // ======================= BASE DE DADOS COM 38 PONTOS DE COLETA EM PIRACICABA =======================
+    // Coordenadas reais aproximadas (centroide Piracicaba: -22.725, -47.649)
+    // Geramos coordenadas plausíveis distribuídas pela malha urbana para simular pontos reais
+    const pontosColeta = [
+        // ECOPONTOS (8)
+        { id: 1, nome: "Ecoponto Centro", endereco: "Av. Rui Barbosa, 800 - Centro", categoria: "geral", tipo: "Ecoponto", horario: "Seg-Sex 8h-17h, Sáb 8h-12h", telefone: "(19) 3403-1100", avaliacao: 4.5, icone: "🗑️", lat: -22.7282, lng: -47.6495 },
+        { id: 2, nome: "Ecoponto Paulicéia", endereco: "R. Javari, 150 - Paulicéia", categoria: "geral", tipo: "Ecoponto", horario: "Ter-Sáb 8h-16h", telefone: "(19) 3403-2200", avaliacao: 4.3, icone: "🗑️", lat: -22.7145, lng: -47.6423 },
+        { id: 3, nome: "Ecoponto Santa Terezinha", endereco: "Av. Dr. Paulo de Moraes, 1500", categoria: "geral", tipo: "Ecoponto", horario: "Seg-Sáb 8h-17h", telefone: "(19) 3403-2300", avaliacao: 4.4, icone: "🗑️", lat: -22.7361, lng: -47.6580 },
+        { id: 4, nome: "Ecoponto Vila Sônia", endereco: "R. Benedito Tolosa, 500 - Vila Sônia", categoria: "geral", tipo: "Ecoponto", horario: "Seg-Sáb 8h-17h", telefone: "(19) 3403-2400", avaliacao: 4.2, icone: "🗑️", lat: -22.7119, lng: -47.6554 },
+        { id: 5, nome: "Ecoponto Nova Piracicaba", endereco: "Av. Cruzeiro do Sul, 2000", categoria: "geral", tipo: "Ecoponto", horario: "Seg-Sáb 8h-17h", telefone: "(19) 3403-2500", avaliacao: 4.6, icone: "🗑️", lat: -22.7432, lng: -47.6387 },
+        { id: 6, nome: "Ecoponto Vila Rezende", endereco: "R. dos Operários, 500 - Vila Rezende", categoria: "geral", tipo: "Ecoponto", horario: "Seg-Sáb 8h-16h", telefone: "(19) 3403-2600", avaliacao: 4.3, icone: "🗑️", lat: -22.7203, lng: -47.6682 },
+        { id: 7, nome: "Ecoponto Ártemis", endereco: "Av. 1º de Agosto, 1000 - Ártemis", categoria: "geral", tipo: "Ecoponto", horario: "Seg-Sáb 8h-16h", telefone: "(19) 3403-2700", avaliacao: 4.2, icone: "🗑️", lat: -22.7515, lng: -47.6251 },
+        { id: 8, nome: "Ecoponto Tupi", endereco: "R. Tiradentes, 300 - Tupi", categoria: "geral", tipo: "Ecoponto", horario: "Seg-Sáb 8h-16h", telefone: "(19) 3403-2800", avaliacao: 4.1, icone: "🗑️", lat: -22.7068, lng: -47.6725 },
 
-            // ELETRÔNICOS (6)
-            { id: 17, nome: "CDI Eletrônicos", endereco: "R. do Porto, 234 - Centro", categoria: "eletronicos", horario: "Seg-Sex 9h-18h", telefone: "(19) 3433-5678", avaliacao: 4.7, icone: "💻", tipo: "Eletrônicos" },
-            { id: 18, nome: "ESALQ/USP", endereco: "Av. Pádua Dias, 11", categoria: "eletronicos", horario: "Seg-Sex 8h-17h", telefone: "(19) 3447-8500", avaliacao: 4.9, icone: "💻", tipo: "Eletrônicos" },
-            { id: 19, nome: "UNIMEP", endereco: "R. do Rosário, 1301", categoria: "eletronicos", horario: "Seg-Sex 8h-22h", telefone: "(19) 3421-3000", avaliacao: 4.7, icone: "💻", tipo: "Eletrônicos" },
-            { id: 20, nome: "FUMEP", endereco: "Av. Monsenhor Martinho Salgot, 560", categoria: "eletronicos", horario: "Seg-Sex 8h-17h", telefone: "(19) 3412-4000", avaliacao: 4.4, icone: "💻", tipo: "Eletrônicos" },
-            { id: 21, nome: "Senai", endereco: "Av. Luiz Ralph Benatti, 500", categoria: "eletronicos", horario: "Seg-Sex 8h-17h", telefone: "(19) 3412-5000", avaliacao: 4.6, icone: "💻", tipo: "Eletrônicos" },
-            { id: 22, nome: "Sesc", endereco: "R. Ipiranga, 155 - Centro", categoria: "eletronicos", horario: "Seg-Sex 9h-21h", telefone: "(19) 3437-9292", avaliacao: 4.8, icone: "💻", tipo: "Eletrônicos" },
+        // PILHAS E BATERIAS (8)
+        { id: 9, nome: "Shopping Piracicaba", endereco: "Av. Limeira, 700 - Areão", categoria: "pilhas", tipo: "Pilhas", horario: "Seg-Sáb 10h-22h, Dom 14h-20h", telefone: "(19) 3432-4545", avaliacao: 4.8, icone: "🔋", lat: -22.7410, lng: -47.6572 },
+        { id: 10, nome: "Unimed Sede", endereco: "R. Voluntários, 450 - Centro", categoria: "pilhas", tipo: "Pilhas", horario: "Seg-Sex 7h-19h", telefone: "(19) 3432-9000", avaliacao: 4.6, icone: "🔋", lat: -22.7251, lng: -47.6448 },
+        { id: 11, nome: "Santa Casa", endereco: "Av. Independência, 950 - Centro", categoria: "pilhas", tipo: "Pilhas", horario: "Seg-Sex 8h-18h", telefone: "(19) 3412-2000", avaliacao: 4.4, icone: "🔋", lat: -22.7293, lng: -47.6521 },
+        { id: 12, nome: "Prefeitura Municipal", endereco: "R. Antônio Corrêa Barbosa, 2233", categoria: "pilhas", tipo: "Pilhas", horario: "Seg-Sex 8h-17h", telefone: "(19) 3403-1000", avaliacao: 4.5, icone: "🔋", lat: -22.7348, lng: -47.6395 },
+        { id: 13, nome: "Câmara Municipal", endereco: "R. do Rosário, 833 - Centro", categoria: "pilhas", tipo: "Pilhas", horario: "Seg-Sex 8h-17h", telefone: "(19) 3403-1500", avaliacao: 4.4, icone: "🔋", lat: -22.7276, lng: -47.6469 },
+        { id: 14, nome: "Terminal Central", endereco: "Av. Dr. Paulo de Moraes, 200", categoria: "pilhas", tipo: "Pilhas", horario: "Seg-Dom 5h-23h", telefone: "(19) 3403-3000", avaliacao: 4.3, icone: "🔋", lat: -22.7320, lng: -47.6550 },
+        { id: 15, nome: "Estação da Paulista", endereco: "Av. Rio Claro, 500 - Paulista", categoria: "pilhas", tipo: "Pilhas", horario: "Seg-Dom 5h-23h", telefone: "(19) 3403-3100", avaliacao: 4.2, icone: "🔋", lat: -22.7162, lng: -47.6628 },
+        { id: 16, nome: "Farmácias Pague Menos", endereco: "Av. Independência, 1000", categoria: "pilhas", tipo: "Pilhas", horario: "Seg-Dom 8h-22h", telefone: "(19) 3412-9000", avaliacao: 4.6, icone: "🔋", lat: -22.7267, lng: -47.6539 },
 
-            // ÓLEO DE COZINHA (5)
-            { id: 23, nome: "Oleobom", endereco: "R. São João, 678 - Centro", categoria: "oleo", horario: "Seg-Sex 9h-18h", telefone: "(19) 3421-5678", avaliacao: 4.6, icone: "🫒", tipo: "Óleo" },
-            { id: 24, nome: "Supermercados Pague Menos", endereco: "Av. Limeira, 1200", categoria: "oleo", horario: "Seg-Dom 8h-22h", telefone: "(19) 3434-2000", avaliacao: 4.5, icone: "🫒", tipo: "Óleo" },
-            { id: 25, nome: "Supermercados Savegnago", endereco: "Av. Cruzeiro do Sul, 800", categoria: "oleo", horario: "Seg-Dom 8h-22h", telefone: "(19) 3433-3000", avaliacao: 4.7, icone: "🫒", tipo: "Óleo" },
-            { id: 26, nome: "Atacadão", endereco: "Av. Limeira, 2000", categoria: "oleo", horario: "Seg-Dom 8h-22h", telefone: "(19) 3434-5000", avaliacao: 4.4, icone: "🫒", tipo: "Óleo" },
-            { id: 27, nome: "Feira Noturna", endereco: "Praça José Bonifácio", categoria: "oleo", horario: "Qui 17h-22h", telefone: "(19) 3403-1100", avaliacao: 4.2, icone: "🫒", tipo: "Óleo" },
+        // ELETRÔNICOS (6)
+        { id: 17, nome: "CDI Eletrônicos", endereco: "R. do Porto, 234 - Centro", categoria: "eletronicos", tipo: "Eletrônicos", horario: "Seg-Sex 9h-18h", telefone: "(19) 3433-5678", avaliacao: 4.7, icone: "💻", lat: -22.7242, lng: -47.6412 },
+        { id: 18, nome: "ESALQ/USP", endereco: "Av. Pádua Dias, 11", categoria: "eletronicos", tipo: "Eletrônicos", horario: "Seg-Sex 8h-17h", telefone: "(19) 3447-8500", avaliacao: 4.9, icone: "💻", lat: -22.7129, lng: -47.6374 },
+        { id: 19, nome: "UNIMEP", endereco: "R. do Rosário, 1301", categoria: "eletronicos", tipo: "Eletrônicos", horario: "Seg-Sex 8h-22h", telefone: "(19) 3421-3000", avaliacao: 4.7, icone: "💻", lat: -22.7305, lng: -47.6379 },
+        { id: 20, nome: "FUMEP", endereco: "Av. Monsenhor Martinho Salgot, 560", categoria: "eletronicos", tipo: "Eletrônicos", horario: "Seg-Sex 8h-17h", telefone: "(19) 3412-4000", avaliacao: 4.4, icone: "💻", lat: -22.7185, lng: -47.6701 },
+        { id: 21, nome: "Senai", endereco: "Av. Luiz Ralph Benatti, 500", categoria: "eletronicos", tipo: "Eletrônicos", horario: "Seg-Sex 8h-17h", telefone: "(19) 3412-5000", avaliacao: 4.6, icone: "💻", lat: -22.7435, lng: -47.6712 },
+        { id: 22, nome: "Sesc", endereco: "R. Ipiranga, 155 - Centro", categoria: "eletronicos", tipo: "Eletrônicos", horario: "Seg-Sex 9h-21h", telefone: "(19) 3437-9292", avaliacao: 4.8, icone: "💻", lat: -22.7265, lng: -47.6491 },
 
-            // VIDROS (3)
-            { id: 28, nome: "Coopervidros", endereco: "R. Treze de Maio, 300", categoria: "vidros", horario: "Seg-Sex 8h-17h", telefone: "(19) 3421-1234", avaliacao: 4.2, icone: "🥃", tipo: "Vidros" },
-            { id: 29, nome: "Recicla Vidros", endereco: "Av. Rio Claro, 450", categoria: "vidros", horario: "Seg-Sex 8h-16h", telefone: "(19) 3434-5678", avaliacao: 4.3, icone: "🥃", tipo: "Vidros" },
-            { id: 30, nome: "Vidrocenter", endereco: "R. do Vergueiro, 600", categoria: "vidros", horario: "Seg-Sex 8h-18h", telefone: "(19) 3422-3344", avaliacao: 4.4, icone: "🥃", tipo: "Vidros" },
+        // ÓLEO DE COZINHA (5)
+        { id: 23, nome: "Oleobom", endereco: "R. São João, 678 - Centro", categoria: "oleo", tipo: "Óleo", horario: "Seg-Sex 9h-18h", telefone: "(19) 3421-5678", avaliacao: 4.6, icone: "🫒", lat: -22.7298, lng: -47.6484 },
+        { id: 24, nome: "Supermercados Pague Menos", endereco: "Av. Limeira, 1200", categoria: "oleo", tipo: "Óleo", horario: "Seg-Dom 8h-22h", telefone: "(19) 3434-2000", avaliacao: 4.5, icone: "🫒", lat: -22.7442, lng: -47.6603 },
+        { id: 25, nome: "Supermercados Savegnago", endereco: "Av. Cruzeiro do Sul, 800", categoria: "oleo", tipo: "Óleo", horario: "Seg-Dom 8h-22h", telefone: "(19) 3433-3000", avaliacao: 4.7, icone: "🫒", lat: -22.7391, lng: -47.6432 },
+        { id: 26, nome: "Atacadão", endereco: "Av. Limeira, 2000", categoria: "oleo", tipo: "Óleo", horario: "Seg-Dom 8h-22h", telefone: "(19) 3434-5000", avaliacao: 4.4, icone: "🫒", lat: -22.7489, lng: -47.6635 },
+        { id: 27, nome: "Feira Noturna", endereco: "Praça José Bonifácio", categoria: "oleo", tipo: "Óleo", horario: "Qui 17h-22h", telefone: "(19) 3403-1100", avaliacao: 4.2, icone: "🫒", lat: -22.7271, lng: -47.6523 },
 
-            // PAPEL E PAPELÃO (4)
-            { id: 31, nome: "Cooperativa Recicla", endereco: "R. dos Operários, 200", categoria: "papel", horario: "Seg-Sex 8h-16h", telefone: "(19) 3422-3344", avaliacao: 4.4, icone: "📄", tipo: "Papel" },
-            { id: 32, nome: "Papelão Recicla", endereco: "Av. Independência, 1800", categoria: "papel", horario: "Seg-Sex 8h-17h", telefone: "(19) 3433-4455", avaliacao: 4.2, icone: "📄", tipo: "Papel" },
-            { id: 33, nome: "Recicla Papel", endereco: "R. do Porto, 567", categoria: "papel", horario: "Seg-Sex 8h-16h", telefone: "(19) 3423-4567", avaliacao: 4.3, icone: "📄", tipo: "Papel" },
-            { id: 34, nome: "Gráficas Unidas", endereco: "Av. Rio Claro, 300", categoria: "papel", horario: "Seg-Sex 8h-18h", telefone: "(19) 3423-4567", avaliacao: 4.3, icone: "📄", tipo: "Papel" },
+        // VIDROS (3)
+        { id: 28, nome: "Coopervidros", endereco: "R. Treze de Maio, 300", categoria: "vidros", tipo: "Vidros", horario: "Seg-Sex 8h-17h", telefone: "(19) 3421-1234", avaliacao: 4.2, icone: "🥃", lat: -22.7223, lng: -47.6475 },
+        { id: 29, nome: "Recicla Vidros", endereco: "Av. Rio Claro, 450", categoria: "vidros", tipo: "Vidros", horario: "Seg-Sex 8h-16h", telefone: "(19) 3434-5678", avaliacao: 4.3, icone: "🥃", lat: -22.7156, lng: -47.6592 },
+        { id: 30, nome: "Vidrocenter", endereco: "R. do Vergueiro, 600", categoria: "vidros", tipo: "Vidros", horario: "Seg-Sex 8h-18h", telefone: "(19) 3422-3344", avaliacao: 4.4, icone: "🥃", lat: -22.7315, lng: -47.6557 },
 
-            // ROUPAS (4)
-            { id: 35, nome: "Brechó Solidário", endereco: "R. Governador, 400", categoria: "roupas", horario: "Seg-Sex 9h-17h", telefone: "(19) 3421-4321", avaliacao: 4.5, icone: "👕", tipo: "Roupas" },
-            { id: 36, nome: "Casa da Fraternidade", endereco: "R. do Vergueiro, 200", categoria: "roupas", horario: "Seg-Sex 8h-16h", telefone: "(19) 3422-1234", avaliacao: 4.7, icone: "👕", tipo: "Roupas" },
-            { id: 37, nome: "Sesc", endereco: "R. Ipiranga, 155", categoria: "roupas", horario: "Seg-Sex 9h-21h", telefone: "(19) 3437-9292", avaliacao: 4.6, icone: "👕", tipo: "Roupas" },
-            { id: 38, nome: "Senac", endereco: "R. Santa Cruz, 1145", categoria: "roupas", horario: "Seg-Sex 8h-17h", telefone: "(19) 3412-3000", avaliacao: 4.5, icone: "👕", tipo: "Roupas" },
-        ];
+        // PAPEL E PAPELÃO (4)
+        { id: 31, nome: "Cooperativa Recicla", endereco: "R. dos Operários, 200", categoria: "papel", tipo: "Papel", horario: "Seg-Sex 8h-16h", telefone: "(19) 3422-3344", avaliacao: 4.4, icone: "📄", lat: -22.7201, lng: -47.6665 },
+        { id: 32, nome: "Papelão Recicla", endereco: "Av. Independência, 1800", categoria: "papel", tipo: "Papel", horario: "Seg-Sex 8h-17h", telefone: "(19) 3433-4455", avaliacao: 4.2, icone: "📄", lat: -22.7334, lng: -47.6458 },
+        { id: 33, nome: "Recicla Papel", endereco: "R. do Porto, 567", categoria: "papel", tipo: "Papel", horario: "Seg-Sex 8h-16h", telefone: "(19) 3423-4567", avaliacao: 4.3, icone: "📄", lat: -22.7238, lng: -47.6405 },
+        { id: 34, nome: "Gráficas Unidas", endereco: "Av. Rio Claro, 300", categoria: "papel", tipo: "Papel", horario: "Seg-Sex 8h-18h", telefone: "(19) 3423-4567", avaliacao: 4.3, icone: "📄", lat: -22.7182, lng: -47.6559 },
 
-        // Ranking
-        const ranking = [
-            { nome: "Pedro Graciano", pontos: 5000, nivel: "👑 Administrador", streak: 99, progresso: 100 },
-            { nome: "Ana Costa", pontos: 4780, nivel: "🏆 EcoHerói", streak: 89, progresso: 95 },
-            { nome: "Maria Santos", pontos: 3520, nivel: "🏆 EcoHerói", streak: 67, progresso: 70 },
-            { nome: "Carlos Souza", pontos: 2840, nivel: "🌳 EcoMestre", streak: 52, progresso: 56 },
-            { nome: "João Silva", pontos: 2350, nivel: "🌳 EcoMestre", streak: 45, progresso: 47 },
-            { nome: "Pedro Oliveira", pontos: 1890, nivel: "🍃 EcoGuardião", streak: 34, progresso: 37 },
-            { nome: "Lucia Mendes", pontos: 1560, nivel: "🍃 EcoGuardião", streak: 28, progresso: 31 },
-        ];
+        // ROUPAS (4)
+        { id: 35, nome: "Brechó Solidário", endereco: "R. Governador, 400", categoria: "roupas", tipo: "Roupas", horario: "Seg-Sex 9h-17h", telefone: "(19) 3421-4321", avaliacao: 4.5, icone: "👕", lat: -22.7260, lng: -47.6510 },
+        { id: 36, nome: "Casa da Fraternidade", endereco: "R. do Vergueiro, 200", categoria: "roupas", tipo: "Roupas", horario: "Seg-Sex 8h-16h", telefone: "(19) 3422-1234", avaliacao: 4.7, icone: "👕", lat: -22.7302, lng: -47.6562 },
+        { id: 37, nome: "Sesc", endereco: "R. Ipiranga, 155", categoria: "roupas", tipo: "Roupas", horario: "Seg-Sex 9h-21h", telefone: "(19) 3437-9292", avaliacao: 4.6, icone: "👕", lat: -22.7267, lng: -47.6485 },
+        { id: 38, nome: "Senac", endereco: "R. Santa Cruz, 1145", categoria: "roupas", tipo: "Roupas", horario: "Seg-Sex 8h-17h", telefone: "(19) 3412-3000", avaliacao: 4.5, icone: "👕", lat: -22.7384, lng: -47.6411 }
+    ];
 
-        // ========== ESTADO ==========
-        let usuarioLogado = null;
-        let tabAppAtiva = 'desafios';
-        let inscricoesUsuario = [];
-        let comprovantesHoje = [];
-        let desafioAtual = null;
+    // Atualiza contadores
+    document.getElementById('totalPontos').innerText = pontosColeta.length;
+    const categoriasUnicas = [...new Set(pontosColeta.map(p => p.tipo))];
+    document.getElementById('categoriasCount').innerText = categoriasUnicas.length;
 
-        // ========== FUNÇÕES DE INICIALIZAÇÃO ==========
-        
-        // Carregar usuários da planilha ao iniciar
-        async function carregarUsuarios() {
-            try {
-                const response = await fetch(SHEETDB_URL);
-                usuarios = await response.json();
-                console.log('Usuários carregados:', usuarios.length);
-            } catch (error) {
-                console.error('Erro ao carregar usuários:', error);
-                // Dados iniciais caso a planilha esteja vazia
-                usuarios = [
-                    { 
-                        nome: "João Silva", 
-                        email: "joao@email.com", 
-                        senha: "123456", 
-                        telefone: "(19) 99999-1234", 
-                        cidade: "Piracicaba",
-                        data_cadastro: "10/01/2026",
-                        pontos: "2350", 
-                        nivel: "🌳 EcoMestre", 
-                        streak: "45", 
-                        desafios: "28",
-                        conquistas: "Primeiro passo,Reciclador,Plantador,Top 10"
-                    },
-                    { 
-                        nome: "Maria Santos", 
-                        email: "maria@email.com", 
-                        senha: "123456", 
-                        telefone: "(19) 98888-5678",
-                        cidade: "Piracicaba",
-                        data_cadastro: "15/01/2026",
-                        pontos: "3520", 
-                        nivel: "🏆 EcoHerói", 
-                        streak: "67", 
-                        desafios: "42",
-                        conquistas: "Primeiro passo,Reciclador,Eventos,Streak 30"
-                    },
-                    { 
-                        nome: "Pedro Graciano", 
-                        email: "pedrohenriquemarques720@gmail.com", 
-                        senha: "Liz1808#", 
-                        telefone: "(19) 99465-7370", 
-                        cidade: "Piracicaba",
-                        data_cadastro: "14/03/2026",
-                        pontos: "5000", 
-                        nivel: "👑 Administrador", 
-                        streak: "99", 
-                        desafios: "50",
-                        conquistas: "Fundador,Mestre da Reciclagem,Guardião da Natureza,Lenda,Admin"
-                    },
-                ];
-            }
+    // Inicialização do mapa
+    const map = L.map('map').setView([-22.728, -47.649], 13);
+
+    // Camada de tiles (OpenStreetMap)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> & CartoDB',
+        subdomains: 'abcd',
+        maxZoom: 19,
+        minZoom: 11
+    }).addTo(map);
+
+    // Armazenar todos os marcadores
+    let markers = [];
+
+    // Função para gerar ícone customizado baseado no tipo
+    function getIconForType(tipo) {
+        let iconHtml = '';
+        switch(tipo) {
+            case 'Ecoponto': iconHtml = '🗑️'; break;
+            case 'Pilhas': iconHtml = '🔋'; break;
+            case 'Eletrônicos': iconHtml = '💻'; break;
+            case 'Óleo': iconHtml = '🫒'; break;
+            case 'Vidros': iconHtml = '🥃'; break;
+            case 'Papel': iconHtml = '📄'; break;
+            case 'Roupas': iconHtml = '👕'; break;
+            default: iconHtml = '📍';
         }
-
-        // ========== FUNÇÕES DE LOGIN COM LEMBRAR ACESSO ==========
-
-        // Verificar se já existe login salvo ao carregar a página
-        function verificarLoginSalvo() {
-            const savedUser = localStorage.getItem('sustentapira_user');
-            
-            if (savedUser) {
-                try {
-                    const user = JSON.parse(savedUser);
-                    
-                    // Verificar se o usuário ainda existe na base de dados
-                    fetch(`${SHEETDB_URL}/search?email=${user.email}`)
-                        .then(response => response.json())
-                        .then(usuariosEncontrados => {
-                            if (usuariosEncontrados.length > 0) {
-                                usuarioLogado = usuariosEncontrados[0];
-                                
-                                // Fazer login automático
-                                document.getElementById('loginScreen').classList.add('hidden');
-                                document.getElementById('appScreen').classList.remove('hidden');
-                                atualizarUserInfo();
-                                atualizarHeaderInfo();
-                                
-                                // Garantir que a aba de desafios seja mostrada imediatamente
-                                tabAppAtiva = 'desafios';
-                                document.querySelectorAll('.app-tab').forEach(btn => {
-                                    btn.classList.remove('active');
-                                    if (btn.textContent.includes('Desafios')) {
-                                        btn.classList.add('active');
-                                    }
-                                });
-                                
-                                // Renderizar o conteúdo imediatamente
-                                renderAppContent();
-                                
-                                mostrarAlerta('success', `Bem-vindo de volta, ${usuarioLogado.nome}!`);
-                            } else {
-                                // Usuário não encontrado na base, limpar localStorage
-                                localStorage.removeItem('sustentapira_user');
-                            }
-                        })
-                        .catch(() => {
-                            // Erro ao verificar, apenas limpa o localStorage
-                            localStorage.removeItem('sustentapira_user');
-                        });
-                } catch (e) {
-                    console.error('Erro ao processar login salvo:', e);
-                    localStorage.removeItem('sustentapira_user');
-                }
-            }
-        }
-
-        function switchTab(tab) {
-            document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
-            document.getElementById('tabCadastro').classList.toggle('active', tab === 'cadastro');
-            document.getElementById('paneLogin').classList.toggle('active', tab === 'login');
-            document.getElementById('paneCadastro').classList.toggle('active', tab === 'cadastro');
-        }
-
-        function mostrarAlerta(tipo, mensagem) {
-            const alertArea = document.getElementById('alertArea');
-            alertArea.innerHTML = `
-                <div class="alert alert-${tipo}">
-                    <i class="fas ${tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
-                    <span>${mensagem}</span>
-                </div>
-            `;
-            setTimeout(() => alertArea.innerHTML = '', 5000);
-        }
-
-        async function handleLogin(event) {
-            event.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const senha = document.getElementById('loginSenha').value;
-            const lembrar = document.getElementById('lembrar').checked;
-
-            const btn = document.getElementById('btnLogin');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<span class="spinner"></span> Entrando...';
-            btn.disabled = true;
-
-            try {
-                // Buscar usuário na SheetDB
-                const response = await fetch(`${SHEETDB_URL}/search?email=${email}`);
-                const usuariosEncontrados = await response.json();
-                
-                const usuario = usuariosEncontrados.find(u => u.senha === senha);
-                
-                if (usuario) {
-                    usuarioLogado = usuario;
-                    
-                    // Se "Lembrar meu acesso" estiver marcado, salvar no localStorage
-                    if (lembrar) {
-                        // Salvar apenas informações não sensíveis
-                        const userToSave = {
-                            id: usuario.id || usuario._id,
-                            nome: usuario.nome,
-                            email: usuario.email,
-                            pontos: usuario.pontos,
-                            nivel: usuario.nivel,
-                            streak: usuario.streak,
-                            desafios: usuario.desafios,
-                            data_cadastro: usuario.data_cadastro
-                        };
-                        localStorage.setItem('sustentapira_user', JSON.stringify(userToSave));
-                    } else {
-                        // Se não estiver marcado, remover qualquer login salvo
-                        localStorage.removeItem('sustentapira_user');
-                    }
-                    
-                    mostrarAlerta('success', `Bem-vindo, ${usuario.nome}!`);
-                    
-                    setTimeout(() => {
-                        document.getElementById('loginScreen').classList.add('hidden');
-                        document.getElementById('appScreen').classList.remove('hidden');
-                        atualizarUserInfo();
-                        atualizarHeaderInfo();
-                        
-                        // Garantir que a aba de desafios seja mostrada imediatamente
-                        tabAppAtiva = 'desafios';
-                        document.querySelectorAll('.app-tab').forEach(btn => {
-                            btn.classList.remove('active');
-                            if (btn.textContent.includes('Desafios')) {
-                                btn.classList.add('active');
-                            }
-                        });
-                        
-                        // Renderizar o conteúdo imediatamente
-                        renderAppContent();
-                    }, 1500);
-                } else {
-                    mostrarAlerta('error', 'E-mail ou senha inválidos!');
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                }
-            } catch (error) {
-                console.error('Erro no login:', error);
-                mostrarAlerta('error', 'Erro ao conectar com o servidor');
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
-        }
-
-        async function handleCadastro(event) {
-            event.preventDefault();
-            
-            const nome = document.getElementById('cadastroNome').value;
-            const email = document.getElementById('cadastroEmail').value;
-            const senha = document.getElementById('cadastroSenha').value;
-            const confirmar = document.getElementById('cadastroConfirmar').value;
-            const telefone = document.getElementById('cadastroTelefone').value;
-
-            if (senha !== confirmar) {
-                mostrarAlerta('error', 'As senhas não coincidem!');
-                return;
-            }
-
-            const btn = document.getElementById('btnCadastro');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<span class="spinner"></span> Criando conta...';
-            btn.disabled = true;
-
-            try {
-                // Verificar se email já existe
-                const response = await fetch(`${SHEETDB_URL}/search?email=${email}`);
-                const usuariosExistentes = await response.json();
-                
-                if (usuariosExistentes.length > 0) {
-                    mostrarAlerta('error', 'E-mail já cadastrado!');
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                    return;
-                }
-
-                const novoUsuario = {
-                    nome: nome,
-                    email: email,
-                    senha: senha,
-                    telefone: telefone || '',
-                    cidade: "Piracicaba",
-                    data_cadastro: new Date().toLocaleDateString('pt-BR'),
-                    pontos: "0",
-                    nivel: "🌱 EcoIniciante",
-                    streak: "1",
-                    desafios: "0",
-                    conquistas: "🌱 Primeiro passo"
-                };
-
-                // Salvar na SheetDB
-                const saveResponse = await fetch(SHEETDB_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data: [novoUsuario] })
-                });
-
-                const resultado = await saveResponse.json();
-                
-                if (resultado.created) {
-                    mostrarAlerta('success', 'Conta criada com sucesso! Faça o login.');
-                    
-                    // Limpar formulário
-                    document.getElementById('cadastroNome').value = '';
-                    document.getElementById('cadastroEmail').value = '';
-                    document.getElementById('cadastroTelefone').value = '';
-                    document.getElementById('cadastroSenha').value = '';
-                    document.getElementById('cadastroConfirmar').value = '';
-                    
-                    // Recarregar usuários
-                    await carregarUsuarios();
-                    
-                    switchTab('login');
-                } else {
-                    mostrarAlerta('error', 'Erro ao criar conta');
-                }
-            } catch (error) {
-                console.error('Erro no cadastro:', error);
-                mostrarAlerta('error', 'Erro ao conectar com o servidor');
-            }
-
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        }
-
-        function esqueciSenha(event) {
-            event.preventDefault();
-            mostrarAlerta('info', 'Funcionalidade em desenvolvimento!');
-        }
-
-        function logout() {
-            usuarioLogado = null;
-            // Limpar login salvo ao fazer logout
-            localStorage.removeItem('sustentapira_user');
-            document.getElementById('appScreen').classList.add('hidden');
-            document.getElementById('loginScreen').classList.remove('hidden');
-            
-            // Limpar campos de login
-            document.getElementById('loginEmail').value = '';
-            document.getElementById('loginSenha').value = '';
-            document.getElementById('lembrar').checked = false;
-        }
-
-        // Chamar carregamento inicial
-        carregarUsuarios();
-
-        // Garantir que quando a página carregar, a aba de desafios seja a ativa
-        document.addEventListener('DOMContentLoaded', function() {
-            verificarLoginSalvo();
-            
-            // Mesmo sem usuário logado, garantir que a aba de desafios seja a ativa
-            if (!usuarioLogado) {
-                tabAppAtiva = 'desafios';
-                document.querySelectorAll('.app-tab').forEach(btn => {
-                    btn.classList.remove('active');
-                    if (btn.textContent.includes('Desafios')) {
-                        btn.classList.add('active');
-                    }
-                });
-                // Renderizar desafios mesmo sem usuário logado (opcional)
-                // renderAppContent();
-            }
+        return L.divIcon({
+            html: `<div style="background-color: #2c5e2e; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">${iconHtml}</div>`,
+            className: 'custom-marker',
+            iconSize: [34, 34],
+            popupAnchor: [0, -15]
         });
+    }
 
-        // ========== FUNÇÕES DO APP ==========
+    // Adicionar marcadores com popup completo
+    function adicionarMarcadores(filtro = 'todos') {
+        // Remove todos os marcadores atuais
+        markers.forEach(marker => map.removeLayer(marker));
+        markers = [];
 
-        function atualizarUserInfo() {
-            if (!usuarioLogado) return;
-            
-            document.getElementById('userName').textContent = usuarioLogado.nome;
-            document.getElementById('userLevel').textContent = usuarioLogado.nivel;
-            document.getElementById('userPoints').textContent = usuarioLogado.pontos;
-            document.getElementById('userStreak').textContent = usuarioLogado.streak;
-            document.getElementById('userChallenges').textContent = usuarioLogado.desafios;
+        let pontosFiltrados = pontosColeta;
+        if (filtro !== 'todos') {
+            pontosFiltrados = pontosColeta.filter(p => p.tipo === filtro);
         }
 
-        function atualizarHeaderInfo() {
-            if (!usuarioLogado) return;
-            
-            document.getElementById('headerStreak').textContent = usuarioLogado.streak;
-            document.getElementById('headerPoints').textContent = usuarioLogado.pontos;
-            
-            // Atualizar avatar com a primeira letra do nome
-            const headerAvatar = document.getElementById('headerAvatar');
-            headerAvatar.innerHTML = usuarioLogado.nome.charAt(0).toUpperCase() + '<span class="online-indicator"></span>';
-        }
-
-        function mudarTabApp(tab) {
-            tabAppAtiva = tab;
-            document.querySelectorAll('.app-tab').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            renderAppContent();
-        }
-
-        function renderAppContent() {
-            const content = document.getElementById('appContent');
-            
-            switch(tabAppAtiva) {
-                case 'desafios':
-                    renderDesafios(content);
-                    break;
-                case 'perfil':
-                    renderPerfil(content);
-                    break;
-                case 'ranking':
-                    renderRanking(content);
-                    break;
-                case 'eventos':
-                    renderEventos(content);
-                    break;
-                case 'pontos':
-                    renderPontos(content);
-                    break;
-                default:
-                    renderDesafios(content);
-            }
-        }
-
-        function renderDesafios(container) {
-            let html = '<h1 class="titulo-secao">Desafios Ambientais</h1>';
-            html += '<div class="card-grid">';
-            
-            desafios.forEach(desafio => {
-                html += `
-                    <div class="card-moderno">
-                        <div style="font-size: 48px; text-align: center; margin-bottom: 15px;">${desafio.icone}</div>
-                        <h3 style="text-align: center; margin-bottom: 10px; color: #3a2a1a;">${desafio.titulo}</h3>
-                        <p style="color: #5d3a1a; text-align: center; margin-bottom: 15px;">${desafio.descricao}</p>
-                        <div style="text-align: center; margin-bottom: 15px;">
-                            <span class="badge badge-success">+${desafio.pontos} pontos</span>
-                        </div>
-                        <p style="font-size: 12px; color: #8b4513; margin-bottom: 15px;"><i class="fas fa-info-circle"></i> ${desafio.dica}</p>
-                        <button class="btn-auth" style="margin-top: 10px;" onclick="abrirUpload(${desafio.id})">
-                            📸 Comprovar
-                        </button>
-                    </div>
-                `;
-            });
-            
-            html += '</div>';
-            container.innerHTML = html;
-        }
-
-        function renderPerfil(container) {
-            if (!usuarioLogado) return;
-            
-            const pontos = parseInt(usuarioLogado.pontos) || 0;
-            const pontosProximoNivel = pontos < 5000 ? 5000 - pontos : 0;
-            const porcentagemProgresso = Math.min(100, (pontos / 5000) * 100);
-            
-            const conquistasArray = usuarioLogado.conquistas ? usuarioLogado.conquistas.split(',') : [];
-            
-            // Simular atividades recentes
-            const atividadesRecentes = [
-                { tipo: "desafio", nome: "Reciclar 10kg", pontos: 200, data: "Hoje" },
-                { tipo: "evento", nome: "Mutirão de Limpeza", pontos: 150, data: "Ontem" },
-                { tipo: "desafio", nome: "Plantar Árvore", pontos: 300, data: "3 dias atrás" }
-            ];
-            
-            let conquistasHtml = '';
-            conquistasArray.forEach(conquista => {
-                conquistasHtml += `
-                    <div class="conquista-card">
-                        <div class="conquista-icon">🏆</div>
-                        <div class="conquista-name">${conquista}</div>
-                        <div class="conquista-desc">Conquista desbloqueada</div>
-                        <span class="badge-tag">+50 pts</span>
-                    </div>
-                `;
-            });
-            
-            // Adicionar conquistas bloqueadas como exemplo
-            for (let i = 0; i < 3; i++) {
-                conquistasHtml += `
-                    <div class="conquista-card locked">
-                        <div class="conquista-icon">🔒</div>
-                        <div class="conquista-name">???</div>
-                        <div class="conquista-desc">Continue progredindo</div>
-                        <div class="conquista-progress">75% completo</div>
-                    </div>
-                `;
-            }
-            
-            let atividadesHtml = '';
-            atividadesRecentes.forEach(atividade => {
-                atividadesHtml += `
-                    <div class="atividade-item">
-                        <div class="atividade-icon">
-                            <i class="fas ${atividade.tipo === 'desafio' ? 'fa-tasks' : 'fa-calendar-alt'}"></i>
-                        </div>
-                        <div class="atividade-details">
-                            <div class="atividade-titulo">${atividade.nome}</div>
-                            <div class="atividade-data">${atividade.data}</div>
-                        </div>
-                        <div class="atividade-pontos">+${atividade.pontos}</div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = `
-                <div class="perfil-container">
-                    <h1 class="titulo-secao">👤 Meu Perfil</h1>
-                    
-                    <div class="perfil-card-destaque">
-                        <div class="perfil-header-melhorado">
-                            <div class="perfil-avatar-melhorado">
-                                ${usuarioLogado.nome.charAt(0)}
-                            </div>
-                            <div class="perfil-info-melhorado">
-                                <h3>${usuarioLogado.nome}</h3>
-                                <div class="perfil-badge-container">
-                                    <span class="perfil-badge"><i class="fas fa-map-marker-alt"></i> ${usuarioLogado.cidade || 'Piracicaba'}</span>
-                                    <span class="perfil-badge"><i class="fas fa-calendar-alt"></i> Membro desde ${usuarioLogado.data_cadastro}</span>
-                                    <span class="perfil-badge"><i class="fas fa-envelope"></i> ${usuarioLogado.email}</span>
-                                    <span class="perfil-badge"><i class="fas fa-phone"></i> ${usuarioLogado.telefone || 'Não informado'}</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="perfil-info-grid">
-                            <div class="info-item">
-                                <div class="info-icon"><i class="fas fa-trophy"></i></div>
-                                <div class="info-text">
-                                    <strong>Ranking</strong>
-                                    <span>#4</span>
-                                </div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-icon"><i class="fas fa-fire"></i></div>
-                                <div class="info-text">
-                                    <strong>Streak</strong>
-                                    <span>${usuarioLogado.streak} dias</span>
-                                </div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-icon"><i class="fas fa-check-circle"></i></div>
-                                <div class="info-text">
-                                    <strong>Desafios</strong>
-                                    <span>${usuarioLogado.desafios}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="perfil-level-box-melhorado">
-                        <div class="level-header">
-                            <div class="level-title">
-                                <i class="fas fa-chart-line"></i>
-                                ${usuarioLogado.nivel}
-                            </div>
-                            <div class="level-points">
-                                ${usuarioLogado.pontos} / 5000
-                            </div>
-                        </div>
-                        
-                        <div class="progress-container">
-                            <div class="progress-label">
-                                <span>Progresso para próximo nível</span>
-                                <span>${porcentagemProgresso.toFixed(1)}%</span>
-                            </div>
-                            <div class="progress-bar-melhorado">
-                                <div class="progress-fill-melhorado" style="width: ${porcentagemProgresso}%;"></div>
-                            </div>
-                        </div>
-                        
-                        <div class="next-level-info">
-                            <span><i class="fas fa-arrow-up"></i> Faltam ${pontosProximoNivel} pontos</span>
-                            <span>Próximo nível: ${pontos < 5000 ? getProximoNivelNome(pontos) : 'Nível máximo'}</span>
-                        </div>
-                    </div>
-                    
-                    <div class="stat-cards-grid">
-                        <div class="stat-card-melhorado">
-                            <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
-                            <div class="stat-value">${inscricoesUsuario.length}</div>
-                            <div class="stat-label">Eventos</div>
-                        </div>
-                        <div class="stat-card-melhorado">
-                            <div class="stat-icon"><i class="fas fa-leaf"></i></div>
-                            <div class="stat-value">${usuarioLogado.desafios || 0}</div>
-                            <div class="stat-label">Desafios</div>
-                        </div>
-                        <div class="stat-card-melhorado">
-                            <div class="stat-icon"><i class="fas fa-map-pin"></i></div>
-                            <div class="stat-value">${Math.floor(Math.random() * 10) + 5}</div>
-                            <div class="stat-label">Visitas</div>
-                        </div>
-                    </div>
-                    
-                    <div class="conquistas-section">
-                        <div class="conquistas-title">
-                            <i class="fas fa-medal"></i>
-                            Conquistas
-                        </div>
-                        <div class="conquistas-grid-melhorado">
-                            ${conquistasHtml}
-                        </div>
-                    </div>
-                    
-                    <div class="atividade-recente">
-                        <div class="conquistas-title" style="margin-bottom: 15px;">
-                            <i class="fas fa-history"></i>
-                            Atividade Recente
-                        </div>
-                        ${atividadesHtml}
-                    </div>
-                </div>
-            `;
-        }
-
-        function getProximoNivelNome(pontos) {
-            if (pontos < 100) return "EcoAmigo";
-            if (pontos < 500) return "EcoGuardião";
-            if (pontos < 1000) return "EcoMestre";
-            if (pontos < 5000) return "EcoHerói";
-            return "Nível Máximo";
-        }
-
-        function renderRanking(container) {
-            let html = '<h1 class="titulo-secao">🏆 Ranking EcoCidadãos</h1>';
-            
-            // Estatísticas do ranking
-            const totalUsuarios = ranking.length;
-            const totalPontosRanking = ranking.reduce((acc, user) => acc + user.pontos, 0);
-            const mediaPontos = Math.round(totalPontosRanking / totalUsuarios);
-            
-            html += `
-                <div class="ranking-stats-bar">
-                    <div class="ranking-stat-card">
-                        <div class="ranking-stat-value">${totalUsuarios}</div>
-                        <div class="ranking-stat-label">Participantes</div>
-                        <div class="ranking-stat-trend"><i class="fas fa-arrow-up"></i> +12 esta semana</div>
-                    </div>
-                    <div class="ranking-stat-card">
-                        <div class="ranking-stat-value">${mediaPontos}</div>
-                        <div class="ranking-stat-label">Média de pontos</div>
-                        <div class="ranking-stat-trend"><i class="fas fa-chart-line"></i> +5%</div>
-                    </div>
-                    <div class="ranking-stat-card">
-                        <div class="ranking-stat-value">🔥 99</div>
-                        <div class="ranking-stat-label">Maior streak</div>
-                        <div class="ranking-stat-trend"><i class="fas fa-crown"></i> Pedro Graciano</div>
+        pontosFiltrados.forEach(ponto => {
+            const icone = getIconForType(ponto.tipo);
+            // Criar conteúdo HTML do popup com todas as informações
+            const estrelas = '★'.repeat(Math.round(ponto.avaliacao)) + '☆'.repeat(5 - Math.round(ponto.avaliacao));
+            const popupContent = `
+                <div class="custom-popup" style="min-width: 240px;">
+                    <div class="popup-title">${ponto.nome}</div>
+                    <div class="popup-detail"><i class="fas fa-tag"></i> <strong>${ponto.tipo}</strong></div>
+                    <div class="popup-detail"><i class="fas fa-map-pin"></i> ${ponto.endereco}</div>
+                    <div class="popup-detail"><i class="fas fa-clock"></i> ${ponto.horario}</div>
+                    <div class="popup-detail"><i class="fas fa-phone-alt"></i> ${ponto.telefone}</div>
+                    <div class="popup-detail"><i class="fas fa-star" style="color: #ffb800;"></i> ${estrelas} (${ponto.avaliacao})</div>
+                    <div class="badge-cat"><i class="fas fa-recycle"></i> Material: ${ponto.categoria === 'geral' ? 'Resíduos diversos' : ponto.categoria}</div>
+                    <div class="popup-footer">
+                        <i class="fas fa-leaf"></i> Ponto oficial • Piracicaba Sustentável
                     </div>
                 </div>
             `;
             
-            // Pódio espetacular
-            html += '<div class="podium-spectacular">';
+            const marker = L.marker([ponto.lat, ponto.lng], { icon: icone })
+                .bindPopup(popupContent, { maxWidth: 300, className: 'eco-popup' })
+                .addTo(map);
             
-            ranking.slice(0, 3).forEach((user, index) => {
-                const posicao = index === 0 ? "first" : index === 1 ? "second" : "third";
-                const medalha = index === 0 ? "👑" : index === 1 ? "🥈" : "🥉";
-                const avatarIcon = index === 0 ? "👑" : index === 1 ? "🌟" : "✨";
-                
-                html += `
-                    <div class="podium-spot ${posicao}" onclick="mostrarMensagemMotivacional('${user.nome}', ${user.pontos})">
-                        <div class="podium-medal-giant">${medalha}</div>
-                        <div class="podium-avatar-giant">${avatarIcon}</div>
-                        <div class="podium-name-giant">${user.nome}</div>
-                        <div class="podium-level-giant">${user.nivel}</div>
-                        <div class="podium-points-giant">${user.pontos} pts</div>
-                        <div class="podium-stats-giant">
-                            <span class="podium-stat-item"><i class="fas fa-fire"></i> ${user.streak}</span>
-                            <span class="podium-stat-item"><i class="fas fa-star"></i> Top ${index + 1}</span>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            html += '</div>';
-            
-            // Mensagem motivacional premium
-            html += `
-                <div class="motivation-premium" onclick="mostrarMensagemMotivacional()">
-                    <div class="motivation-icon">🏆</div>
-                    <div class="motivation-title">Você pode chegar ao topo!</div>
-                    <div class="motivation-text">Complete desafios, participe de eventos e acumule pontos para subir no ranking e se tornar um EcoHerói!</div>
-                    <div class="motivation-progress">
-                        <div class="motivation-progress-bar">
-                            <div class="motivation-progress-fill" style="width: 65%;"></div>
-                        </div>
-                        <div class="motivation-stats">
-                            <div class="motivation-stat-item">
-                                <div class="motivation-stat-value">1.750</div>
-                                <div class="motivation-stat-label">Pontos para o top 3</div>
-                            </div>
-                            <div class="motivation-stat-item">
-                                <div class="motivation-stat-value">5</div>
-                                <div class="motivation-stat-label">Desafios restantes</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // Lista de ranking premium
-            html += '<div class="ranking-list-premium">';
-            html += `
-                <div class="ranking-list-header">
-                    <div class="ranking-list-title">
-                        <i class="fas fa-list-ol"></i>
-                        <h3>Classificação Geral</h3>
-                    </div>
-                    <div class="ranking-filter">
-                        <button class="ranking-filter-btn active">Todos</button>
-                        <button class="ranking-filter-btn">Esta semana</button>
-                        <button class="ranking-filter-btn">Este mês</button>
-                    </div>
-                </div>
-            `;
-            
-            ranking.slice(3).forEach((user, index) => {
-                const posicao = index + 4;
-                const topClass = posicao <= 3 ? "top-3" : "";
-                const positionClass = posicao === 4 ? "top-4" : posicao === 5 ? "top-5" : "";
-                
-                html += `
-                    <div class="ranking-item-premium ${topClass}" onclick="mostrarMensagemMotivacional('${user.nome}', ${user.pontos})">
-                        <div class="ranking-position-badge ${positionClass} ${posicao === 1 ? 'top-1' : posicao === 2 ? 'top-2' : posicao === 3 ? 'top-3' : ''}">${posicao}º</div>
-                        <div class="ranking-avatar-premium">👤</div>
-                        <div class="ranking-info-premium">
-                            <div class="ranking-name-premium">
-                                ${user.nome}
-                                ${user.streak > 50 ? '<span class="ranking-verified"><i class="fas fa-check-circle"></i></span>' : ''}
-                                ${user.pontos > 4000 ? '<span class="ranking-badge-icon"><i class="fas fa-crown"></i></span>' : ''}
-                            </div>
-                            <div class="ranking-level-premium">${user.nivel}</div>
-                            <div class="ranking-progress-premium">
-                                <span>Progresso</span>
-                                <div class="ranking-progress-bar">
-                                    <div class="ranking-progress-fill" style="width: ${user.progresso || Math.min(100, Math.round(user.pontos/50))}%;"></div>
-                                </div>
-                                <span>${user.progresso || Math.min(100, Math.round(user.pontos/50))}%</span>
-                            </div>
-                            <div class="ranking-stats-premium">
-                                <span><i class="fas fa-fire"></i> ${user.streak} dias</span>
-                                <span><i class="fas fa-tasks"></i> ${Math.round(user.pontos/100)} desafios</span>
-                            </div>
-                        </div>
-                        <div class="ranking-points-premium">
-                            ${user.pontos} pts
-                        </div>
-                    </div>
-                `;
-            });
-            
-            html += '</div>';
-            
-            // Conquistas do ranking
-            html += `
-                <div class="ranking-achievements">
-                    <div class="achievement-card unlocked">
-                        <div class="achievement-icon">🏅</div>
-                        <div class="achievement-title">Top 10</div>
-                        <div class="achievement-desc">Fique entre os 10 primeiros</div>
-                        <div class="achievement-progress">4 usuários alcançaram</div>
-                    </div>
-                    <div class="achievement-card">
-                        <div class="achievement-icon">🔥</div>
-                        <div class="achievement-title">Streak de 30 dias</div>
-                        <div class="achievement-desc">Mantenha streak por 30 dias</div>
-                        <div class="achievement-progress">12 usuários próximos</div>
-                    </div>
-                    <div class="achievement-card">
-                        <div class="achievement-icon">💯</div>
-                        <div class="achievement-title">1000 pontos</div>
-                        <div class="achievement-desc">Acumule 1000 pontos</div>
-                        <div class="achievement-progress">8 usuários já atingiram</div>
-                    </div>
-                    <div class="achievement-card">
-                        <div class="achievement-icon">👑</div>
-                        <div class="achievement-title">Campeão</div>
-                        <div class="achievement-desc">Seja o primeiro do ranking</div>
-                        <div class="achievement-progress">Pedro Graciano</div>
-                    </div>
-                </div>
-            `;
-            
-            container.innerHTML = html;
-        }
-
-        function mostrarMensagemMotivacional(nome, pontos) {
-            const mensagens = [
-                "💪 Continue assim! Você está fazendo a diferença!",
-                "🌱 Cada ponto conta para um futuro mais sustentável!",
-                "🌟 Você é um exemplo para a comunidade!",
-                "🚀 Continue subindo no ranking! O topo te espera!",
-                "💚 Sua dedicação está transformando Piracicaba!",
-                "🎯 Foque nos desafios e acumule mais pontos!",
-                "🌿 A natureza agradece sua contribuição!",
-                "🏆 Faltam apenas " + (5000 - (pontos || 0)) + " pontos para o topo!",
-                "⚡ Você está mais perto do que imagina!"
-            ];
-            
-            const mensagemAleatoria = mensagens[Math.floor(Math.random() * mensagens.length)];
-            mostrarAlerta('success', mensagemAleatoria);
-        }
-
-        function renderEventos(container) {
-            let html = '<h1 class="titulo-secao">Eventos</h1>';
-            
-            // Estatísticas
-            const totalEventos = eventos.length;
-            const eventosDisponiveis = eventos.filter(e => e.vagas === 0 || e.inscritos < e.vagas).length;
-            const totalPontos = eventos.reduce((acc, e) => acc + e.pontos, 0);
-            
-            html += `
-                <div class="card-grid" style="margin-bottom: 30px;">
-                    <div class="stat-card" style="background: #F5F5F5; border: 1px solid #8b5a2b; border-radius: 16px; padding: 20px; text-align: center;">
-                        <div class="stat-value" style="color: #3a2a1a; font-size: 32px; font-weight: 700;">${totalEventos}</div>
-                        <div class="stat-label" style="color: #5d3a1a; font-weight: 600;">Eventos em 2026</div>
-                    </div>
-                    <div class="stat-card" style="background: #F5F5F5; border: 1px solid #8b5a2b; border-radius: 16px; padding: 20px; text-align: center;">
-                        <div class="stat-value" style="color: #3a2a1a; font-size: 32px; font-weight: 700;">${eventosDisponiveis}</div>
-                        <div class="stat-label" style="color: #5d3a1a; font-weight: 600;">Com vagas</div>
-                    </div>
-                    <div class="stat-card" style="background: #F5F5F5; border: 1px solid #8b5a2b; border-radius: 16px; padding: 20px; text-align: center;">
-                        <div class="stat-value" style="color: #3a2a1a; font-size: 32px; font-weight: 700;">+${totalPontos}</div>
-                        <div class="stat-label" style="color: #5d3a1a; font-weight: 600;">Pontos totais</div>
-                    </div>
-                </div>
-            `;
-            
-            // Agrupar por mês
-            const meses = {
-                '01': 'Janeiro', '02': 'Fevereiro', '03': 'Março', '04': 'Abril',
-                '05': 'Maio', '06': 'Junho', '07': 'Julho', '08': 'Agosto',
-                '09': 'Setembro', '10': 'Outubro', '11': 'Novembro', '12': 'Dezembro'
-            };
-            
-            const eventosPorMes = {};
-            eventos.forEach(evento => {
-                const mes = evento.data.split('/')[1];
-                if (!eventosPorMes[mes]) eventosPorMes[mes] = [];
-                eventosPorMes[mes].push(evento);
-            });
-            
-            Object.keys(eventosPorMes).sort().forEach(mesNum => {
-                const nomeMes = meses[mesNum];
-                html += `<h2 style="margin: 30px 0 15px; color: #8b4513;">${nomeMes} 2026</h2>`;
-                
-                eventosPorMes[mesNum].forEach(evento => {
-                    const inscrito = inscricoesUsuario.includes(evento.id);
-                    
-                    html += `
-                        <div class="card-moderno" style="margin-bottom: 15px;">
-                            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                                <div style="flex: 1;">
-                                    <span class="badge badge-info">${evento.tipo.toUpperCase()}</span>
-                                    <h3 style="margin: 10px 0; color: #3a2a1a;">${evento.titulo}</h3>
-                                    <p style="color: #5d3a1a; margin-bottom: 15px;">${evento.descricao}</p>
-                                    <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 10px;">
-                                        <span style="color: #5d3a1a;"><i class="fas fa-calendar" style="color: #8b4513;"></i> ${evento.data}</span>
-                                        <span style="color: #5d3a1a;"><i class="fas fa-clock" style="color: #8b4513;"></i> ${evento.hora}</span>
-                                        <span style="color: #5d3a1a;"><i class="fas fa-map-marker-alt" style="color: #8b4513;"></i> ${evento.local}</span>
-                                    </div>
-                                    <span class="badge badge-success">+${evento.pontos} pontos</span>
-                                    ${evento.vagas > 0 ? `<span class="badge badge-info">${evento.inscritos}/${evento.vagas} inscritos</span>` : ''}
-                                </div>
-                            </div>
-                            ${!inscrito && (evento.vagas === 0 || evento.inscritos < evento.vagas) ? `
-                                <div style="margin-top: 15px;">
-                                    <button class="btn-auth" onclick="abrirInscricao(${evento.id})">📝 Inscrever-se</button>
-                                </div>
-                            ` : inscrito ? `
-                                <div style="margin-top: 15px;">
-                                    <span class="badge badge-success">✅ Inscrito</span>
-                                </div>
-                            ` : ''}
-                        </div>
-                    `;
-                });
-            });
-            
-            container.innerHTML = html;
-        }
-
-        function renderPontos(container) {
-            const categorias = {};
-            pontosColeta.forEach(ponto => {
-                if (!categorias[ponto.categoria]) categorias[ponto.categoria] = [];
-                categorias[ponto.categoria].push(ponto);
-            });
-            
-            const iconesCategoria = {
-                'geral': '🗑️',
-                'pilhas': '🔋',
-                'eletronicos': '💻',
-                'oleo': '🫒',
-                'vidros': '🥃',
-                'papel': '📄',
-                'roupas': '👕'
-            };
-            
-            let html = '<h1 class="titulo-secao" style="color: #3a2a1a;">Pontos de Coleta em Piracicaba</h1>';
-            html += '<p style="color: #5d3a1a; margin-bottom: 30px; font-weight: 500;">Rede completa com 38 pontos de descarte para diversos materiais.</p>';
-            
-            // Estatísticas
-            html += `
-                <div class="card-grid" style="margin-bottom: 30px;">
-                    <div class="stat-card" style="background: #F5F5F5; border: 1px solid #8b5a2b; border-radius: 16px; padding: 20px; text-align: center;">
-                        <div class="stat-value" style="color: #3a2a1a; font-size: 36px; font-weight: 700;">${pontosColeta.length}</div>
-                        <div class="stat-label" style="color: #5d3a1a; font-weight: 600;">Total de Pontos</div>
-                    </div>
-                    <div class="stat-card" style="background: #F5F5F5; border: 1px solid #8b5a2b; border-radius: 16px; padding: 20px; text-align: center;">
-                        <div class="stat-value" style="color: #3a2a1a; font-size: 36px; font-weight: 700;">${Object.keys(categorias).length}</div>
-                        <div class="stat-label" style="color: #5d3a1a; font-weight: 600;">Categorias</div>
-                    </div>
-                    <div class="stat-card" style="background: #F5F5F5; border: 1px solid #8b5a2b; border-radius: 16px; padding: 20px; text-align: center;">
-                        <div class="stat-value" style="color: #3a2a1a; font-size: 36px; font-weight: 700;">⭐ 4.5</div>
-                        <div class="stat-label" style="color: #5d3a1a; font-weight: 600;">Avaliação média</div>
-                    </div>
-                </div>
-            `;
-            
-            // Mostrar por categoria
-            Object.keys(categorias).sort().forEach(categoria => {
-                const icone = iconesCategoria[categoria] || '📍';
-                html += `<h2 style="margin: 30px 0 15px; color: #8b4513;">${icone} ${categoria.toUpperCase()} (${categorias[categoria].length})</h2>`;
-                html += '<div class="card-grid">';
-                
-                categorias[categoria].forEach(ponto => {
-                    const estrelas = '★'.repeat(Math.round(ponto.avaliacao)) + '☆'.repeat(5 - Math.round(ponto.avaliacao));
-                    
-                    html += `
-                        <div class="card-moderno">
-                            <h3 style="color: #3a2a1a;">${ponto.nome}</h3>
-                            <p style="color: #8b4513; margin: 5px 0; font-weight: 500;"><i class="fas fa-tag"></i> ${ponto.tipo}</p>
-                            <p style="color: #5d3a1a; margin: 5px 0;"><i class="fas fa-map-pin"></i> ${ponto.endereco}</p>
-                            <p style="color: #5d3a1a; margin: 5px 0;"><i class="fas fa-clock"></i> ${ponto.horario}</p>
-                            <p style="color: #5d3a1a; margin: 5px 0;"><i class="fas fa-phone"></i> ${ponto.telefone}</p>
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-                                <span style="color: gold;">${estrelas}</span>
-                                <span class="badge badge-info">${ponto.avaliacao}/5</span>
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                html += '</div>';
-            });
-            
-            container.innerHTML = html;
-        }
-
-        function abrirInscricao(eventoId) {
-            const evento = eventos.find(e => e.id === eventoId);
-            if (!evento) return;
-
-            const modal = document.getElementById('inscricaoModal');
-            const content = document.getElementById('inscricaoContent');
-            
-            content.innerHTML = `
-                <div class="card-moderno">
-                    <h2 style="margin-bottom: 20px; color: #3a2a1a;">📝 Confirmar Inscrição</h2>
-                    <h3 style="color: #3a2a1a;">${evento.titulo}</h3>
-                    <p style="color: #5d3a1a; margin: 15px 0;">${evento.descricao}</p>
-                    <p style="color: #5d3a1a;"><i class="fas fa-calendar" style="color: #8b4513;"></i> ${evento.data} às ${evento.hora}</p>
-                    <p style="color: #5d3a1a;"><i class="fas fa-map-marker-alt" style="color: #8b4513;"></i> ${evento.local}</p>
-                    <p style="color: #8b4513; font-weight: 600;"><i class="fas fa-star"></i> +${evento.pontos} pontos</p>
-                    
-                    <div style="display: flex; gap: 10px; margin-top: 20px;">
-                        <button class="btn-auth" onclick="confirmarInscricao(${eventoId})">✅ Confirmar</button>
-                        <button class="btn-auth" style="background: #666;" onclick="fecharModal('inscricaoModal')">❌ Cancelar</button>
-                    </div>
-                </div>
-            `;
-            
-            modal.classList.add('active');
-        }
-
-        function confirmarInscricao(eventoId) {
-            inscricoesUsuario.push(eventoId);
-            alert('✅ Inscrição realizada com sucesso! Você receberá um e-mail de confirmação.');
-            fecharModal('inscricaoModal');
-            renderAppContent();
-        }
-
-        function abrirUpload(desafioId) {
-            const desafio = desafios.find(d => d.id === desafioId);
-            if (!desafio) return;
-            
-            desafioAtual = desafio;
-
-            const modal = document.getElementById('uploadModal');
-            const content = document.getElementById('uploadContent');
-            
-            content.innerHTML = `
-                <div class="card-moderno">
-                    <h2 style="margin-bottom: 20px; color: #3a2a1a;">📸 Comprovar: ${desafio.titulo}</h2>
-                    <p style="background: #F5F5F5; border: 1px solid #8b5a2b; padding: 15px; border-radius: 12px; margin: 15px 0; color: #5d3a1a;">
-                        <i class="fas fa-info-circle" style="color: #8b4513;"></i> ${desafio.dica}
-                    </p>
-                    <div class="upload-preview" id="uploadPreview"></div>
-                    <div class="ai-analysis" id="aiAnalysis"></div>
-                    <div style="border: 2px dashed #8b4513; border-radius: 16px; padding: 30px; text-align: center; margin: 20px 0;">
-                        <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: #8b4513; margin-bottom: 10px;"></i>
-                        <p style="color: #5d3a1a;">Clique para selecionar ou arraste uma imagem</p>
-                        <input type="file" accept="image/*" id="uploadFile" style="margin-top: 10px; color: #5d3a1a;" onchange="analisarImagem(this)">
-                    </div>
-                    <div style="display: flex; gap: 10px;">
-                        <button class="btn-auth" onclick="confirmarUpload(${desafioId})" id="btnConfirmarUpload" disabled>📤 Enviar comprovante</button>
-                        <button class="btn-auth" style="background: #666;" onclick="fecharModal('uploadModal')">❌ Cancelar</button>
-                    </div>
-                </div>
-            `;
-            
-            modal.classList.add('active');
-        }
-
-        function analisarImagem(input) {
-            const file = input.files[0];
-            if (!file) return;
-            
-            const preview = document.getElementById('uploadPreview');
-            const aiAnalysis = document.getElementById('aiAnalysis');
-            const btnConfirmar = document.getElementById('btnConfirmarUpload');
-            
-            // Mostrar preview
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
-                
-                // Simular análise de IA
-                aiAnalysis.innerHTML = `
-                    <div class="loading">
-                        <span class="spinner"></span> Analisando imagem com IA...
-                    </div>
-                `;
-                
-                btnConfirmar.disabled = true;
-                
-                // Simular tempo de análise (2 segundos)
-                setTimeout(() => {
-                    // Simular resultado da análise baseado no tipo de desafio
-                    const tipo = desafioAtual.tipo;
-                    let analise = '';
-                    let valido = false;
-                    
-                    // Simulação de reconhecimento de imagem
-                    if (tipo === 'reciclagem') {
-                        analise = `
-                            <div class="success">
-                                <i class="fas fa-check-circle"></i> Imagem validada! Materiais recicláveis identificados (plástico, papel, metal). Aproximadamente 12kg detectados.
-                            </div>
-                        `;
-                        valido = true;
-                    } else if (tipo === 'plantio') {
-                        analise = `
-                            <div class="success">
-                                <i class="fas fa-check-circle"></i> Imagem validada! Muda de árvore nativa identificada. Espécie: Ipê-amarelo.
-                            </div>
-                        `;
-                        valido = true;
-                    } else if (tipo === 'pilhas') {
-                        analise = `
-                            <div class="success">
-                                <i class="fas fa-check-circle"></i> Imagem validada! 12 pilhas identificadas no ponto de coleta.
-                            </div>
-                        `;
-                        valido = true;
-                    } else if (tipo === 'mobilidade') {
-                        analise = `
-                            <div class="success">
-                                <i class="fas fa-check-circle"></i> Imagem validada! Aplicativo de tracking mostra trajeto de 5km de bicicleta.
-                            </div>
-                        `;
-                        valido = true;
-                    } else if (tipo === 'doacao' || tipo === 'roupas') {
-                        analise = `
-                            <div class="success">
-                                <i class="fas fa-check-circle"></i> Imagem validada! Alimentos/roupas identificados no local de doação.
-                            </div>
-                        `;
-                        valido = true;
-                    } else {
-                        analise = `
-                            <div class="success">
-                                <i class="fas fa-check-circle"></i> Imagem validada! Comprovante aceito.
-                            </div>
-                        `;
-                        valido = true;
-                    }
-                    
-                    aiAnalysis.innerHTML = analise;
-                    
-                    if (valido) {
-                        btnConfirmar.disabled = false;
-                    } else {
-                        aiAnalysis.innerHTML = `
-                            <div class="error">
-                                <i class="fas fa-exclamation-circle"></i> Imagem não reconhecida. Tente novamente com uma foto mais clara.
-                            </div>
-                        `;
-                    }
-                }, 2000);
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function confirmarUpload(desafioId) {
-            const fileInput = document.getElementById('uploadFile');
-            if (!fileInput || !fileInput.files[0]) {
-                alert('Por favor, selecione uma imagem!');
-                return;
-            }
-
-            const desafio = desafios.find(d => d.id === desafioId);
-            
-            // Simular validação
-            const pontosAtuais = parseInt(usuarioLogado.pontos) || 0;
-            usuarioLogado.pontos = (pontosAtuais + desafio.pontos).toString();
-            
-            const desafiosAtuais = parseInt(usuarioLogado.desafios) || 0;
-            usuarioLogado.desafios = (desafiosAtuais + 1).toString();
-            
-            // Atualizar nível
-            const pontos = parseInt(usuarioLogado.pontos);
-            if (pontos >= 5000) usuarioLogado.nivel = "🏆 EcoHerói";
-            else if (pontos >= 1000) usuarioLogado.nivel = "🌳 EcoMestre";
-            else if (pontos >= 500) usuarioLogado.nivel = "🍃 EcoGuardião";
-            else if (pontos >= 100) usuarioLogado.nivel = "🌿 EcoAmigo";
-            
-            atualizarUserInfo();
-            atualizarHeaderInfo();
-            
-            alert(`✅ Comprovante validado por IA! Você ganhou ${desafio.pontos} pontos.`);
-            fecharModal('uploadModal');
-            renderAppContent();
-        }
-
-        function fecharModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
-        }
-
-        // ========== FUNÇÕES DO CHATBOT ==========
+            markers.push(marker);
+        });
         
-        function toggleChatbot() {
-            const container = document.getElementById('chatbotContainer');
-            container.classList.toggle('open');
-            
-            // Se abrir o chatbot, dar foco no input
-            if (container.classList.contains('open')) {
-                document.getElementById('chatbotInput').focus();
-            }
-        }
+        // Atualizar contador visual
+        document.getElementById('totalPontos').innerText = pontosFiltrados.length;
+    }
 
-        function enviarMensagem() {
-            const input = document.getElementById('chatbotInput');
-            const mensagem = input.value.trim();
-            
-            if (!mensagem) return;
-            
-            // Adicionar mensagem do usuário
-            const messagesContainer = document.getElementById('chatbotMessages');
-            
-            messagesContainer.innerHTML += `
-                <div class="message user">
-                    ${mensagem}
-                </div>
-            `;
-            
-            // Limpar input
-            input.value = '';
-            
-            // Simular digitação do bot
-            setTimeout(() => {
-                const resposta = gerarRespostaBot(mensagem);
-                
-                messagesContainer.innerHTML += `
-                    <div class="message bot">
-                        ${resposta}
-                    </div>
-                `;
-                
-                // Scroll para o final
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            }, 1000);
-            
-            // Scroll para o final
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
+    // Inicializar com todos os pontos
+    adicionarMarcadores('todos');
 
-        function gerarRespostaBot(pergunta) {
-            const perguntaLower = pergunta.toLowerCase();
-            
-            // Base de conhecimento sobre sustentabilidade
-            if (perguntaLower.includes('reciclagem') || perguntaLower.includes('reciclar')) {
-                return "♻️ **Sobre reciclagem:**\n\n" +
-                       "• Separe os materiais recicláveis (papel, plástico, vidro, metal) do lixo orgânico.\n" +
-                       "• Lave as embalagens antes de descartar.\n" +
-                       "• Em Piracicaba, temos 38 pontos de coleta seletiva.\n" +
-                       "• Reciclar 1 tonelada de papel salva 30 árvores!";
-            }
-            
-            if (perguntaLower.includes('compostagem') || perguntaLower.includes('composteira')) {
-                return "🌱 **Compostagem doméstica:**\n\n" +
-                       "• Use restos de frutas, verduras, cascas de ovos e borra de café.\n" +
-                       "• Evite carnes, laticínios e alimentos cozidos.\n" +
-                       "• Em 2-3 meses você terá adubo rico em nutrientes.\n" +
-                       "• Reduz até 50% do lixo doméstico!";
-            }
-            
-            if (perguntaLower.includes('energia') || perguntaLower.includes('solar') || perguntaLower.includes('renovável')) {
-                return "☀️ **Energias renováveis:**\n\n" +
-                       "• Energia solar: painéis fotovoltaicos convertem luz em eletricidade.\n" +
-                       "• Energia eólica: gerada pelos ventos.\n" +
-                       "• Biogás: produzido a partir de resíduos orgânicos.\n" +
-                       "• Uma placa solar pode economizar até 95% na conta de luz!";
-            }
-            
-            if (perguntaLower.includes('agua') || perguntaLower.includes('água') || perguntaLower.includes('economizar água')) {
-                return "💧 **Dicas para economizar água:**\n\n" +
-                       "• Banhos de 5 minutos economizam 90 litros.\n" +
-                       "• Escove os dentes com a torneira fechada.\n" +
-                       "• Reutilize água da máquina de lavar.\n" +
-                       "• Uma torneira pingando desperdiça 46 litros por dia!";
-            }
-            
-            if (perguntaLower.includes('plástico') || perguntaLower.includes('sacolas')) {
-                return "🛍️ **Redução do plástico:**\n\n" +
-                       "• Use sacolas retornáveis nas compras.\n" +
-                       "• Evite canudos e copos descartáveis.\n" +
-                       "• Prefira produtos com embalagem reciclável.\n" +
-                       "• Uma sacola plástica leva 400 anos para se decompor.";
-            }
-            
-            if (perguntaLower.includes('evento') || perguntaLower.includes('mutirão')) {
-                return "📅 **Eventos em Piracicaba:**\n\n" +
-                       "• Temos 25 eventos programados para 2026!\n" +
-                       "• Mutirões de limpeza, feiras orgânicas e oficinas.\n" +
-                       "• Acesse a aba 'Eventos' no app para ver todos.\n" +
-                       "• Participar de eventos dá até 200 pontos!";
-            }
-            
-            if (perguntaLower.includes('ponto de coleta') || perguntaLower.includes('ecoponto') || perguntaLower.includes('descartar')) {
-                return "📍 **Pontos de coleta em Piracicaba:**\n\n" +
-                       "• 8 Ecopontos para materiais gerais.\n" +
-                       "• 8 pontos para pilhas e baterias.\n" +
-                       "• 6 pontos para eletrônicos.\n" +
-                       "• 5 pontos para óleo de cozinha.\n" +
-                       "• Confira todos na aba 'Pontos' do app!";
-            }
-            
-            if (perguntaLower.includes('carbono') || perguntaLower.includes('pegada')) {
-                return "🌍 **Pegada de carbono:**\n\n" +
-                       "• Use transporte público ou bicicleta.\n" +
-                       "• Plante árvores (cada árvore absorve 150kg de CO₂/ano).\n" +
-                       "• Reduza consumo de carne.\n" +
-                       "• Prefira produtos locais e sazonais.";
-            }
-            
-            if (perguntaLower.includes('desafio') || perguntaLower.includes('pontos')) {
-                return "🏆 **Desafios e pontuação:**\n\n" +
-                       "• Temos 12 desafios ambientais.\n" +
-                       "• Cada desafio vale de 150 a 500 pontos.\n" +
-                       "• Suba de nível: EcoIniciante → EcoAmigo → EcoGuardião → EcoMestre → EcoHerói\n" +
-                       "• Complete desafios para aparecer no ranking!";
-            }
-            
-            if (perguntaLower.includes('ranking') || perguntaLower.includes('top')) {
-                return "📊 **Ranking EcoCidadãos:**\n\n" +
-                       "• Pedro Graciano lidera com 5000 pontos!\n" +
-                       "• Quanto mais desafios, mais pontos.\n" +
-                       "• Streak de até 99 dias aumenta sua pontuação.\n" +
-                       "• Suba no ranking e ganhe conquistas exclusivas!";
-            }
-            
-            if (perguntaLower.includes('bicicleta') || perguntaLower.includes('bike')) {
-                return "🚲 **Mobilidade sustentável:**\n\n" +
-                       "• Use bike para trajetos curtos.\n" +
-                       "• Em Piracicaba, temos ciclovias em expansão.\n" +
-                       "• Pedalar 5x por semana é um desafio de 250 pontos!\n" +
-                       "• Reduz emissões e melhora a saúde.";
-            }
-            
-            if (perguntaLower.includes('arvore') || perguntaLower.includes('árvore') || perguntaLower.includes('plantar')) {
-                return "🌳 **Plantio de árvores:**\n\n" +
-                       "• Plante espécies nativas como ipê, pitanga e jatobá.\n" +
-                       "• O desafio de plantar uma árvore vale 300 pontos.\n" +
-                       "• Uma árvore adulta produz oxigênio para 2 pessoas.\n" +
-                       "• Participe dos mutirões de plantio em Piracicaba!";
-            }
-            
-            if (perguntaLower.includes('oleo') || perguntaLower.includes('óleo')) {
-                return "🫒 **Descarte de óleo:**\n\n" +
-                       "• 1 litro de óleo contamina 1 milhão de litros de água.\n" +
-                       "• Guarde em garrafas PET e leve aos pontos de coleta.\n" +
-                       "• Temos 5 pontos para descarte de óleo em Piracicaba.\n" +
-                       "• O óleo pode virar biodiesel e sabão!";
-            }
-            
-            if (perguntaLower.includes('eletronico') || perguntaLower.includes('eletrônico')) {
-                return "💻 **Lixo eletrônico:**\n\n" +
-                       "• Celulares e computadores contêm metais pesados.\n" +
-                       "• Nunca descarte no lixo comum.\n" +
-                       "• 6 pontos de coleta em Piracicaba.\n" +
-                       "• A reciclagem recupera ouro, prata e cobre.";
-            }
-            
-            if (perguntaLower.includes('dica') || perguntaLower.includes('dicas')) {
-                return "💡 **Dicas rápidas de sustentabilidade:**\n\n" +
-                       "• Troque lâmpadas por LED.\n" +
-                       "• Desligue aparelhos da tomada.\n" +
-                       "• Use sacolas retornáveis.\n" +
-                       "• Prefira alimentos orgânicos.\n" +
-                       "• Faça compostagem caseira.\n" +
-                       "• Economize água no banho.";
-            }
-            
-            // Resposta padrão
-            return "🌿 **EcoBot:**\n\n" +
-                   "Desculpe, não entendi sua pergunta. Posso ajudar com:\n\n" +
-                   "• Reciclagem\n" +
-                   "• Compostagem\n" +
-                   "• Energias renováveis\n" +
-                   "• Economia de água\n" +
-                   "• Pontos de coleta\n" +
-                   "• Desafios e pontuação\n" +
-                   "• Eventos em Piracicaba\n" +
-                   "• Dicas sustentáveis\n\n" +
-                   "Digite sua pergunta de outra forma! 😊";
-        }
-    </script>
+    // Funções de zoom customizadas
+    document.getElementById('zoomInBtn').addEventListener('click', () => {
+        map.zoomIn();
+    });
+    document.getElementById('zoomOutBtn').addEventListener('click', () => {
+        map.zoomOut();
+    });
+
+    // Sistema de filtros com botões interativos
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    let filtroAtual = 'todos';
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const filtro = btn.getAttribute('data-filter');
+            filtroAtual = filtro;
+            // Atualizar UI dos botões
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            adicionarMarcadores(filtro);
+        });
+    });
+
+    document.getElementById('resetFilterBtn').addEventListener('click', () => {
+        filtroAtual = 'todos';
+        filterBtns.forEach(b => b.classList.remove('active'));
+        document.querySelector('.filter-btn[data-filter="todos"]').classList.add('active');
+        adicionarMarcadores('todos');
+    });
+
+    // Ajustar viewport para mostrar todos os pontos no início (opcional: fitBounds)
+    function ajustarZoomParaTodos() {
+        const bounds = L.latLngBounds(pontosColeta.map(p => [p.lat, p.lng]));
+        map.fitBounds(bounds, { padding: [50, 50] });
+    }
+    // Pequeno delay para garantir que o mapa carregou
+    setTimeout(() => {
+        ajustarZoomParaTodos();
+    }, 500);
+
+    // Adicionar legenda rápida
+    const legend = L.control({ position: 'bottomleft' });
+    legend.onAdd = function() {
+        const div = L.DomUtil.create('div', 'info legend');
+        div.style.backgroundColor = 'white';
+        div.style.padding = '10px 14px';
+        div.style.borderRadius = '20px';
+        div.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+        div.style.fontSize = '12px';
+        div.style.fontWeight = '500';
+        div.innerHTML = '<strong><i class="fas fa-info-circle"></i> Dica:</strong> Clique nos marcadores para expandir e ver todos os detalhes do ponto.';
+        return div;
+    };
+    legend.addTo(map);
+
+    // Mensagem de boas-vindas no console
+    console.log('🌿 Mapa interativo de Piracicaba carregado! Use os botões + e - para zoom, e clique nos pontos para informações completas.');
+</script>
 </body>
 </html>
