@@ -1,0 +1,67 @@
+<h1 class="titulo-secao">🏆 Ranking dos Campeões</h1>
+
+<!-- Estatísticas -->
+<div class="ranking-header-stats" id="ranking-stats"></div>
+
+<!-- Pódio 3D -->
+<div class="podium-3d-container">
+    <div class="podium-crown">👑</div>
+    <div class="podium-title"><h2>Pódio dos Campeões</h2><p>Os melhores da comunidade sustentável</p></div>
+    <div class="podium-grid" id="podium-container"></div>
+</div>
+
+<!-- Tabela de Ranking -->
+<div class="ranking-table-premium">
+    <div class="ranking-header"><div>Posição</div><div></div><div>Participante</div><div>Pontos</div><div>Streak</div></div>
+    <div id="ranking-list"></div>
+</div>
+
+<!-- Motivação -->
+<div class="motivation-card" id="motivation-card"></div>
+
+<script>
+    const rankingData = window.ranking || [
+        { nome: "Pedro Graciano", pontos: 5480, nivel: "👑 Lenda Ambiental", streak: 127, avatar: "👑" },
+        { nome: "Ana Beatriz", pontos: 5120, nivel: "🏆 Mestre Eco", streak: 112, avatar: "🌟" },
+        { nome: "Carlos Eduardo", pontos: 4890, nivel: "🏆 Mestre Eco", streak: 98, avatar: "⚡" },
+        { nome: "Mariana Santos", pontos: 4350, nivel: "🌳 Guardião", streak: 85, avatar: "🌸" },
+        { nome: "Lucas Oliveira", pontos: 3980, nivel: "🌳 Guardião", streak: 76, avatar: "🌿" },
+        { nome: "Fernanda Lima", pontos: 3520, nivel: "🍃 EcoHerói", streak: 67, avatar: "🍃" }
+    ];
+    
+    const totalPontos = rankingData.reduce((a, b) => a + b.pontos, 0);
+    const mediaPontos = Math.round(totalPontos / rankingData.length);
+    const maiorStreak = Math.max(...rankingData.map(r => r.streak));
+    const top3 = rankingData.slice(0, 3);
+    const userPontos = parseInt({{usuarioLogado.pontos}} || 0);
+    const pontosParaTop1 = rankingData[0].pontos - userPontos;
+    const progressoTop1 = Math.min(100, (userPontos / rankingData[0].pontos) * 100);
+    
+    document.getElementById('ranking-stats').innerHTML = `
+        <div class="rank-stat-card"><div class="rank-stat-icon"><i class="fas fa-users"></i></div><div class="rank-stat-value">${rankingData.length}</div><div>Participantes</div></div>
+        <div class="rank-stat-card"><div class="rank-stat-icon"><i class="fas fa-chart-line"></i></div><div class="rank-stat-value">${mediaPontos}</div><div>Média de Pontos</div></div>
+        <div class="rank-stat-card"><div class="rank-stat-icon"><i class="fas fa-fire"></i></div><div class="rank-stat-value">${maiorStreak}</div><div>Maior Streak</div></div>
+        <div class="rank-stat-card"><div class="rank-stat-icon"><i class="fas fa-trophy"></i></div><div class="rank-stat-value">${totalPontos}</div><div>Pontos Totais</div></div>
+    `;
+    
+    let podiumHtml = '';
+    top3.forEach((user, idx) => {
+        const classe = idx === 0 ? "first" : idx === 1 ? "second" : "third";
+        podiumHtml += `<div class="podium-item ${classe}"><div class="podium-avatar">${user.avatar}</div><div class="podium-name">${user.nome}</div><div class="podium-points">${user.pontos} pts</div><div class="podium-level">${user.nivel}</div><div class="podium-streak"><i class="fas fa-fire"></i> ${user.streak} dias</div><div class="podium-base"></div></div>`;
+    });
+    document.getElementById('podium-container').innerHTML = podiumHtml;
+    
+    let rankingHtml = '';
+    rankingData.forEach((user, idx) => {
+        const posClass = idx === 0 ? "top-1" : idx === 1 ? "top-2" : idx === 2 ? "top-3" : "";
+        rankingHtml += `<div class="ranking-row-premium"><div class="rank-position ${posClass}">${idx + 1}º</div><div class="rank-avatar">${user.avatar}</div><div class="rank-info"><div class="rank-name">${user.nome}</div><div class="rank-level">${user.nivel}</div></div><div class="rank-points">${user.pontos}</div><div class="rank-streak"><i class="fas fa-fire"></i> ${user.streak}</div></div>`;
+    });
+    document.getElementById('ranking-list').innerHTML = rankingHtml;
+    
+    document.getElementById('motivation-card').innerHTML = `
+        <h3><i class="fas fa-chart-line"></i> Sua Jornada até o Topo</h3>
+        <p>{{usuarioLogado.nome}} está a ${pontosParaTop1 > 0 ? pontosParaTop1 : 0} pontos de alcançar o 1º lugar!</p>
+        <div class="progress-to-top"><div class="progress-fill" style="width: ${progressoTop1}%;"></div></div>
+        <p>Complete desafios e participe de eventos para acumular pontos e subir no ranking!</p>
+    `;
+</script>
