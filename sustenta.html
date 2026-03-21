@@ -60,7 +60,7 @@
         .iframe-container {
             background: white;
             border-radius: 28px;
-            overflow: hidden;
+            overflow: auto;
             box-shadow: 0 15px 40px rgba(0,0,0,0.05);
             min-height: 600px;
             border: 1px solid rgba(139,69,19,0.1);
@@ -143,22 +143,11 @@
 
     <script>
         // ========== DADOS DO USUÁRIO ==========
-        const SHEETDB_URL = 'https://sheetdb.io/api/v1/pxcozyw0d91x8';
-        
         let usuarioLogado = null;
-        let usuarios = [];
-
-        async function carregarUsuarios() {
-            try {
-                const response = await fetch(SHEETDB_URL);
-                usuarios = await response.json();
-            } catch (error) {
-                usuarios = [
-                    { nome: "João Silva", email: "joao@email.com", senha: "123456", telefone: "(19) 99999-1234", pontos: "2350", nivel: "🌳 EcoMestre", streak: "45", desafios: "28", conquistas: "Primeiro passo,Reciclador,Plantador" },
-                    { nome: "Maria Santos", email: "maria@email.com", senha: "123456", telefone: "(19) 98888-5678", pontos: "3520", nivel: "🏆 EcoHerói", streak: "67", desafios: "42", conquistas: "Primeiro passo,Reciclador,Eventos,Streak 30" }
-                ];
-            }
-        }
+        let usuarios = [
+            { nome: "João Silva", email: "joao@email.com", senha: "123456", telefone: "(19) 99999-1234", pontos: "2350", nivel: "🌳 EcoMestre", streak: "45", desafios: "28", conquistas: "Primeiro passo,Reciclador,Plantador" },
+            { nome: "Maria Santos", email: "maria@email.com", senha: "123456", telefone: "(19) 98888-5678", pontos: "3520", nivel: "🏆 EcoHerói", streak: "67", desafios: "42", conquistas: "Primeiro passo,Reciclador,Eventos,Streak 30" }
+        ];
 
         function switchTab(tab) {
             document.getElementById('paneLogin').style.display = tab === 'login' ? 'block' : 'none';
@@ -236,51 +225,14 @@
             document.querySelectorAll('.app-tab').forEach(btn => btn.classList.remove('active'));
             document.querySelector(`.app-tab[data-tab="${tab}"]`).classList.add('active');
             
-            // Forçar recarregamento do iframe com um timestamp para evitar cache
-            const url = tabMap[tab] + '?t=' + new Date().getTime();
-            iframe.src = url;
-            
-            iframe.onload = function() {
-                try {
-                    const iframeWindow = iframe.contentWindow;
-                    if (iframeWindow && usuarioLogado) {
-                        iframeWindow.postMessage({
-                            type: 'USER_DATA',
-                            usuario: usuarioLogado
-                        }, '*');
-                    }
-                } catch(e) {
-                    console.log('Aguardando carregamento do iframe');
-                }
-            };
+            iframe.src = tabMap[tab];
         }
         
-        window.addEventListener('message', function(event) {
-            if (event.data && event.data.type === 'UPDATE_USER') {
-                if (usuarioLogado) {
-                    usuarioLogado.pontos = event.data.pontos || usuarioLogado.pontos;
-                    usuarioLogado.desafios = event.data.desafios || usuarioLogado.desafios;
-                    usuarioLogado.nivel = event.data.nivel || usuarioLogado.nivel;
-                    atualizarHeader();
-                    
-                    const iframe = document.getElementById('contentFrame');
-                    if (iframe && iframe.contentWindow) {
-                        iframe.contentWindow.postMessage({
-                            type: 'USER_DATA',
-                            usuario: usuarioLogado
-                        }, '*');
-                    }
-                }
-            }
-        });
-
-        carregarUsuarios();
-        
+        window.mudarTab = mudarTab;
         window.switchTab = switchTab;
         window.handleLogin = handleLogin;
         window.handleCadastro = handleCadastro;
         window.logout = logout;
-        window.mudarTab = mudarTab;
     </script>
 </body>
 </html>
