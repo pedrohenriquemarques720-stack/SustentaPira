@@ -1,12 +1,12 @@
+<!-- Conteúdo completo da aba Perfil -->
 <h1 class="titulo-secao">👤 Meu Perfil</h1>
 
-<!-- Hero Section -->
 <div class="profile-hero">
     <div class="profile-hero-content">
         <div class="profile-avatar-large">{{usuarioLogado.nome.charAt(0)}}</div>
         <div>
             <h2 style="font-size:28px;">{{usuarioLogado.nome}}</h2>
-            <div style="background:#ffd966; display:inline-block; padding:4px 16px; border-radius:30px; color:#8b4513;">{{usuarioLogado.nivel}}</div>
+            <div class="profile-level" style="background:#ffd966; display:inline-block; padding:4px 16px; border-radius:30px; color:#8b4513;">{{usuarioLogado.nivel}}</div>
             <p style="margin-top:8px;"><i class="fas fa-calendar"></i> Membro desde Janeiro 2025</p>
         </div>
     </div>
@@ -18,7 +18,6 @@
     </div>
 </div>
 
-<!-- Progresso -->
 <div class="level-card">
     <div class="level-title"><i class="fas fa-chart-line"></i> Progresso para Próximo Nível</div>
     <div class="progress-bar-premium"><div class="progress-fill-premium" id="progress-bar" style="width: 0%;"></div></div>
@@ -26,7 +25,6 @@
     <p style="margin-top:15px;"><i class="fas fa-arrow-up"></i> <span id="pontos-faltam">0</span> pontos para o próximo nível</p>
 </div>
 
-<!-- Stats Cards -->
 <div class="stats-grid-premium">
     <div class="stat-card-premium"><div class="stat-icon-premium"><i class="fas fa-calendar-check"></i></div><div class="stat-number-premium" id="eventos-count">0</div><div>Eventos</div></div>
     <div class="stat-card-premium"><div class="stat-icon-premium"><i class="fas fa-leaf"></i></div><div class="stat-number-premium">{{usuarioLogado.desafios}}</div><div>Desafios</div></div>
@@ -34,11 +32,9 @@
     <div class="stat-card-premium"><div class="stat-icon-premium"><i class="fas fa-trophy"></i></div><div class="stat-number-premium" id="ranking-position">#0</div><div>Ranking</div></div>
 </div>
 
-<!-- Conquistas -->
-<h3><i class="fas fa-medal"></i> Conquistas (<span id="conquistas-desbloqueadas">0</span>/<span id="total-conquistas">0</span>)</h3>
+<h3><i class="fas fa-medal"></i> Conquistas (<span id="conquistas-desbloqueadas">0</span>/<span id="total-conquistas">8</span>)</h3>
 <div class="conquistas-grid-premium" id="conquistas-container"></div>
 
-<!-- Atividades Recentes -->
 <h3 style="margin-top:30px;"><i class="fas fa-history"></i> Atividade Recente</h3>
 <div class="atividade-timeline" id="atividades-container"></div>
 
