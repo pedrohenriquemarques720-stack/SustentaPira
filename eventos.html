@@ -1,21 +1,369 @@
-<!-- Conteúdo completo da aba Eventos -->
-<h1 class="titulo-secao">📅 Eventos Sustentáveis</h1>
-<div class="card-grid" id="eventos-container"></div>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>SustentaPira · Eventos Sustentáveis</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #faf8f5; color: #2c3e2f; min-height: 100vh; }
+        
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+        
+        .eventos-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        
+        /* Cards Gerais */
+        .card-moderno {
+            background: white;
+            border-radius: 28px;
+            padding: 25px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+            border: 1px solid rgba(139,69,19,0.15);
+            margin-bottom: 20px;
+        }
+        .card-moderno:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.1);
+        }
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+        }
+        .titulo-secao {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #2c5e2e, #8b4513);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+            display: inline-block;
+        }
+        .titulo-secao::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, #8b4513, #b85e3a);
+            border-radius: 2px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 5px;
+        }
+        .badge-success {
+            background: #2e7d32;
+            color: white;
+        }
+        .badge-info {
+            background: #1565c0;
+            color: white;
+        }
+        .badge-warning {
+            background: #ff8f00;
+            color: white;
+        }
+        
+        .btn-auth {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #8b4513, #b85e3a);
+            border: none;
+            border-radius: 16px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        .btn-auth:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 69, 19, 0.5);
+        }
+        
+        .stat-card {
+            background: #F5F5F5;
+            border: 1px solid #8b5a2b;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-value {
+            color: #3a2a1a;
+            font-size: 32px;
+            font-weight: 700;
+        }
+        .stat-label {
+            color: #5d3a1a;
+            font-weight: 600;
+        }
+        
+        /* Filtros */
+        .eventos-filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+        .filter-chip {
+            padding: 10px 24px;
+            background: white;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid #ddd;
+            font-weight: 500;
+        }
+        .filter-chip.active {
+            background: #8b4513;
+            color: white;
+            border-color: #8b4513;
+        }
+        
+        .vagas-progress {
+            background: #e8e0d5;
+            border-radius: 20px;
+            height: 8px;
+            width: 200px;
+            overflow: hidden;
+        }
+        
+        @media (max-width: 768px) {
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+            .vagas-progress {
+                width: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="eventos-container">
+        <h1 class="titulo-secao">📅 Eventos Sustentáveis</h1>
+        
+        <!-- Estatísticas -->
+        <div class="card-grid" style="margin-bottom: 30px;" id="statsCards"></div>
+        
+        <!-- Filtros por mês -->
+        <div class="eventos-filters" id="filtrosContainer"></div>
+        
+        <!-- Lista de Eventos -->
+        <div id="eventosContainer"></div>
+    </div>
 
-<script>
-    const eventosData = window.eventos || [
-        { id: 1, titulo: "🌱 Mutirão de Limpeza", descricao: "Limpeza das margens do Rio Piracicaba", data: "10/04/2026", hora: "08:00", local: "Rua do Porto", vagas: 200, inscritos: 78, pontos: 200 },
-        { id: 2, titulo: "♻️ Oficina de Reciclagem", descricao: "Aprenda técnicas avançadas", data: "17/04/2026", hora: "14:00", local: "SENAI", vagas: 40, inscritos: 35, pontos: 150 },
-        { id: 3, titulo: "🌿 Workshop Compostagem", descricao: "Compostagem doméstica", data: "24/05/2026", hora: "10:00", local: "Horto Municipal", vagas: 60, inscritos: 42, pontos: 180 },
-        { id: 4, titulo: "🚴 Pedal Sustentável", descricao: "Passeio ciclístico", data: "01/06/2026", hora: "08:00", local: "Largo dos Pescadores", vagas: 150, inscritos: 89, pontos: 180 }
-    ];
-    
-    const inscritos = window.inscricoesUsuario || [];
-    
-    let html = '';
-    eventosData.forEach(e => {
-        const inscrito = inscritos.includes(e.id);
-        html += `<div class="card-moderno"><h3>${e.titulo}</h3><p>${e.descricao}</p><p><i class="fas fa-calendar"></i> ${e.data} ${e.hora}</p><p><i class="fas fa-map-marker-alt"></i> ${e.local}</p><span class="badge badge-success">+${e.pontos} pts</span>${!inscrito ? `<button class="btn-auth" style="margin-top:10px;" onclick="window.inscreverEvento(${e.id})">Inscrever-se</button>` : '<span class="badge badge-success">✅ Inscrito</span>'}</div>`;
-    });
-    document.getElementById('eventos-container').innerHTML = html;
-</script>
+    <script>
+        // ========== DADOS DOS EVENTOS ==========
+        const eventos = [
+            // JANEIRO
+            { id: 1, titulo: "🌱 1º Mutirão de Limpeza 2026", descricao: "Inicie o ano contribuindo com a limpeza das margens do Rio Piracicaba. Haverá café da manhã comunitário.", data: "10/01/2026", mes: "Janeiro", hora: "08:00", local: "Rua do Porto", tipo: "mutirão", vagas: 200, inscritos: 78, organizador: "SOS Rio Piracicaba", pontos: 200 },
+            { id: 2, titulo: "♻️ Oficina de Reciclagem de Papel", descricao: "Aprenda a fazer papel reciclado artesanal. Traga papéis usados.", data: "17/01/2026", mes: "Janeiro", hora: "14:00", local: "SENAI Piracicaba", tipo: "oficina", vagas: 40, inscritos: 35, organizador: "SENAI", pontos: 150 },
+            { id: 3, titulo: "🌿 Palestra: Agricultura Urbana", descricao: "Como cultivar alimentos em pequenos espaços na cidade.", data: "24/01/2026", mes: "Janeiro", hora: "10:00", local: "Horto Municipal", tipo: "palestra", vagas: 100, inscritos: 62, organizador: "Horto Municipal", pontos: 120 },
+            { id: 4, titulo: "🚴 Pedal do Sol Nascente", descricao: "Passeio ciclístico ao amanhecer para celebrar o início do ano.", data: "31/01/2026", mes: "Janeiro", hora: "06:00", local: "Largo dos Pescadores", tipo: "passeio", vagas: 150, inscritos: 89, organizador: "Ciclovida", pontos: 180 },
+            
+            // FEVEREIRO
+            { id: 5, titulo: "🌊 Expedição Rio Piracicaba", descricao: "Passeio de barco educativo com biólogos, observação de aves.", data: "07/02/2026", mes: "Fevereiro", hora: "09:00", local: "Rua do Porto", tipo: "passeio", vagas: 60, inscritos: 42, organizador: "Comitê PCJ", pontos: 200 },
+            { id: 6, titulo: "🌱 Feira de Orgânicos Especial", descricao: "Edição de verão da feira orgânica com produtos sazonais.", data: "14/02/2026", mes: "Fevereiro", hora: "08:00", local: "Mercado Municipal", tipo: "feira", vagas: 0, inscritos: 0, organizador: "Associação Orgânicos", pontos: 120 },
+            { id: 7, titulo: "♻️ Workshop de Compostagem", descricao: "Técnicas de compostagem para apartamentos, com minhocas.", data: "21/02/2026", mes: "Fevereiro", hora: "15:00", local: "SESC Piracicaba", tipo: "workshop", vagas: 50, inscritos: 38, organizador: "SESC", pontos: 180 },
+            { id: 8, titulo: "🌿 Trilha Ecológica Noturna", descricao: "Trilha guiada no Parque Ecológico para observação de animais noturnos.", data: "28/02/2026", mes: "Fevereiro", hora: "19:00", local: "Parque Ecológico", tipo: "trilha", vagas: 60, inscritos: 45, organizador: "Parque Ecológico", pontos: 200 },
+            
+            // MARÇO
+            { id: 9, titulo: "🌱 Feira de Sustentabilidade", descricao: "Feira com produtos orgânicos, artesanato sustentável e startups verdes.", data: "15/03/2026", mes: "Março", hora: "09:00", local: "Engenho Central", tipo: "feira", vagas: 1000, inscritos: 342, organizador: "Prefeitura de Piracicaba", pontos: 150 },
+            { id: 10, titulo: "💧 Dia Mundial da Água", descricao: "Palestras e atividades sobre preservação dos recursos hídricos.", data: "22/03/2026", mes: "Março", hora: "09:00", local: "ESALQ/USP", tipo: "palestra", vagas: 300, inscritos: 187, organizador: "ESALQ/USP", pontos: 180 },
+            
+            // ABRIL
+            { id: 11, titulo: "🌊 Mutirão Rio Piracicaba", descricao: "Limpeza das margens do rio com atividades educativas.", data: "05/04/2026", mes: "Abril", hora: "08:00", local: "Rua do Porto", tipo: "mutirão", vagas: 200, inscritos: 95, organizador: "SOS Rio Piracicaba", pontos: 200 },
+            { id: 12, titulo: "🍃 Feira de Trocas Sustentáveis", descricao: "Traga objetos que não usa mais e troque por outros.", data: "10/04/2026", mes: "Abril", hora: "10:00", local: "Praça José Bonifácio", tipo: "feira", vagas: 0, inscritos: 0, organizador: "Coletivo Transition", pontos: 120 },
+            { id: 13, titulo: "🌳 Plantio do Dia da Terra", descricao: "Mutirão de plantio de 500 árvores nativas.", data: "22/04/2026", mes: "Abril", hora: "08:30", local: "Parque Ecológico", tipo: "mutirão", vagas: 400, inscritos: 256, organizador: "SOS Mata Atlântica", pontos: 250 },
+            
+            // MAIO
+            { id: 14, titulo: "🔋 Descarte de Eletrônicos", descricao: "Campanha de coleta de lixo eletrônico: computadores, pilhas.", data: "15/05/2026", mes: "Maio", hora: "09:00", local: "Shopping Piracicaba", tipo: "campanha", vagas: 0, inscritos: 0, organizador: "Green Eletronics", pontos: 100 },
+            { id: 15, titulo: "🚴 Pedal Verde", descricao: "Passeio ciclístico ecológico de 15km pelas áreas verdes.", data: "23/05/2026", mes: "Maio", hora: "08:00", local: "Largo dos Pescadores", tipo: "passeio", vagas: 200, inscritos: 112, organizador: "Ciclovida", pontos: 180 },
+            
+            // JUNHO
+            { id: 16, titulo: "🌍 Dia Mundial do Meio Ambiente", descricao: "Evento especial com shows, palestras, oficinas e feira.", data: "05/06/2026", mes: "Junho", hora: "09:00", local: "Engenho Central", tipo: "evento", vagas: 2000, inscritos: 843, organizador: "Prefeitura", pontos: 200 },
+            { id: 17, titulo: "🌱 Oficina de Compostagem", descricao: "Aprenda a fazer compostagem doméstica com minhocas.", data: "15/06/2026", mes: "Junho", hora: "14:00", local: "Horto Municipal", tipo: "oficina", vagas: 50, inscritos: 42, organizador: "Horto Municipal", pontos: 150 }
+        ];
+
+        let inscricoesUsuario = [];
+
+        // ========== FUNÇÕES ==========
+        function mostrarAlerta(tipo, msg) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${tipo}`;
+            alertDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1000; padding: 12px 20px; border-radius: 16px; background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.2); border-left: 4px solid #4caf50;';
+            alertDiv.innerHTML = `<i class="fas ${tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${msg}`;
+            document.body.appendChild(alertDiv);
+            setTimeout(() => alertDiv.remove(), 3000);
+        }
+
+        function inscreverEvento(id) {
+            if (inscricoesUsuario.includes(id)) {
+                mostrarAlerta('error', 'Você já está inscrito neste evento!');
+                return;
+            }
+            inscricoesUsuario.push(id);
+            mostrarAlerta('success', '✅ Inscrição realizada com sucesso!');
+            renderEventos();
+        }
+
+        function renderEventos() {
+            // Estatísticas
+            const totalEventos = eventos.length;
+            const eventosDisponiveis = eventos.filter(e => e.vagas === 0 || e.inscritos < e.vagas).length;
+            const totalPontos = eventos.reduce((acc, e) => acc + e.pontos, 0);
+            
+            document.getElementById('statsCards').innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${totalEventos}</div>
+                    <div class="stat-label">Eventos em 2026</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${eventosDisponiveis}</div>
+                    <div class="stat-label">Com vagas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">+${totalPontos}</div>
+                    <div class="stat-label">Pontos totais</div>
+                </div>
+            `;
+            
+            // Criar filtros por mês
+            const meses = [...new Set(eventos.map(e => e.mes))];
+            let filtrosHtml = `<div class="filter-chip active" data-mes="todos">📅 Todos (${totalEventos})</div>`;
+            meses.forEach(mes => {
+                const count = eventos.filter(e => e.mes === mes).length;
+                filtrosHtml += `<div class="filter-chip" data-mes="${mes}">${mes} (${count})</div>`;
+            });
+            document.getElementById('filtrosContainer').innerHTML = filtrosHtml;
+            
+            // Eventos dos filtros
+            document.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                    const mesSelecionado = chip.getAttribute('data-mes');
+                    renderEventosPorMes(mesSelecionado);
+                });
+            });
+            
+            // Renderizar todos os eventos inicialmente
+            renderEventosPorMes('todos');
+        }
+        
+        function renderEventosPorMes(filtro) {
+            let eventosFiltrados = filtro === 'todos' ? eventos : eventos.filter(e => e.mes === filtro);
+            
+            // Agrupar por mês se for "todos"
+            if (filtro === 'todos') {
+                const eventosPorMes = {};
+                eventos.forEach(evento => {
+                    if (!eventosPorMes[evento.mes]) eventosPorMes[evento.mes] = [];
+                    eventosPorMes[evento.mes].push(evento);
+                });
+                
+                let html = '';
+                const ordemMeses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+                
+                ordemMeses.forEach(mes => {
+                    if (eventosPorMes[mes] && eventosPorMes[mes].length > 0) {
+                        html += `<h2 style="margin: 30px 0 15px; color: #8b4513;">${mes} 2026</h2>`;
+                        eventosPorMes[mes].forEach(evento => {
+                            html += gerarCardEvento(evento);
+                        });
+                    }
+                });
+                document.getElementById('eventosContainer').innerHTML = html;
+            } else {
+                let html = '';
+                eventosFiltrados.forEach(evento => {
+                    html += gerarCardEvento(evento);
+                });
+                document.getElementById('eventosContainer').innerHTML = html;
+            }
+        }
+        
+        function gerarCardEvento(evento) {
+            const inscrito = inscricoesUsuario.includes(evento.id);
+            const vagasRestantes = evento.vagas - evento.inscritos;
+            const percentVagas = (evento.inscritos / evento.vagas) * 100;
+            
+            let tipoBadge = '';
+            switch(evento.tipo) {
+                case 'mutirão': tipoBadge = '<span class="badge badge-success">🤝 Mutirão</span>'; break;
+                case 'oficina': tipoBadge = '<span class="badge badge-info">🔧 Oficina</span>'; break;
+                case 'palestra': tipoBadge = '<span class="badge badge-info">🎤 Palestra</span>'; break;
+                case 'passeio': tipoBadge = '<span class="badge badge-success">🚴 Passeio</span>'; break;
+                case 'feira': tipoBadge = '<span class="badge badge-warning">🌽 Feira</span>'; break;
+                case 'workshop': tipoBadge = '<span class="badge badge-info">🛠️ Workshop</span>'; break;
+                case 'trilha': tipoBadge = '<span class="badge badge-success">🥾 Trilha</span>'; break;
+                case 'campanha': tipoBadge = '<span class="badge badge-warning">📢 Campanha</span>'; break;
+                default: tipoBadge = '<span class="badge badge-info">📅 Evento</span>';
+            }
+            
+            return `
+                <div class="card-moderno">
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                        <div style="flex: 1;">
+                            ${tipoBadge}
+                            <h3 style="margin: 10px 0; color: #3a2a1a;">${evento.titulo}</h3>
+                            <p style="color: #5d3a1a; margin-bottom: 15px;">${evento.descricao}</p>
+                            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 10px;">
+                                <span style="color: #5d3a1a;"><i class="fas fa-calendar" style="color: #8b4513;"></i> ${evento.data}</span>
+                                <span style="color: #5d3a1a;"><i class="fas fa-clock" style="color: #8b4513;"></i> ${evento.hora}</span>
+                                <span style="color: #5d3a1a;"><i class="fas fa-map-marker-alt" style="color: #8b4513;"></i> ${evento.local}</span>
+                                <span style="color: #5d3a1a;"><i class="fas fa-user" style="color: #8b4513;"></i> ${evento.organizador}</span>
+                            </div>
+                            <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center; margin-top: 10px;">
+                                <span class="badge badge-success">+${evento.pontos} pontos</span>
+                                ${evento.vagas > 0 ? `<span class="badge badge-info">${evento.inscritos}/${evento.vagas} inscritos</span>` : '<span class="badge badge-warning">Evento Livre</span>'}
+                                ${evento.vagas > 0 && evento.inscritos < evento.vagas ? `
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <span>${Math.round(percentVagas)}%</span>
+                                        <div class="vagas-progress"><div style="width: ${percentVagas}%; height:100%; background:#8b4513;"></div></div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    ${!inscrito && (evento.vagas === 0 || evento.inscritos < evento.vagas) ? `
+                        <div style="margin-top: 15px;">
+                            <button class="btn-auth" onclick="inscreverEvento(${evento.id})">📝 Inscrever-se</button>
+                        </div>
+                    ` : inscrito ? `
+                        <div style="margin-top: 15px;">
+                            <span class="badge badge-success">✅ Inscrito</span>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+        
+        // Inicializar
+        renderEventos();
+        
+        // Expor funções globalmente
+        window.inscreverEvento = inscreverEvento;
+    </script>
+</body>
+</html>
