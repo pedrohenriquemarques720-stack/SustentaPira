@@ -1,22 +1,19 @@
+<!-- Conteúdo completo da aba Ranking -->
 <h1 class="titulo-secao">🏆 Ranking dos Campeões</h1>
 
-<!-- Estatísticas -->
 <div class="ranking-header-stats" id="ranking-stats"></div>
 
-<!-- Pódio 3D -->
 <div class="podium-3d-container">
     <div class="podium-crown">👑</div>
     <div class="podium-title"><h2>Pódio dos Campeões</h2><p>Os melhores da comunidade sustentável</p></div>
     <div class="podium-grid" id="podium-container"></div>
 </div>
 
-<!-- Tabela de Ranking -->
 <div class="ranking-table-premium">
     <div class="ranking-header"><div>Posição</div><div></div><div>Participante</div><div>Pontos</div><div>Streak</div></div>
     <div id="ranking-list"></div>
 </div>
 
-<!-- Motivação -->
 <div class="motivation-card" id="motivation-card"></div>
 
 <script>
@@ -26,7 +23,9 @@
         { nome: "Carlos Eduardo", pontos: 4890, nivel: "🏆 Mestre Eco", streak: 98, avatar: "⚡" },
         { nome: "Mariana Santos", pontos: 4350, nivel: "🌳 Guardião", streak: 85, avatar: "🌸" },
         { nome: "Lucas Oliveira", pontos: 3980, nivel: "🌳 Guardião", streak: 76, avatar: "🌿" },
-        { nome: "Fernanda Lima", pontos: 3520, nivel: "🍃 EcoHerói", streak: 67, avatar: "🍃" }
+        { nome: "Fernanda Lima", pontos: 3520, nivel: "🍃 EcoHerói", streak: 67, avatar: "🍃" },
+        { nome: "Rafael Souza", pontos: 3180, nivel: "🍃 EcoHerói", streak: 58, avatar: "💚" },
+        { nome: "Juliana Costa", pontos: 2840, nivel: "🌱 EcoAmigo", streak: 49, avatar: "🌱" }
     ];
     
     const totalPontos = rankingData.reduce((a, b) => a + b.pontos, 0);
