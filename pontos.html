@@ -1,3 +1,4 @@
+<!-- Conteúdo completo da aba Pontos com Mapa -->
 <h1 class="titulo-secao">🗺️ Mapa Interativo - Pontos de Coleta</h1>
 <p style="margin-bottom:20px;">Clique nos marcadores para ver todas as informações do ponto. Use os botões + e - para zoom.</p>
 <div class="map-wrapper">
@@ -19,7 +20,9 @@
     let markers = [];
     let pontosData = window.pontosColeta || [
         { id: 1, nome: "Ecoponto Centro", endereco: "Av. Rui Barbosa, 800", tipo: "Ecoponto", horario: "Seg-Sex 8h-17h", telefone: "(19) 3403-1100", avaliacao: 4.5, lat: -22.7282, lng: -47.6495 },
-        { id: 2, nome: "Ecoponto Paulicéia", endereco: "R. Javari, 150", tipo: "Ecoponto", horario: "Ter-Sáb 8h-16h", telefone: "(19) 3403-2200", avaliacao: 4.3, lat: -22.7145, lng: -47.6423 }
+        { id: 2, nome: "Ecoponto Paulicéia", endereco: "R. Javari, 150", tipo: "Ecoponto", horario: "Ter-Sáb 8h-16h", telefone: "(19) 3403-2200", avaliacao: 4.3, lat: -22.7145, lng: -47.6423 },
+        { id: 3, nome: "Shopping Piracicaba", endereco: "Av. Limeira, 700", tipo: "Pilhas", horario: "Seg-Sáb 10h-22h", telefone: "(19) 3432-4545", avaliacao: 4.8, lat: -22.7410, lng: -47.6572 },
+        { id: 4, nome: "ESALQ/USP", endereco: "Av. Pádua Dias, 11", tipo: "Eletrônicos", horario: "Seg-Sex 8h-17h", telefone: "(19) 3447-8500", avaliacao: 4.9, lat: -22.7129, lng: -47.6374 }
     ];
     
     document.getElementById('total-pontos').innerText = pontosData.length;
@@ -31,7 +34,7 @@
     });
     document.getElementById('filtros-container').innerHTML = filtrosHtml;
     
-    function initMap() {
+    function initMapa() {
         if (mapaInstance) mapaInstance.remove();
         mapaInstance = L.map('map').setView([-22.728, -47.649], 13);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -87,5 +90,6 @@
         }, 200);
     }
     
-    initMap();
+    initMapa();
+    window.initMapa = initMapa;
 </script>
