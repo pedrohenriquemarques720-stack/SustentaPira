@@ -1,3 +1,4 @@
+<!-- Conteúdo completo da aba Desafios -->
 <h1 class="titulo-secao">🌱 Desafios Ambientais</h1>
 <div class="card-grid" id="desafios-container"></div>
 
@@ -5,6 +6,21 @@
     function renderDesafios() {
         const container = document.getElementById('desafios-container');
         if (!container) return;
+        
+        const desafios = window.desafios || [
+            { id: 1, titulo: "♻️ Reciclar 10kg", descricao: "Recicle 10kg de materiais recicláveis", pontos: 200, icone: "♻️", dica: "Tire foto dos materiais na balança" },
+            { id: 2, titulo: "📅 Participar de Evento", descricao: "Participe de 1 evento ambiental", pontos: 150, icone: "📅", dica: "Tire foto no local do evento" },
+            { id: 3, titulo: "🌳 Plantar Árvore", descricao: "Plante 1 árvore nativa", pontos: 300, icone: "🌳", dica: "Tire foto da muda plantada" },
+            { id: 4, titulo: "🔋 Descartar Pilhas", descricao: "Descarte 10 pilhas", pontos: 150, icone: "🔋", dica: "Tire foto das pilhas no ponto" },
+            { id: 5, titulo: "🚲 Usar Bike 5x", descricao: "Use bicicleta 5 vezes", pontos: 250, icone: "🚲", dica: "Compartilhe seu trajeto" },
+            { id: 6, titulo: "🥫 Doar Alimentos", descricao: "Doe 10kg de alimentos", pontos: 280, icone: "🥫", dica: "Foto dos alimentos" },
+            { id: 7, titulo: "👕 Doar Roupas", descricao: "Doe 15 peças", pontos: 200, icone: "👕", dica: "Foto das roupas" },
+            { id: 8, titulo: "💧 Economizar Água", descricao: "Reduza consumo em 20%", pontos: 400, icone: "💧", dica: "Compartilhe sua conta" },
+            { id: 9, titulo: "⚡ Energia Solar", descricao: "Instale placa solar", pontos: 500, icone: "☀️", dica: "Foto da instalação" },
+            { id: 10, titulo: "🌱 Compostagem", descricao: "Inicie uma composteira", pontos: 350, icone: "🌱", dica: "Foto da composteira" },
+            { id: 11, titulo: "📚 Educador Ambiental", descricao: "Palestre sobre sustentabilidade", pontos: 450, icone: "📚", dica: "Foto do evento" },
+            { id: 12, titulo: "🏆 EcoLíder", descricao: "Convide 5 amigos", pontos: 300, icone: "🏆", dica: "Compartilhe seu código" }
+        ];
         
         let html = '';
         desafios.forEach(desafio => {
