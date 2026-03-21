@@ -1,0 +1,91 @@
+<h1 class="titulo-secao">🗺️ Mapa Interativo - Pontos de Coleta</h1>
+<p style="margin-bottom:20px;">Clique nos marcadores para ver todas as informações do ponto. Use os botões + e - para zoom.</p>
+<div class="map-wrapper">
+    <div id="map" style="height:500px;"></div>
+    <div class="custom-zoom">
+        <button class="zoom-btn" id="zoomPlus"><i class="fas fa-plus"></i></button>
+        <button class="zoom-btn" id="zoomMinus"><i class="fas fa-minus"></i></button>
+    </div>
+    <div class="filter-panel">
+        <h4><i class="fas fa-filter"></i> Filtrar por tipo</h4>
+        <button class="filter-btn active" data-filter="todos">Todos (<span id="total-pontos">0</span>)</button>
+        <div id="filtros-container"></div>
+        <button class="reset-filter" id="resetFiltro">Mostrar todos</button>
+    </div>
+</div>
+
+<script>
+    let mapaInstance = null;
+    let markers = [];
+    let pontosData = window.pontosColeta || [
+        { id: 1, nome: "Ecoponto Centro", endereco: "Av. Rui Barbosa, 800", tipo: "Ecoponto", horario: "Seg-Sex 8h-17h", telefone: "(19) 3403-1100", avaliacao: 4.5, lat: -22.7282, lng: -47.6495 },
+        { id: 2, nome: "Ecoponto Paulicéia", endereco: "R. Javari, 150", tipo: "Ecoponto", horario: "Ter-Sáb 8h-16h", telefone: "(19) 3403-2200", avaliacao: 4.3, lat: -22.7145, lng: -47.6423 }
+    ];
+    
+    document.getElementById('total-pontos').innerText = pontosData.length;
+    
+    const tipos = [...new Set(pontosData.map(p => p.tipo))];
+    let filtrosHtml = '';
+    tipos.forEach(tipo => {
+        filtrosHtml += `<button class="filter-btn" data-filter="${tipo}">${tipo}</button>`;
+    });
+    document.getElementById('filtros-container').innerHTML = filtrosHtml;
+    
+    function initMap() {
+        if (mapaInstance) mapaInstance.remove();
+        mapaInstance = L.map('map').setView([-22.728, -47.649], 13);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap & CartoDB',
+            subdomains: 'abcd',
+            maxZoom: 19
+        }).addTo(mapaInstance);
+        
+        function adicionarMarcadores(filtro = 'todos') {
+            if (markers.length) markers.forEach(m => mapaInstance.removeLayer(m));
+            markers = [];
+            const filtrados = filtro === 'todos' ? pontosData : pontosData.filter(p => p.tipo === filtro);
+            const iconesMap = { 'Ecoponto':'🗑️', 'Pilhas':'🔋', 'Eletrônicos':'💻', 'Óleo':'🫒', 'Vidros':'🥃', 'Papel':'📄', 'Roupas':'👕' };
+            
+            filtrados.forEach(ponto => {
+                const iconHtml = `<div style="background-color:#2c5e2e; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:2px solid white; box-shadow:0 2px 8px rgba(0,0,0,0.3);">${iconesMap[ponto.tipo] || '📍'}</div>`;
+                const icon = L.divIcon({ html: iconHtml, iconSize: [38,38], popupAnchor: [0, -19] });
+                const estrelas = '★'.repeat(Math.round(ponto.avaliacao)) + '☆'.repeat(5 - Math.round(ponto.avaliacao));
+                const popupContent = `
+                    <div style="min-width:260px;">
+                        <h3 style="color:#2c5e2e; margin-bottom:8px;">${ponto.nome}</h3>
+                        <p><i class="fas fa-tag"></i> <strong>${ponto.tipo}</strong></p>
+                        <p><i class="fas fa-map-pin"></i> ${ponto.endereco}</p>
+                        <p><i class="fas fa-clock"></i> ${ponto.horario}</p>
+                        <p><i class="fas fa-phone"></i> ${ponto.telefone}</p>
+                        <p><i class="fas fa-star" style="color:#ffb800;"></i> ${estrelas} (${ponto.avaliacao}/5)</p>
+                        <div style="margin-top:10px; padding-top:8px; border-top:1px solid #eee; font-size:11px; color:#666;">
+                            <i class="fas fa-leaf"></i> Ponto oficial - Piracicaba Sustentável
+                        </div>
+                    </div>
+                `;
+                const marker = L.marker([ponto.lat, ponto.lng], { icon }).bindPopup(popupContent).addTo(mapaInstance);
+                markers.push(marker);
+            });
+        }
+        
+        adicionarMarcadores('todos');
+        
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                adicionarMarcadores(btn.getAttribute('data-filter'));
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+        document.getElementById('resetFiltro')?.addEventListener('click', () => adicionarMarcadores('todos'));
+        document.getElementById('zoomPlus')?.addEventListener('click', () => mapaInstance.zoomIn());
+        document.getElementById('zoomMinus')?.addEventListener('click', () => mapaInstance.zoomOut());
+        
+        setTimeout(() => {
+            const bounds = L.latLngBounds(pontosData.map(p => [p.lat, p.lng]));
+            mapaInstance.fitBounds(bounds, { padding: [40, 40] });
+        }, 200);
+    }
+    
+    initMap();
+</script>
