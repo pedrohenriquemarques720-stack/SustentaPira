@@ -14,7 +14,6 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #faf8f5; color: #2c3e2f; min-height: 100vh; }
         
-        /* Animações */
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
         
@@ -65,18 +64,22 @@
             overflow: hidden;
             box-shadow: 0 15px 40px rgba(0,0,0,0.05);
             min-height: 600px;
+            border: 1px solid rgba(139,69,19,0.1);
         }
         .content-iframe {
             width: 100%;
             min-height: 600px;
             border: none;
             background: #faf8f5;
+            display: block;
         }
         
         @media (max-width: 768px) {
             .app-tabs { justify-content: center; }
             .top-header { flex-direction: column; text-align: center; }
             .header-actions { justify-content: center; }
+            .iframe-container { min-height: 500px; }
+            .content-iframe { min-height: 500px; }
         }
     </style>
 </head>
@@ -124,12 +127,12 @@
                 </div>
             </div>
             <div class="app-tabs">
-                <button class="app-tab" onclick="mudarTab('inicio')">🏠 Início</button>
-                <button class="app-tab" onclick="mudarTab('desafios')">🌱 Desafios</button>
-                <button class="app-tab" onclick="mudarTab('perfil')">👤 Perfil</button>
-                <button class="app-tab" onclick="mudarTab('ranking')">🏆 Ranking</button>
-                <button class="app-tab" onclick="mudarTab('eventos')">📅 Eventos</button>
-                <button class="app-tab" onclick="mudarTab('pontos')">🗺️ Pontos</button>
+                <button class="app-tab" data-tab="inicio" onclick="mudarTab('inicio')">🏠 Início</button>
+                <button class="app-tab" data-tab="desafios" onclick="mudarTab('desafios')">🌱 Desafios</button>
+                <button class="app-tab" data-tab="perfil" onclick="mudarTab('perfil')">👤 Perfil</button>
+                <button class="app-tab" data-tab="ranking" onclick="mudarTab('ranking')">🏆 Ranking</button>
+                <button class="app-tab" data-tab="eventos" onclick="mudarTab('eventos')">📅 Eventos</button>
+                <button class="app-tab" data-tab="pontos" onclick="mudarTab('pontos')">🗺️ Pontos</button>
             </div>
             <div class="iframe-container">
                 <iframe id="contentFrame" class="content-iframe" src="tabs/inicio.html" title="Conteúdo SustentaPira"></iframe>
@@ -179,6 +182,12 @@
                 document.getElementById('loginScreen').classList.add('hidden');
                 document.getElementById('appScreen').classList.add('active');
                 atualizarHeader();
+                
+                // Marcar a primeira aba como ativa
+                document.querySelectorAll('.app-tab').forEach(btn => btn.classList.remove('active'));
+                document.querySelector('.app-tab[data-tab="inicio"]').classList.add('active');
+                
+                // Carregar a aba início
                 mudarTab('inicio');
                 mostrarAlerta('success', `Bem-vindo, ${localUser.nome}!`);
             } else {
@@ -216,39 +225,39 @@
 
         function mudarTab(tab) {
             const iframe = document.getElementById('contentFrame');
-            const tabNome = {
-                'inicio': 'inicio.html',
-                'desafios': 'desafios.html',
-                'perfil': 'perfil.html',
-                'ranking': 'ranking.html',
-                'eventos': 'eventos.html',
-                'pontos': 'pontos.html'
+            const tabMap = {
+                'inicio': 'tabs/inicio.html',
+                'desafios': 'tabs/desafios.html',
+                'perfil': 'tabs/perfil.html',
+                'ranking': 'tabs/ranking.html',
+                'eventos': 'tabs/eventos.html',
+                'pontos': 'tabs/pontos.html'
             };
             
             // Atualizar classe ativa do botão
             document.querySelectorAll('.app-tab').forEach(btn => btn.classList.remove('active'));
-            event?.target?.classList.add('active');
+            document.querySelector(`.app-tab[data-tab="${tab}"]`).classList.add('active');
             
             // Carregar o iframe com a página correspondente
-            iframe.src = `tabs/${tabNome[tab]}`;
+            iframe.src = tabMap[tab];
             
-            // Adicionar evento para quando o iframe carregar, passar os dados do usuário
+            // Quando o iframe carregar, enviar os dados do usuário
             iframe.onload = function() {
                 try {
                     const iframeWindow = iframe.contentWindow;
-                    if (iframeWindow) {
+                    if (iframeWindow && usuarioLogado) {
                         iframeWindow.postMessage({
                             type: 'USER_DATA',
                             usuario: usuarioLogado
                         }, '*');
                     }
                 } catch(e) {
-                    console.log('Não foi possível enviar dados para iframe');
+                    console.log('Aguardando carregamento do iframe');
                 }
             };
         }
         
-        // Receber mensagens dos iframes
+        // Receber mensagens dos iframes (ex: atualização de pontos)
         window.addEventListener('message', function(event) {
             if (event.data && event.data.type === 'UPDATE_USER') {
                 if (usuarioLogado) {
@@ -256,6 +265,15 @@
                     usuarioLogado.desafios = event.data.desafios || usuarioLogado.desafios;
                     usuarioLogado.nivel = event.data.nivel || usuarioLogado.nivel;
                     atualizarHeader();
+                    
+                    // Atualizar também no iframe atual
+                    const iframe = document.getElementById('contentFrame');
+                    if (iframe && iframe.contentWindow) {
+                        iframe.contentWindow.postMessage({
+                            type: 'USER_DATA',
+                            usuario: usuarioLogado
+                        }, '*');
+                    }
                 }
             }
         });
