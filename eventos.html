@@ -1,0 +1,20 @@
+<h1 class="titulo-secao">📅 Eventos Sustentáveis</h1>
+<div class="card-grid" id="eventos-container"></div>
+
+<script>
+    const eventosData = window.eventos || [
+        { id: 1, titulo: "🌱 Mutirão de Limpeza", descricao: "Limpeza das margens do Rio Piracicaba", data: "10/04/2026", hora: "08:00", local: "Rua do Porto", vagas: 200, inscritos: 78, pontos: 200 },
+        { id: 2, titulo: "♻️ Oficina de Reciclagem", descricao: "Aprenda técnicas avançadas", data: "17/04/2026", hora: "14:00", local: "SENAI", vagas: 40, inscritos: 35, pontos: 150 },
+        { id: 3, titulo: "🌿 Workshop Compostagem", descricao: "Compostagem doméstica", data: "24/05/2026", hora: "10:00", local: "Horto Municipal", vagas: 60, inscritos: 42, pontos: 180 },
+        { id: 4, titulo: "🚴 Pedal Sustentável", descricao: "Passeio ciclístico", data: "01/06/2026", hora: "08:00", local: "Largo dos Pescadores", vagas: 150, inscritos: 89, pontos: 180 }
+    ];
+    
+    const inscritos = window.inscricoesUsuario || [];
+    
+    let html = '';
+    eventosData.forEach(e => {
+        const inscrito = inscritos.includes(e.id);
+        html += `<div class="card-moderno"><h3>${e.titulo}</h3><p>${e.descricao}</p><p><i class="fas fa-calendar"></i> ${e.data} ${e.hora}</p><p><i class="fas fa-map-marker-alt"></i> ${e.local}</p><span class="badge badge-success">+${e.pontos} pts</span>${!inscrito ? `<button class="btn-auth" style="margin-top:10px;" onclick="window.inscreverEvento(${e.id})">Inscrever-se</button>` : '<span class="badge badge-success">✅ Inscrito</span>'}</div>`;
+    });
+    document.getElementById('eventos-container').innerHTML = html;
+</script>
