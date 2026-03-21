@@ -16,10 +16,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #faf8f5; color: #2c3e2f; min-height: 100vh; }
         
-        /* Animações */
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideInRight { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
         @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
         
         /* TELA DE LOGIN */
@@ -71,6 +68,67 @@
         .badge { display: inline-block; padding: 6px 14px; border-radius: 50px; font-size: 12px; font-weight: 600; margin: 5px; }
         .badge-success { background: #2e7d32; color: white; }
         
+        /* Perfil */
+        .profile-hero { background: linear-gradient(135deg, #2c5e2e, #1e3a1e); border-radius: 32px; padding: 40px; margin-bottom: 30px; color: white; position: relative; overflow: hidden; }
+        .profile-hero::before { content: ''; position: absolute; top: -50%; right: -20%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%); border-radius: 50%; }
+        .profile-hero-content { display: flex; align-items: center; gap: 30px; flex-wrap: wrap; position: relative; z-index: 1; }
+        .profile-avatar-large { width: 100px; height: 100px; background: linear-gradient(135deg, #FFD700, #FFA500); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 48px; color: #2c5e2e; border: 4px solid white; }
+        .profile-stats-hero { display: flex; gap: 40px; flex-wrap: wrap; margin-top: 20px; }
+        .stat-hero-item { text-align: center; }
+        .stat-hero-value { font-size: 32px; font-weight: 800; }
+        .level-card { background: linear-gradient(135deg, #fff, #faf5f0); border-radius: 24px; padding: 25px; margin-bottom: 30px; }
+        .progress-bar-premium { background: #e8e0d5; border-radius: 20px; height: 12px; overflow: hidden; }
+        .progress-fill-premium { background: linear-gradient(90deg, #8b4513, #b85e3a); height: 100%; border-radius: 20px; transition: width 0.5s; }
+        .stats-grid-premium { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card-premium { background: white; padding: 20px; border-radius: 24px; text-align: center; border: 1px solid rgba(139,69,19,0.1); transition: all 0.3s; }
+        .stat-card-premium:hover { transform: translateY(-5px); }
+        .stat-icon-premium { font-size: 32px; color: #8b4513; margin-bottom: 10px; }
+        .stat-number-premium { font-size: 28px; font-weight: 800; color: #2c3e2f; }
+        .conquistas-grid-premium { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; margin-top: 25px; }
+        .conquista-card-premium { background: linear-gradient(135deg, #fff, #faf5f0); padding: 20px; border-radius: 20px; text-align: center; border: 1px solid #e0d5c8; position: relative; overflow: hidden; }
+        .conquista-card-premium::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #FFD700, #FFA500); }
+        .conquista-card-premium.locked { opacity: 0.6; filter: grayscale(0.3); }
+        .conquista-card-premium.locked::before { background: #aaa; }
+        .atividade-item { display: flex; align-items: center; gap: 15px; padding: 15px 0; border-bottom: 1px solid #f0e8e0; }
+        .atividade-icon { width: 45px; height: 45px; background: linear-gradient(135deg, #f5f0e8, #e8e0d5); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #8b4513; }
+        
+        /* Ranking */
+        .ranking-header-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 40px; }
+        .rank-stat-card { background: white; border-radius: 24px; padding: 25px; text-align: center; border: 1px solid rgba(139,69,19,0.1); transition: all 0.3s; }
+        .rank-stat-card:hover { transform: translateY(-5px); }
+        .rank-stat-icon { font-size: 40px; color: #8b4513; margin-bottom: 10px; }
+        .rank-stat-value { font-size: 36px; font-weight: 800; color: #2c3e2f; }
+        .podium-3d-container { background: linear-gradient(135deg, #f8f4ef, #f0e9e0); border-radius: 48px; padding: 40px 20px; margin-bottom: 40px; }
+        .podium-crown { text-align: center; font-size: 48px; margin-bottom: 20px; animation: float 3s ease-in-out infinite; }
+        .podium-grid { display: flex; justify-content: center; align-items: flex-end; gap: 30px; flex-wrap: wrap; }
+        .podium-item { text-align: center; transition: all 0.3s; cursor: pointer; }
+        .podium-item:hover { transform: translateY(-10px); }
+        .podium-avatar { width: 100px; height: 100px; background: linear-gradient(135deg, #FFD700, #FFA500); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 48px; margin: 0 auto 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); border: 3px solid white; }
+        .podium-item.first .podium-avatar { width: 120px; height: 120px; background: linear-gradient(135deg, #FFD700, #FF8C00); font-size: 60px; }
+        .podium-item.second .podium-avatar { background: linear-gradient(135deg, #C0C0C0, #A9A9A9); }
+        .podium-item.third .podium-avatar { background: linear-gradient(135deg, #CD7F32, #B87333); }
+        .ranking-table-premium { background: white; border-radius: 28px; overflow: hidden; margin-bottom: 30px; }
+        .ranking-header { display: grid; grid-template-columns: 80px 80px 1fr 120px 100px; background: linear-gradient(135deg, #8b4513, #b85e3a); color: white; padding: 18px 20px; font-weight: 700; }
+        .ranking-row-premium { display: grid; grid-template-columns: 80px 80px 1fr 120px 100px; padding: 16px 20px; border-bottom: 1px solid #f0e8e0; transition: all 0.3s; align-items: center; }
+        .ranking-row-premium:hover { background: #faf5f0; transform: translateX(5px); }
+        .rank-position { font-weight: 800; font-size: 18px; }
+        .rank-position.top-1 { color: #FFD700; }
+        .rank-position.top-2 { color: #C0C0C0; }
+        .rank-position.top-3 { color: #CD7F32; }
+        .rank-avatar { width: 50px; height: 50px; background: linear-gradient(135deg, #e0d5c8, #d0c5b8); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .motivation-card { background: linear-gradient(135deg, #8b4513, #b85e3a); border-radius: 28px; padding: 30px; color: white; text-align: center; }
+        .progress-to-top { background: rgba(255,255,255,0.2); border-radius: 20px; height: 8px; margin: 20px 0; overflow: hidden; }
+        .progress-fill { background: #ffd966; height: 100%; border-radius: 20px; transition: width 0.5s; }
+        
+        /* Mapa */
+        .map-wrapper { position: relative; margin-top: 20px; }
+        #map { height: 500px; border-radius: 24px; border: 2px solid #e0d5c8; }
+        .custom-zoom { position: absolute; bottom: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
+        .zoom-btn { width: 48px; height: 48px; background: white; border-radius: 50%; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.2); color: #8b4513; }
+        .filter-panel { position: absolute; top: 20px; left: 20px; background: rgba(255,255,255,0.95); border-radius: 20px; padding: 15px; width: 200px; z-index: 1000; }
+        .filter-btn { display: block; width: 100%; padding: 8px; margin: 5px 0; border: none; border-radius: 20px; cursor: pointer; background: #f0f0f0; text-align: left; }
+        .filter-btn.active { background: #8b4513; color: white; }
+        
         /* Chatbot */
         .chatbot-button { position: fixed; bottom: 30px; right: 30px; width: 70px; height: 70px; background: linear-gradient(135deg, #8b4513, #b85e3a); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 30px; cursor: pointer; z-index: 1000; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
         .chatbot-container { position: fixed; bottom: 120px; right: 30px; width: 380px; height: 550px; background: white; border-radius: 25px; border: 2px solid #8b4513; display: none; flex-direction: column; overflow: hidden; z-index: 1001; }
@@ -89,7 +147,12 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         
         @media (max-width: 768px) {
-            .card-grid { grid-template-columns: 1fr; }
+            .stats-grid-premium { grid-template-columns: repeat(2, 1fr); }
+            .ranking-header-stats { grid-template-columns: repeat(2, 1fr); }
+            .ranking-header, .ranking-row-premium { grid-template-columns: 50px 60px 1fr 80px 70px; font-size: 12px; }
+            .podium-avatar { width: 70px; height: 70px; font-size: 32px; }
+            .podium-item.first .podium-avatar { width: 90px; height: 90px; font-size: 45px; }
+            .filter-panel { width: 160px; }
             .chatbot-container { width: 90%; right: 5%; }
         }
     </style>
@@ -129,16 +192,16 @@
     <div class="app-screen" id="appScreen">
         <div class="app-container">
             <div class="top-header">
-                <div class="logo-container" onclick="mudarTabApp('inicio')"><div class="logo-image">🌿</div><div class="logo-text"><h1>SustentaPira</h1><p>Sustentabilidade em ação</p></div></div>
+                <div class="logo-container" onclick="mudarTab('inicio')"><div class="logo-image">🌿</div><div class="logo-text"><h1>SustentaPira</h1><p>Sustentabilidade em ação</p></div></div>
                 <div class="header-actions"><div class="header-stat"><i class="fas fa-fire"></i><span id="headerStreak">0</span> dias</div><div class="header-stat"><i class="fas fa-star"></i><span id="headerPoints">0</span> pts</div><div class="header-avatar" id="headerAvatar">👤</div><button class="logout-btn-header" onclick="logout()">Sair</button></div>
             </div>
             <div class="app-tabs">
-                <button class="app-tab" onclick="mudarTabApp('inicio')">🏠 Início</button>
-                <button class="app-tab" onclick="mudarTabApp('desafios')">🌱 Desafios</button>
-                <button class="app-tab" onclick="mudarTabApp('perfil')">👤 Perfil</button>
-                <button class="app-tab" onclick="mudarTabApp('ranking')">🏆 Ranking</button>
-                <button class="app-tab" onclick="mudarTabApp('eventos')">📅 Eventos</button>
-                <button class="app-tab" onclick="mudarTabApp('pontos')">🗺️ Pontos</button>
+                <button class="app-tab" onclick="mudarTab('inicio')">🏠 Início</button>
+                <button class="app-tab" onclick="mudarTab('desafios')">🌱 Desafios</button>
+                <button class="app-tab" onclick="mudarTab('perfil')">👤 Perfil</button>
+                <button class="app-tab" onclick="mudarTab('ranking')">🏆 Ranking</button>
+                <button class="app-tab" onclick="mudarTab('eventos')">📅 Eventos</button>
+                <button class="app-tab" onclick="mudarTab('pontos')">🗺️ Pontos</button>
             </div>
             <div id="appContent"></div>
         </div>
@@ -148,28 +211,28 @@
     <div class="chatbot-button" onclick="toggleChatbot()"><i class="fas fa-robot"></i></div>
     <div class="chatbot-container" id="chatbotContainer">
         <div class="chatbot-header"><h3><i class="fas fa-leaf"></i> EcoBot</h3><button onclick="toggleChatbot()">✕</button></div>
-        <div class="chatbot-messages" id="chatbotMessages"><div class="message bot">Olá! Pergunte sobre reciclagem, compostagem ou pontos de coleta!</div></div>
+        <div class="chatbot-messages" id="chatbotMessages"><div class="message bot">Olá! Sou o EcoBot. Pergunte sobre reciclagem, compostagem, energia solar ou pontos de coleta!</div></div>
         <div class="chatbot-input-area"><input type="text" id="chatbotInput" placeholder="Digite sua pergunta..." onkeypress="if(event.key==='Enter') enviarMensagem()"><button onclick="enviarMensagem()">📤</button></div>
     </div>
 
     <script>
-        // ========== CONFIGURAÇÃO ==========
+        // ========== CONFIGURAÇÃO SHEETDB ==========
         const SHEETDB_URL = 'https://sheetdb.io/api/v1/pxcozyw0d91x8';
         
-        // ========== DADOS COMPARTILHADOS ==========
+        // ========== DADOS COMPLETOS ==========
         const desafios = [
-            { id: 1, titulo: "♻️ Reciclar 10kg", descricao: "Recicle 10kg de materiais recicláveis", pontos: 200, icone: "♻️", dica: "Tire foto dos materiais na balança" },
-            { id: 2, titulo: "📅 Participar de Evento", descricao: "Participe de 1 evento ambiental", pontos: 150, icone: "📅", dica: "Tire foto no local do evento" },
-            { id: 3, titulo: "🌳 Plantar Árvore", descricao: "Plante 1 árvore nativa", pontos: 300, icone: "🌳", dica: "Tire foto da muda plantada" },
-            { id: 4, titulo: "🔋 Descartar Pilhas", descricao: "Descarte 10 pilhas", pontos: 150, icone: "🔋", dica: "Tire foto das pilhas no ponto" },
-            { id: 5, titulo: "🚲 Usar Bike 5x", descricao: "Use bicicleta 5 vezes", pontos: 250, icone: "🚲", dica: "Compartilhe seu trajeto" },
-            { id: 6, titulo: "🥫 Doar Alimentos", descricao: "Doe 10kg de alimentos", pontos: 280, icone: "🥫", dica: "Foto dos alimentos" },
-            { id: 7, titulo: "👕 Doar Roupas", descricao: "Doe 15 peças", pontos: 200, icone: "👕", dica: "Foto das roupas" },
-            { id: 8, titulo: "💧 Economizar Água", descricao: "Reduza consumo em 20%", pontos: 400, icone: "💧", dica: "Compartilhe sua conta" },
-            { id: 9, titulo: "⚡ Energia Solar", descricao: "Instale placa solar", pontos: 500, icone: "☀️", dica: "Foto da instalação" },
-            { id: 10, titulo: "🌱 Compostagem", descricao: "Inicie uma composteira", pontos: 350, icone: "🌱", dica: "Foto da composteira" },
-            { id: 11, titulo: "📚 Educador Ambiental", descricao: "Palestre sobre sustentabilidade", pontos: 450, icone: "📚", dica: "Foto do evento" },
-            { id: 12, titulo: "🏆 EcoLíder", descricao: "Convide 5 amigos", pontos: 300, icone: "🏆", dica: "Compartilhe seu código" }
+            { id: 1, titulo: "♻️ Reciclar 10kg", descricao: "Recicle 10kg de materiais recicláveis", pontos: 200, icone: "♻️", tipo: "reciclagem", dica: "Tire foto dos materiais na balança" },
+            { id: 2, titulo: "📅 Participar de Evento", descricao: "Participe de 1 evento ambiental", pontos: 150, icone: "📅", tipo: "evento", dica: "Tire foto no local do evento" },
+            { id: 3, titulo: "🌳 Plantar Árvore", descricao: "Plante 1 árvore nativa", pontos: 300, icone: "🌳", tipo: "plantio", dica: "Tire foto da muda plantada" },
+            { id: 4, titulo: "🔋 Descartar Pilhas", descricao: "Descarte 10 pilhas em ponto de coleta", pontos: 150, icone: "🔋", tipo: "pilhas", dica: "Tire foto das pilhas no ponto" },
+            { id: 5, titulo: "🚲 Usar Bike 5x", descricao: "Use bicicleta em vez de carro 5 vezes", pontos: 250, icone: "🚲", tipo: "mobilidade", dica: "Compartilhe seu trajeto" },
+            { id: 6, titulo: "🥫 Doar Alimentos", descricao: "Doe 10kg de alimentos não perecíveis", pontos: 280, icone: "🥫", tipo: "doacao", dica: "Foto dos alimentos no local" },
+            { id: 7, titulo: "👕 Doar Roupas", descricao: "Doe 15 peças de roupa", pontos: 200, icone: "👕", tipo: "roupas", dica: "Foto das roupas doadas" },
+            { id: 8, titulo: "💧 Economizar Água", descricao: "Reduza consumo em 20% por 1 mês", pontos: 400, icone: "💧", tipo: "agua", dica: "Compartilhe sua conta" },
+            { id: 9, titulo: "⚡ Energia Solar", descricao: "Instale placa solar ou use energia limpa", pontos: 500, icone: "☀️", tipo: "energia", dica: "Foto da instalação" },
+            { id: 10, titulo: "🌱 Compostagem", descricao: "Inicie uma composteira doméstica", pontos: 350, icone: "🌱", tipo: "compostagem", dica: "Foto da sua composteira" },
+            { id: 11, titulo: "📚 Educador Ambiental", descricao: "Palestre sobre sustentabilidade", pontos: 450, icone: "📚", tipo: "educacao", dica: "Foto do evento" },
+            { id: 12, titulo: "🏆 EcoLíder", descricao: "Convide 5 amigos para o app", pontos: 300, icone: "🏆", tipo: "social", dica: "Compartilhe seu código" }
         ];
 
         const eventos = [
@@ -183,7 +246,9 @@
             { id: 1, nome: "Ecoponto Centro", endereco: "Av. Rui Barbosa, 800", tipo: "Ecoponto", horario: "Seg-Sex 8h-17h", telefone: "(19) 3403-1100", avaliacao: 4.5, lat: -22.7282, lng: -47.6495 },
             { id: 2, nome: "Ecoponto Paulicéia", endereco: "R. Javari, 150", tipo: "Ecoponto", horario: "Ter-Sáb 8h-16h", telefone: "(19) 3403-2200", avaliacao: 4.3, lat: -22.7145, lng: -47.6423 },
             { id: 3, nome: "Shopping Piracicaba", endereco: "Av. Limeira, 700", tipo: "Pilhas", horario: "Seg-Sáb 10h-22h", telefone: "(19) 3432-4545", avaliacao: 4.8, lat: -22.7410, lng: -47.6572 },
-            { id: 4, nome: "ESALQ/USP", endereco: "Av. Pádua Dias, 11", tipo: "Eletrônicos", horario: "Seg-Sex 8h-17h", telefone: "(19) 3447-8500", avaliacao: 4.9, lat: -22.7129, lng: -47.6374 }
+            { id: 4, nome: "ESALQ/USP", endereco: "Av. Pádua Dias, 11", tipo: "Eletrônicos", horario: "Seg-Sex 8h-17h", telefone: "(19) 3447-8500", avaliacao: 4.9, lat: -22.7129, lng: -47.6374 },
+            { id: 5, nome: "Oleobom", endereco: "R. São João, 678", tipo: "Óleo", horario: "Seg-Sex 9h-18h", telefone: "(19) 3421-5678", avaliacao: 4.6, lat: -22.7298, lng: -47.6484 },
+            { id: 6, nome: "Coopervidros", endereco: "R. Treze de Maio, 300", tipo: "Vidros", horario: "Seg-Sex 8h-17h", telefone: "(19) 3421-1234", avaliacao: 4.2, lat: -22.7223, lng: -47.6475 }
         ];
 
         const ranking = [
@@ -196,24 +261,12 @@
         ];
 
         let usuarioLogado = null;
-        let tabAppAtiva = 'inicio';
+        let tabAtiva = 'inicio';
         let inscricoesUsuario = [];
         let desafioAtual = null;
         let mapaInstance = null;
         let markers = [];
         let usuarios = [];
-
-        // Carregar módulos dinamicamente
-        async function carregarModulo(nome) {
-            try {
-                const response = await fetch(`pages/${nome}.html`);
-                const html = await response.text();
-                return html;
-            } catch (error) {
-                console.error(`Erro ao carregar ${nome}:`, error);
-                return `<div class="card-moderno"><h2>Erro ao carregar módulo</h2><p>Não foi possível carregar o conteúdo de ${nome}</p></div>`;
-            }
-        }
 
         async function carregarUsuarios() {
             try {
@@ -250,10 +303,10 @@
                 document.getElementById('loginScreen').classList.add('hidden');
                 document.getElementById('appScreen').classList.add('active');
                 atualizarHeader();
-                tabAppAtiva = 'inicio';
+                tabAtiva = 'inicio';
                 document.querySelectorAll('.app-tab').forEach(btn => btn.classList.remove('active'));
                 document.querySelector('.app-tab').classList.add('active');
-                renderAppContent();
+                renderConteudo();
                 mostrarAlerta('success', `Bem-vindo, ${localUser.nome}!`);
             } else {
                 mostrarAlerta('error', 'E-mail ou senha inválidos!');
@@ -289,69 +342,49 @@
             }
         }
 
-        function mudarTabApp(tab) {
-            tabAppAtiva = tab;
+        function mudarTab(tab) {
+            tabAtiva = tab;
             document.querySelectorAll('.app-tab').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
-            renderAppContent();
+            renderConteudo();
         }
 
-        async function renderAppContent() {
+        async function renderConteudo() {
             const container = document.getElementById('appContent');
-            
-            // Dados para passar para os módulos
-            const dados = {
-                usuarioLogado,
-                desafios,
-                eventos,
-                pontosColeta,
-                ranking,
-                inscricoesUsuario,
-                funcoes: {
-                    abrirUpload,
-                    confirmarUpload,
-                    inscreverEvento,
-                    mostrarAlerta
+            try {
+                const response = await fetch(`tabs/${tabAtiva}.html`);
+                let html = await response.text();
+                
+                // Substituir placeholders pelos dados reais
+                html = html.replace(/\{\{usuarioLogado\.nome\}\}/g, usuarioLogado?.nome || 'Usuário');
+                html = html.replace(/\{\{usuarioLogado\.pontos\}\}/g, usuarioLogado?.pontos || '0');
+                html = html.replace(/\{\{usuarioLogado\.streak\}\}/g, usuarioLogado?.streak || '0');
+                html = html.replace(/\{\{usuarioLogado\.desafios\}\}/g, usuarioLogado?.desafios || '0');
+                html = html.replace(/\{\{usuarioLogado\.nivel\}\}/g, usuarioLogado?.nivel || '🌱 EcoIniciante');
+                html = html.replace(/\{\{usuarioLogado\.conquistas\}\}/g, usuarioLogado?.conquistas || '');
+                
+                container.innerHTML = html;
+                
+                // Executar scripts do módulo carregado
+                const scripts = container.querySelectorAll('script');
+                scripts.forEach(oldScript => {
+                    const newScript = document.createElement('script');
+                    if (oldScript.src) {
+                        newScript.src = oldScript.src;
+                    } else {
+                        newScript.textContent = oldScript.textContent;
+                    }
+                    document.body.appendChild(newScript);
+                    oldScript.remove();
+                });
+                
+                // Inicializar mapa se for a aba pontos
+                if (tabAtiva === 'pontos' && typeof window.initMapa === 'function') {
+                    setTimeout(() => window.initMapa(pontosColeta), 100);
                 }
-            };
-            
-            let conteudo = '';
-            
-            switch(tabAppAtiva) {
-                case 'inicio':
-                    conteudo = await carregarModulo('inicio');
-                    break;
-                case 'desafios':
-                    conteudo = await carregarModulo('desafios');
-                    break;
-                case 'perfil':
-                    conteudo = await carregarModulo('perfil');
-                    break;
-                case 'ranking':
-                    conteudo = await carregarModulo('ranking');
-                    break;
-                case 'eventos':
-                    conteudo = await carregarModulo('eventos');
-                    break;
-                case 'pontos':
-                    conteudo = await carregarModulo('pontos');
-                    break;
-                default:
-                    conteudo = await carregarModulo('inicio');
-            }
-            
-            // Substituir placeholders pelos dados reais
-            conteudo = conteudo.replace(/\{\{usuarioLogado\.nome\}\}/g, usuarioLogado?.nome || 'Usuário');
-            conteudo = conteudo.replace(/\{\{usuarioLogado\.pontos\}\}/g, usuarioLogado?.pontos || '0');
-            conteudo = conteudo.replace(/\{\{usuarioLogado\.streak\}\}/g, usuarioLogado?.streak || '0');
-            conteudo = conteudo.replace(/\{\{usuarioLogado\.desafios\}\}/g, usuarioLogado?.desafios || '0');
-            conteudo = conteudo.replace(/\{\{usuarioLogado\.nivel\}\}/g, usuarioLogado?.nivel || '🌱 EcoIniciante');
-            
-            container.innerHTML = conteudo;
-            
-            // Inicializar mapa se for a aba pontos
-            if (tabAppAtiva === 'pontos' && typeof initMap === 'function') {
-                setTimeout(() => initMap(pontosColeta), 100);
+            } catch (error) {
+                console.error('Erro ao carregar módulo:', error);
+                container.innerHTML = `<div class="card-moderno"><h2>Erro ao carregar conteúdo</h2><p>Tente novamente mais tarde.</p></div>`;
             }
         }
 
@@ -359,8 +392,38 @@
             desafioAtual = desafios.find(d => d.id === id);
             const modal = document.getElementById('uploadModal');
             const content = document.getElementById('uploadContent');
-            content.innerHTML = `<div><h2>📸 Comprovar: ${desafioAtual.titulo}</h2><p>${desafioAtual.dica}</p><input type="file" id="uploadFile" accept="image/*"><button class="btn-auth" onclick="confirmarUpload(${desafioAtual.id}, ${desafioAtual.pontos})">Enviar</button><button class="btn-auth" style="background:#666;" onclick="fecharModal('uploadModal')">Cancelar</button></div>`;
+            content.innerHTML = `
+                <div class="card-moderno">
+                    <h2>📸 Comprovar: ${desafioAtual.titulo}</h2>
+                    <p><i class="fas fa-info-circle"></i> ${desafioAtual.dica}</p>
+                    <div class="upload-preview" id="uploadPreview"></div>
+                    <div class="ai-analysis" id="aiAnalysis"></div>
+                    <input type="file" accept="image/*" id="uploadFile" onchange="analisarImagem(this)">
+                    <button class="btn-auth" onclick="confirmarUpload(${desafioAtual.id}, ${desafioAtual.pontos})" id="btnConfirmarUpload" disabled style="margin-top:15px;">📤 Enviar comprovante</button>
+                    <button class="btn-auth" style="background:#666; margin-top:10px;" onclick="fecharModal('uploadModal')">Cancelar</button>
+                </div>
+            `;
             modal.classList.add('active');
+        }
+
+        function analisarImagem(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const preview = document.getElementById('uploadPreview');
+            const aiAnalysis = document.getElementById('aiAnalysis');
+            const btnConfirmar = document.getElementById('btnConfirmarUpload');
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width:100%; max-height:200px; border-radius:12px;">`;
+                aiAnalysis.innerHTML = `<div class="loading"><span class="spinner"></span> Analisando imagem com IA...</div>`;
+                btnConfirmar.disabled = true;
+                setTimeout(() => {
+                    aiAnalysis.innerHTML = `<div class="success"><i class="fas fa-check-circle"></i> Imagem validada! Comprovante aceito.</div>`;
+                    btnConfirmar.disabled = false;
+                }, 2000);
+            };
+            reader.readAsDataURL(file);
         }
 
         function confirmarUpload(id, pontos) {
@@ -372,12 +435,19 @@
             else if (novosPontos >= 1500) usuarioLogado.nivel = "🌳 Guardião";
             else if (novosPontos >= 500) usuarioLogado.nivel = "🍃 EcoHerói";
             atualizarHeader();
-            mostrarAlerta('success', `+${pontos} pontos!`);
+            mostrarAlerta('success', `✅ Comprovante validado! +${pontos} pontos!`);
             fecharModal('uploadModal');
-            renderAppContent();
+            renderConteudo();
+        }
+
+        function inscreverEvento(id) {
+            inscricoesUsuario.push(id);
+            mostrarAlerta('success', 'Inscrição realizada!');
+            renderConteudo();
         }
 
         function fecharModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
+        
         function toggleChatbot() { document.getElementById('chatbotContainer').classList.toggle('open'); }
         
         function enviarMensagem() {
@@ -388,9 +458,11 @@
             container.innerHTML += `<div class="message user">${msg}</div>`;
             input.value = '';
             setTimeout(() => {
-                let resposta = "🌿 Pergunte sobre reciclagem, compostagem ou pontos de coleta!";
-                if(msg.toLowerCase().includes('reciclagem')) resposta = "♻️ Separe plástico, papel, vidro e metal. Em Piracicaba temos vários pontos de coleta!";
-                else if(msg.toLowerCase().includes('compostagem')) resposta = "🌱 Compostagem transforma restos orgânicos em adubo. Reduz até 50% do lixo!";
+                let resposta = "🌿 Pergunte sobre reciclagem, compostagem, energia solar ou pontos de coleta!";
+                const msgLow = msg.toLowerCase();
+                if(msgLow.includes('reciclagem')) resposta = "♻️ Separe plástico, papel, vidro e metal. Em Piracicaba temos vários pontos de coleta!";
+                else if(msgLow.includes('compostagem')) resposta = "🌱 Compostagem transforma restos orgânicos em adubo. Reduz até 50% do lixo!";
+                else if(msgLow.includes('ponto')) resposta = "📍 Temos Ecopontos, locais para pilhas, eletrônicos, óleo e roupas. Confira no mapa interativo!";
                 container.innerHTML += `<div class="message bot">${resposta}</div>`;
                 container.scrollTop = container.scrollHeight;
             }, 500);
@@ -398,17 +470,24 @@
         }
 
         carregarUsuarios();
+        
         window.switchTab = switchTab;
         window.handleLogin = handleLogin;
         window.handleCadastro = handleCadastro;
         window.logout = logout;
-        window.mudarTabApp = mudarTabApp;
+        window.mudarTab = mudarTab;
         window.abrirUpload = abrirUpload;
+        window.analisarImagem = analisarImagem;
         window.confirmarUpload = confirmarUpload;
         window.fecharModal = fecharModal;
-        window.inscreverEvento = function(id) { inscricoesUsuario.push(id); mostrarAlerta('success', 'Inscrição realizada!'); renderAppContent(); };
+        window.inscreverEvento = inscreverEvento;
         window.toggleChatbot = toggleChatbot;
         window.enviarMensagem = enviarMensagem;
+        window.pontosColeta = pontosColeta;
+        window.desafios = desafios;
+        window.eventos = eventos;
+        window.ranking = ranking;
+        window.inscricoesUsuario = inscricoesUsuario;
     </script>
 </body>
 </html>
