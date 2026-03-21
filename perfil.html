@@ -1,0 +1,92 @@
+<h1 class="titulo-secao">👤 Meu Perfil</h1>
+
+<!-- Hero Section -->
+<div class="profile-hero">
+    <div class="profile-hero-content">
+        <div class="profile-avatar-large">{{usuarioLogado.nome.charAt(0)}}</div>
+        <div>
+            <h2 style="font-size:28px;">{{usuarioLogado.nome}}</h2>
+            <div style="background:#ffd966; display:inline-block; padding:4px 16px; border-radius:30px; color:#8b4513;">{{usuarioLogado.nivel}}</div>
+            <p style="margin-top:8px;"><i class="fas fa-calendar"></i> Membro desde Janeiro 2025</p>
+        </div>
+    </div>
+    <div class="profile-stats-hero">
+        <div class="stat-hero-item"><div class="stat-hero-value">{{usuarioLogado.pontos}}</div><div class="stat-hero-label">Pontos</div></div>
+        <div class="stat-hero-item"><div class="stat-hero-value">{{usuarioLogado.streak}}</div><div class="stat-hero-label">Streak 🔥</div></div>
+        <div class="stat-hero-item"><div class="stat-hero-value">{{usuarioLogado.desafios}}</div><div class="stat-hero-label">Desafios</div></div>
+        <div class="stat-hero-item"><div class="stat-hero-value" id="conquistas-count">0</div><div class="stat-hero-label">Conquistas</div></div>
+    </div>
+</div>
+
+<!-- Progresso -->
+<div class="level-card">
+    <div class="level-title"><i class="fas fa-chart-line"></i> Progresso para Próximo Nível</div>
+    <div class="progress-bar-premium"><div class="progress-fill-premium" id="progress-bar" style="width: 0%;"></div></div>
+    <div style="display:flex; justify-content:space-between; margin-top:10px;"><span>{{usuarioLogado.nivel}}</span><span id="next-level">🏆 EcoHerói</span></div>
+    <p style="margin-top:15px;"><i class="fas fa-arrow-up"></i> <span id="pontos-faltam">0</span> pontos para o próximo nível</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-grid-premium">
+    <div class="stat-card-premium"><div class="stat-icon-premium"><i class="fas fa-calendar-check"></i></div><div class="stat-number-premium" id="eventos-count">0</div><div>Eventos</div></div>
+    <div class="stat-card-premium"><div class="stat-icon-premium"><i class="fas fa-leaf"></i></div><div class="stat-number-premium">{{usuarioLogado.desafios}}</div><div>Desafios</div></div>
+    <div class="stat-card-premium"><div class="stat-icon-premium"><i class="fas fa-fire"></i></div><div class="stat-number-premium">{{usuarioLogado.streak}}</div><div>Streak</div></div>
+    <div class="stat-card-premium"><div class="stat-icon-premium"><i class="fas fa-trophy"></i></div><div class="stat-number-premium" id="ranking-position">#0</div><div>Ranking</div></div>
+</div>
+
+<!-- Conquistas -->
+<h3><i class="fas fa-medal"></i> Conquistas (<span id="conquistas-desbloqueadas">0</span>/<span id="total-conquistas">0</span>)</h3>
+<div class="conquistas-grid-premium" id="conquistas-container"></div>
+
+<!-- Atividades Recentes -->
+<h3 style="margin-top:30px;"><i class="fas fa-history"></i> Atividade Recente</h3>
+<div class="atividade-timeline" id="atividades-container"></div>
+
+<script>
+    const pontos = parseInt({{usuarioLogado.pontos}} || 0);
+    const progresso = Math.min(100, (pontos / 5000) * 100);
+    document.getElementById('progress-bar').style.width = progresso + '%';
+    document.getElementById('pontos-faltam').innerText = 5000 - pontos;
+    document.getElementById('next-level').innerText = pontos >= 5000 ? "Nível Máximo" : "🏆 EcoHerói";
+    
+    const conquistas = [
+        { nome: "🌱 Primeiro Passo", icone: "🌱", desc: "Complete seu primeiro desafio", desbloqueado: true },
+        { nome: "♻️ Mestre da Reciclagem", icone: "♻️", desc: "Recicle 50kg de materiais", desbloqueado: pontos >= 500 },
+        { nome: "🌳 Guardião das Árvores", icone: "🌳", desc: "Plante 10 árvores", desbloqueado: pontos >= 1000 },
+        { nome: "📅 Eventos Expert", icone: "📅", desc: "Participe de 5 eventos", desbloqueado: pontos >= 800 },
+        { nome: "🔥 Streak 30", icone: "🔥", desc: "Mantenha streak por 30 dias", desbloqueado: parseInt({{usuarioLogado.streak}} || 0) >= 30 },
+        { nome: "🏆 Top 10", icone: "🏆", desc: "Fique entre os 10 do ranking", desbloqueado: pontos >= 2000 },
+        { nome: "💧 Protetor das Águas", icone: "💧", desc: "Economize 1000L de água", desbloqueado: pontos >= 1500 },
+        { nome: "👑 Lenda Ambiental", icone: "👑", desc: "Atinga 5000 pontos", desbloqueado: pontos >= 5000 }
+    ];
+    
+    document.getElementById('total-conquistas').innerText = conquistas.length;
+    const desbloqueadas = conquistas.filter(c => c.desbloqueado).length;
+    document.getElementById('conquistas-desbloqueadas').innerText = desbloqueadas;
+    document.getElementById('conquistas-count').innerText = desbloqueadas;
+    
+    let conquistasHtml = '';
+    conquistas.forEach(c => {
+        conquistasHtml += `<div class="conquista-card-premium ${!c.desbloqueado ? 'locked' : ''}">
+            <div class="conquista-icon">${c.icone}</div>
+            <div><strong>${c.nome}</strong></div>
+            <div style="font-size:12px; color:#666;">${c.desc}</div>
+            ${c.desbloqueado ? '<span class="badge badge-success" style="margin-top:10px;">Desbloqueado</span>' : '<span class="badge" style="background:#aaa; margin-top:10px;">Bloqueado</span>'}
+        </div>`;
+    });
+    document.getElementById('conquistas-container').innerHTML = conquistasHtml;
+    
+    const atividades = [
+        { icone: "♻️", nome: "Reciclagem", pontos: "+200", data: "Hoje" },
+        { icone: "🌳", nome: "Plantio de Árvore", pontos: "+300", data: "Ontem" },
+        { icone: "📅", nome: "Mutirão de Limpeza", pontos: "+150", data: "3 dias" }
+    ];
+    
+    let atividadesHtml = '';
+    atividades.forEach(a => {
+        atividadesHtml += `<div class="atividade-item"><div class="atividade-icon">${a.icone}</div><div style="flex:1;"><strong>${a.nome}</strong><div style="font-size:12px; color:#8b4513;">${a.data}</div></div><div style="font-weight:700; color:#2e7d32;">${a.pontos}</div></div>`;
+    });
+    document.getElementById('atividades-container').innerHTML = atividadesHtml;
+    document.getElementById('eventos-count').innerText = window.inscricoesUsuario ? window.inscricoesUsuario.length : 0;
+    document.getElementById('ranking-position').innerText = '#' + Math.floor(Math.random() * 10 + 1);
+</script>
