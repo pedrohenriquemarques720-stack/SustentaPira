@@ -1,0 +1,26 @@
+<h1 class="titulo-secao">🌱 Desafios Ambientais</h1>
+<div class="card-grid" id="desafios-container"></div>
+
+<script>
+    function renderDesafios() {
+        const container = document.getElementById('desafios-container');
+        if (!container) return;
+        
+        let html = '';
+        desafios.forEach(desafio => {
+            html += `
+                <div class="card-moderno">
+                    <div style="font-size:48px; text-align:center;">${desafio.icone}</div>
+                    <h3 style="text-align:center;">${desafio.titulo}</h3>
+                    <p style="text-align:center;">${desafio.descricao}</p>
+                    <div style="text-align:center;"><span class="badge badge-success">+${desafio.pontos} pts</span></div>
+                    <p style="font-size:12px;"><i class="fas fa-info-circle"></i> ${desafio.dica}</p>
+                    <button class="btn-auth" onclick="window.abrirUpload(${desafio.id})">📸 Comprovar</button>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+    
+    renderDesafios();
+</script>
