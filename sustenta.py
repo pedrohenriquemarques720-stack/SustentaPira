@@ -1,7 +1,8 @@
 import streamlit as st
 from pathlib import Path
+import os
 
-# Configuração da página - MUST BE THE FIRST STREAMLIT COMMAND
+# Configuração da página
 st.set_page_config(
     page_title="SustentaPira",
     page_icon="🌿",
@@ -9,121 +10,62 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Função para ler o arquivo HTML
+# ========== CONFIGURAÇÃO PARA SERVIR ARQUIVOS ESTÁTICOS ==========
+# Criar diretório static se não existir
+static_dir = Path(__file__).parent / "static"
+static_dir.mkdir(exist_ok=True)
+
+# Copiar arquivos da pasta tabs para static se necessário
+tabs_dir = Path(__file__).parent / "tabs"
+if tabs_dir.exists():
+    for file in tabs_dir.glob("*.html"):
+        dest = static_dir / file.name
+        if not dest.exists():
+            import shutil
+            shutil.copy(file, dest)
+
+# Servir arquivos estáticos
+st.markdown("""
+    <script>
+        // Forçar carregamento dos arquivos da pasta static
+        window.staticPath = '/app/static/';
+    </script>
+""", unsafe_allow_html=True)
+
+# ========== FUNÇÃO PARA LER O ARQUIVO HTML ==========
 def carregar_html():
     caminho_html = Path(__file__).parent / "sustenta.html"
     
     if not caminho_html.exists():
-        return None, caminho_html
+        return None
     
     with open(caminho_html, 'r', encoding='utf-8') as arquivo:
         conteudo = arquivo.read()
     
-    return conteudo, caminho_html
+    # Substituir o caminho dos arquivos para apontar para a pasta static
+    conteudo = conteudo.replace('src="tabs/', 'src="static/')
+    conteudo = conteudo.replace("src='tabs/", "src='static/")
+    
+    return conteudo
 
-# Carregar o HTML
-html_content, caminho = carregar_html()
-
-# CSS personalizado para remover TODOS os elementos do Streamlit
+# CSS para remover elementos do Streamlit
 st.markdown("""
     <style>
-        /* Remove todos os elementos padrão do Streamlit */
-        .main > div {
-            padding: 0 !important;
-            margin: 0 !important;
-            max-width: 100% !important;
-        }
-        
-        /* Remove o cabeçalho e menu */
-        header {
-            display: none !important;
-            visibility: hidden !important;
-            height: 0 !important;
-        }
-        
-        /* Remove o footer */
-        footer {
-            display: none !important;
-            visibility: hidden !important;
-        }
-        
-        /* Remove o menu hamburger */
-        .stApp > header {
-            display: none !important;
-        }
-        
-        /* Remove qualquer padding/margin do body */
-        .stApp {
-            margin: 0 !important;
-            padding: 0 !important;
-            background: #FFFFFF;
-        }
-        
-        /* Container principal ocupa toda a tela */
-        .stApp > div:first-child {
-            padding: 0 !important;
-            margin: 0 !important;
-            max-width: 100% !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            overflow: auto !important;
-        }
-        
-        /* Remove o padding do Streamlit */
-        .block-container {
-            padding: 0 !important;
-            margin: 0 !important;
-            max-width: 100% !important;
-        }
-        
-        /* Esconde qualquer elemento indesejado */
-        #MainMenu {
-            display: none !important;
-        }
-        
-        /* Garante que o iframe ocupe toda a tela mas com scroll */
-        iframe {
-            width: 100vw !important;
-            height: 100vh !important;
-            border: none !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            z-index: 9999 !important;
-        }
-        
-        /* Remove scroll do Streamlit MAS PERMITE SCROLL DO CONTEÚDO */
-        .stApp {
-            overflow: hidden !important;
-        }
-        
-        /* Remove qualquer background extra */
-        .stApp, .main, .block-container {
-            background: #FFFFFF !important;
-        }
+        .main > div { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
+        header { display: none !important; }
+        footer { display: none !important; }
+        .stApp > header { display: none !important; }
+        .stApp { margin: 0 !important; padding: 0 !important; background: #FFFFFF; }
+        .block-container { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
+        #MainMenu { display: none !important; }
+        iframe { width: 100% !important; height: 100vh !important; border: none !important; }
     </style>
 """, unsafe_allow_html=True)
 
-# Se o HTML foi carregado com sucesso
+# Carregar e exibir o HTML
+html_content = carregar_html()
+
 if html_content:
-    # Exibir o HTML em um iframe que ocupa a tela inteira
-    st.components.v1.html(
-        html_content,
-        height=1000,
-        scrolling=True
-    )
+    st.components.v1.html(html_content, height=1000, scrolling=True)
 else:
-    # Mensagem de erro simplificada
-    st.error(f"❌ Arquivo sustenta.html não encontrado em: {caminho}")
-    st.info("""
-    ### Como resolver:
-    1. Certifique-se que o arquivo **sustenta.html** está na mesma pasta que este arquivo Python
-    2. O arquivo deve conter todo o código do seu app SustentaPira
-    3. Após colocar o arquivo, reinicie o Streamlit
-    
-    **Pasta atual:** `{}`
-    """.format(caminho.parent))
+    st.error("❌ Arquivo sustenta.html não encontrado!")
