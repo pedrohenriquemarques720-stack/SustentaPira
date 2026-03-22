@@ -60,7 +60,7 @@
         .iframe-container {
             background: white;
             border-radius: 28px;
-            overflow: auto;
+            overflow: hidden;
             box-shadow: 0 15px 40px rgba(0,0,0,0.05);
             min-height: 600px;
             border: 1px solid rgba(139,69,19,0.1);
@@ -139,15 +139,28 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="uploadModal"><div class="modal-content" id="uploadContent"></div></div>
-
     <script>
-        // ========== DADOS DO USUÁRIO ==========
+        // ========== CONEXÃO SHEETDB ==========
+        const SHEETDB_URL = 'https://sheetdb.io/api/v1/pxcozyw0d91x8';
+        
         let usuarioLogado = null;
-        let usuarios = [
-            { nome: "João Silva", email: "joao@email.com", senha: "123456", telefone: "(19) 99999-1234", pontos: "2350", nivel: "🌳 EcoMestre", streak: "45", desafios: "28", conquistas: "Primeiro passo,Reciclador,Plantador" },
-            { nome: "Maria Santos", email: "maria@email.com", senha: "123456", telefone: "(19) 98888-5678", pontos: "3520", nivel: "🏆 EcoHerói", streak: "67", desafios: "42", conquistas: "Primeiro passo,Reciclador,Eventos,Streak 30" }
-        ];
+        let usuarios = [];
+
+        // Carregar usuários do SheetDB
+        async function carregarUsuarios() {
+            try {
+                const response = await fetch(SHEETDB_URL);
+                usuarios = await response.json();
+                console.log('Usuários carregados:', usuarios.length);
+            } catch (error) {
+                console.error('Erro ao carregar usuários:', error);
+                // Dados locais de fallback
+                usuarios = [
+                    { nome: "João Silva", email: "joao@email.com", senha: "123456", telefone: "(19) 99999-1234", pontos: "2350", nivel: "🌳 EcoMestre", streak: "45", desafios: "28", conquistas: "Primeiro passo,Reciclador,Plantador" },
+                    { nome: "Maria Santos", email: "maria@email.com", senha: "123456", telefone: "(19) 98888-5678", pontos: "3520", nivel: "🏆 EcoHerói", streak: "67", desafios: "42", conquistas: "Primeiro passo,Reciclador,Eventos,Streak 30" }
+                ];
+            }
+        }
 
         function switchTab(tab) {
             document.getElementById('paneLogin').style.display = tab === 'login' ? 'block' : 'none';
@@ -166,18 +179,23 @@
             event.preventDefault();
             const email = document.getElementById('loginEmail').value;
             const senha = document.getElementById('loginSenha').value;
-            const localUser = usuarios.find(u => u.email === email && u.senha === senha);
-            if (localUser) {
-                usuarioLogado = localUser;
+            
+            // Buscar usuário no SheetDB ou local
+            let usuario = usuarios.find(u => u.email === email && u.senha === senha);
+            
+            if (usuario) {
+                usuarioLogado = usuario;
                 document.getElementById('loginScreen').classList.add('hidden');
                 document.getElementById('appScreen').classList.add('active');
                 atualizarHeader();
                 
+                // Marcar aba início como ativa
                 document.querySelectorAll('.app-tab').forEach(btn => btn.classList.remove('active'));
                 document.querySelector('.app-tab[data-tab="inicio"]').classList.add('active');
                 
-                mudarTab('inicio');
-                mostrarAlerta('success', `Bem-vindo, ${localUser.nome}!`);
+                // Carregar a aba início
+                carregarAba('inicio');
+                mostrarAlerta('success', `Bem-vindo, ${usuario.nome}!`);
             } else {
                 mostrarAlerta('error', 'E-mail ou senha inválidos!');
             }
@@ -190,11 +208,38 @@
             const senha = document.getElementById('cadastroSenha').value;
             const confirmar = document.getElementById('cadastroConfirmar').value;
             const telefone = document.getElementById('cadastroTelefone').value;
-            if (senha !== confirmar) { mostrarAlerta('error', 'Senhas não coincidem'); return; }
-            const novoUser = { nome, email, senha, telefone, pontos: "0", nivel: "🌱 EcoIniciante", streak: "1", desafios: "0", conquistas: "🌱 Primeiro passo" };
-            usuarios.push(novoUser);
-            mostrarAlerta('success', 'Conta criada! Faça login.');
-            switchTab('login');
+            
+            if (senha !== confirmar) {
+                mostrarAlerta('error', 'As senhas não coincidem!');
+                return;
+            }
+            
+            const novoUsuario = {
+                nome: nome,
+                email: email,
+                senha: senha,
+                telefone: telefone || '',
+                pontos: "0",
+                nivel: "🌱 EcoIniciante",
+                streak: "1",
+                desafios: "0",
+                conquistas: "🌱 Primeiro passo"
+            };
+            
+            try {
+                const response = await fetch(SHEETDB_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: [novoUsuario] })
+                });
+                mostrarAlerta('success', 'Conta criada com sucesso! Faça o login.');
+                switchTab('login');
+                await carregarUsuarios();
+            } catch (error) {
+                usuarios.push(novoUsuario);
+                mostrarAlerta('success', 'Conta criada com sucesso! Faça o login.');
+                switchTab('login');
+            }
         }
 
         function logout() {
@@ -211,28 +256,67 @@
             }
         }
 
-        function mudarTab(tab) {
+        function carregarAba(aba) {
             const iframe = document.getElementById('contentFrame');
-            const tabMap = {
-                'inicio': 'tabs/inicio.html',
-                'desafios': 'tabs/desafios.html',
-                'perfil': 'tabs/perfil.html',
-                'ranking': 'tabs/ranking.html',
-                'eventos': 'tabs/eventos.html',
-                'pontos': 'tabs/pontos.html'
-            };
+            const caminho = `tabs/${aba}.html`;
             
+            // Atualizar classe ativa do botão
             document.querySelectorAll('.app-tab').forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`.app-tab[data-tab="${tab}"]`).classList.add('active');
+            document.querySelector(`.app-tab[data-tab="${aba}"]`).classList.add('active');
             
-            iframe.src = tabMap[tab];
+            // Carregar o iframe
+            iframe.src = caminho;
+            
+            // Quando o iframe carregar, enviar os dados do usuário
+            iframe.onload = function() {
+                try {
+                    const iframeWindow = iframe.contentWindow;
+                    if (iframeWindow && usuarioLogado) {
+                        iframeWindow.postMessage({
+                            type: 'USER_DATA',
+                            usuario: usuarioLogado
+                        }, '*');
+                    }
+                } catch(e) {
+                    console.log('Aguardando carregamento do iframe');
+                }
+            };
+        }
+
+        function mudarTab(aba) {
+            if (!usuarioLogado) return;
+            carregarAba(aba);
         }
         
-        window.mudarTab = mudarTab;
+        // Receber mensagens dos iframes (para atualizar dados do usuário)
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'UPDATE_USER') {
+                if (usuarioLogado) {
+                    usuarioLogado.pontos = event.data.pontos || usuarioLogado.pontos;
+                    usuarioLogado.desafios = event.data.desafios || usuarioLogado.desafios;
+                    usuarioLogado.nivel = event.data.nivel || usuarioLogado.nivel;
+                    atualizarHeader();
+                    
+                    // Atualizar também no iframe atual
+                    const iframe = document.getElementById('contentFrame');
+                    if (iframe && iframe.contentWindow) {
+                        iframe.contentWindow.postMessage({
+                            type: 'USER_DATA',
+                            usuario: usuarioLogado
+                        }, '*');
+                    }
+                }
+            }
+        });
+
+        // Inicializar
+        carregarUsuarios();
+        
         window.switchTab = switchTab;
         window.handleLogin = handleLogin;
         window.handleCadastro = handleCadastro;
         window.logout = logout;
+        window.mudarTab = mudarTab;
     </script>
 </body>
 </html>
