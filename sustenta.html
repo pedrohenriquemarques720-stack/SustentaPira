@@ -308,6 +308,25 @@
             font-weight: 600;
         }
 
+        .footer-links {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .footer-links a {
+            color: #8b4513;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+
         .divider {
             display: flex;
             align-items: center;
@@ -705,6 +724,131 @@
             height: 4px;
             background: linear-gradient(90deg, #8b4513, #b85e3a);
             border-radius: 2px;
+        }
+
+        /* Estilos para a página Início */
+        .missao-card, .visao-card, .valores-card {
+            background: linear-gradient(145deg, #fafafa, #f5f5f5);
+            border-radius: 24px;
+            padding: 30px;
+            margin-bottom: 25px;
+            border-left: 5px solid #8b4513;
+        }
+        
+        .missao-card h2, .visao-card h2, .valores-card h2 {
+            color: #8b4513;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+        
+        .valores-lista {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .valor-item {
+            background: white;
+            padding: 12px 20px;
+            border-radius: 50px;
+            border: 1px solid #8b5a2b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+        }
+        
+        .valor-item i {
+            color: #8b4513;
+            font-size: 18px;
+        }
+        
+        .fundadores-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        
+        .fundador-card {
+            background: linear-gradient(145deg, #fafafa, #f5f5f5);
+            border-radius: 20px;
+            padding: 25px 20px;
+            text-align: center;
+            border: 1px solid #8b5a2b;
+            transition: all 0.3s ease;
+        }
+        
+        .fundador-card:hover {
+            transform: translateY(-5px);
+            border-color: #8b4513;
+            box-shadow: 0 10px 20px rgba(139, 69, 19, 0.2);
+        }
+        
+        .fundador-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #8b4513, #b85e3a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            color: white;
+            margin: 0 auto 15px;
+        }
+        
+        .fundador-nome {
+            font-size: 20px;
+            font-weight: 700;
+            color: #3a2a1a;
+            margin-bottom: 5px;
+        }
+        
+        .fundador-cargo {
+            font-size: 12px;
+            color: #8b4513;
+            font-weight: 600;
+        }
+        
+        .link-politica {
+            background: #f5f5f5;
+            border: 1px solid #8b5a2b;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .link-politica a {
+            color: #8b4513;
+            text-decoration: none;
+            font-weight: 600;
+            margin: 0 15px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .link-politica a:hover {
+            text-decoration: underline;
+        }
+        
+        .modal-texto {
+            max-height: 70vh;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        
+        .modal-texto h3 {
+            color: #8b4513;
+            margin: 20px 0 10px;
+        }
+        
+        .modal-texto p {
+            margin-bottom: 15px;
+            line-height: 1.5;
         }
 
         /* ===== RANKING ULTRA MELHORADO ===== */
@@ -2019,7 +2163,7 @@
 
                             <div class="checkbox-group">
                                 <input type="checkbox" id="termos" required>
-                                <label for="termos">Eu aceito os <a href="#" style="color: #8b4513; font-weight: 600;">Termos de Uso</a></label>
+                                <label for="termos">Eu aceito os <a href="#" onclick="abrirTermosDeUso(event)" style="color: #8b4513; font-weight: 600;">Termos de Uso</a></label>
                             </div>
 
                             <button type="submit" class="btn-auth" id="btnCadastro">
@@ -2028,6 +2172,11 @@
                             </button>
                         </form>
                     </div>
+                </div>
+
+                <div class="footer-links">
+                    <a href="#" onclick="abrirPoliticaPrivacidade(event)"><i class="fas fa-lock"></i> Política de Privacidade</a>
+                    <a href="#" onclick="abrirTermosDeUso(event)"><i class="fas fa-file-contract"></i> Termos de Uso</a>
                 </div>
 
                 <div class="benefits">
@@ -2053,7 +2202,7 @@
         <div class="app-container">
             <!-- HEADER SUPERIOR MELHORADO COM LOGO -->
             <div class="top-header">
-                <div class="logo-container" onclick="mudarTabApp('perfil')">
+                <div class="logo-container" onclick="mudarTabApp('inicio')">
                     <div class="logo-image">
                         🌿
                     </div>
@@ -2083,18 +2232,24 @@
                 </div>
             </div>
 
-            <!-- Tabs de navegação -->
+            <!-- Tabs de navegação - ABA INÍCIO ADICIONADA À ESQUERDA -->
             <div class="app-tabs">
-                <button class="app-tab active" onclick="mudarTabApp('desafios')">Desafios</button>
-                <button class="app-tab" onclick="mudarTabApp('perfil')">Perfil</button>
-                <button class="app-tab" onclick="mudarTabApp('ranking')">Ranking</button>
-                <button class="app-tab" onclick="mudarTabApp('eventos')">Eventos</button>
-                <button class="app-tab" onclick="mudarTabApp('pontos')">Pontos</button>
+                <button class="app-tab" onclick="mudarTabApp('inicio')">🏠 Início</button>
+                <button class="app-tab active" onclick="mudarTabApp('desafios')">🌱 Desafios</button>
+                <button class="app-tab" onclick="mudarTabApp('perfil')">👤 Perfil</button>
+                <button class="app-tab" onclick="mudarTabApp('ranking')">🏆 Ranking</button>
+                <button class="app-tab" onclick="mudarTabApp('eventos')">📅 Eventos</button>
+                <button class="app-tab" onclick="mudarTabApp('pontos')">📍 Pontos</button>
             </div>
 
             <!-- Conteúdo das tabs -->
             <div id="appContent"></div>
         </div>
+    </div>
+
+    <!-- Modal para Política e Termos -->
+    <div class="modal-overlay" id="legalModal">
+        <div class="modal-content" id="legalContent"></div>
     </div>
 
     <!-- Modal de inscrição -->
@@ -2252,7 +2407,7 @@
 
         // ========== ESTADO ==========
         let usuarioLogado = null;
-        let tabAppAtiva = 'desafios'; // Já inicia como desafios
+        let tabAppAtiva = 'inicio';
         let inscricoesUsuario = [];
         let comprovantesHoje = [];
         
@@ -2337,11 +2492,11 @@
                                 atualizarUserInfo();
                                 atualizarHeaderInfo();
                                 
-                                // Garantir que a aba de desafios seja mostrada imediatamente
-                                tabAppAtiva = 'desafios';
+                                // Garantir que a aba de inicio seja mostrada imediatamente
+                                tabAppAtiva = 'inicio';
                                 document.querySelectorAll('.app-tab').forEach(btn => {
                                     btn.classList.remove('active');
-                                    if (btn.textContent.includes('Desafios')) {
+                                    if (btn.textContent.includes('Início')) {
                                         btn.classList.add('active');
                                     }
                                 });
@@ -2432,11 +2587,11 @@
                         atualizarUserInfo();
                         atualizarHeaderInfo();
                         
-                        // Garantir que a aba de desafios seja mostrada imediatamente
-                        tabAppAtiva = 'desafios';
+                        // Garantir que a aba de inicio seja mostrada imediatamente
+                        tabAppAtiva = 'inicio';
                         document.querySelectorAll('.app-tab').forEach(btn => {
                             btn.classList.remove('active');
-                            if (btn.textContent.includes('Desafios')) {
+                            if (btn.textContent.includes('Início')) {
                                 btn.classList.add('active');
                             }
                         });
@@ -2558,21 +2713,19 @@
         // Chamar carregamento inicial
         carregarUsuarios();
 
-        // Garantir que quando a página carregar, a aba de desafios seja a ativa
+        // Garantir que quando a página carregar, a aba de inicio seja a ativa
         document.addEventListener('DOMContentLoaded', function() {
             verificarLoginSalvo();
             
-            // Mesmo sem usuário logado, garantir que a aba de desafios seja a ativa
+            // Mesmo sem usuário logado, garantir que a aba de inicio seja a ativa
             if (!usuarioLogado) {
-                tabAppAtiva = 'desafios';
+                tabAppAtiva = 'inicio';
                 document.querySelectorAll('.app-tab').forEach(btn => {
                     btn.classList.remove('active');
-                    if (btn.textContent.includes('Desafios')) {
+                    if (btn.textContent.includes('Início')) {
                         btn.classList.add('active');
                     }
                 });
-                // Renderizar desafios mesmo sem usuário logado (opcional)
-                // renderAppContent();
             }
         });
 
@@ -2612,6 +2765,9 @@
             const content = document.getElementById('appContent');
             
             switch(tabAppAtiva) {
+                case 'inicio':
+                    renderInicio(content);
+                    break;
                 case 'desafios':
                     renderDesafios(content);
                     break;
@@ -2628,8 +2784,133 @@
                     renderPontos(content);
                     break;
                 default:
-                    renderDesafios(content);
+                    renderInicio(content);
             }
+        }
+
+        // Função para renderizar a aba Início
+        function renderInicio(container) {
+            const fundadores = [
+                { nome: "Pedro", cargo: "CEO & Fundador", icone: "🌱" },
+                { nome: "Pablo", cargo: "CTO & Fundador", icone: "💻" },
+                { nome: "Marcelo", cargo: "CMO & Fundador", icone: "📢" },
+                { nome: "Silvana", cargo: "COO & Fundadora", icone: "⚙️" },
+                { nome: "Gabriel", cargo: "Designer & Fundador", icone: "🎨" }
+            ];
+            
+            let fundadoresHtml = '';
+            fundadores.forEach(f => {
+                fundadoresHtml += `
+                    <div class="fundador-card">
+                        <div class="fundador-avatar">${f.icone}</div>
+                        <div class="fundador-nome">${f.nome}</div>
+                        <div class="fundador-cargo">${f.cargo}</div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = `
+                <h1 class="titulo-secao">🏠 Sobre o SustentaPira</h1>
+                
+                <div class="missao-card">
+                    <h2><i class="fas fa-bullseye"></i> Missão</h2>
+                    <p>Promover a sustentabilidade em Piracicaba através de um ecossistema digital que conecta cidadãos, empresas e poder público, incentivando práticas ambientais responsáveis e recompensando quem faz a diferença.</p>
+                </div>
+                
+                <div class="visao-card">
+                    <h2><i class="fas fa-eye"></i> Visão</h2>
+                    <p>Ser a principal plataforma de engajamento sustentável do Brasil, transformando Piracicaba em referência nacional em economia circular e consciência ambiental até 2030.</p>
+                </div>
+                
+                <div class="valores-card">
+                    <h2><i class="fas fa-heart"></i> Valores</h2>
+                    <div class="valores-lista">
+                        <div class="valor-item"><i class="fas fa-leaf"></i> Sustentabilidade</div>
+                        <div class="valor-item"><i class="fas fa-users"></i> Colaboração</div>
+                        <div class="valor-item"><i class="fas fa-lightbulb"></i> Inovação</div>
+                        <div class="valor-item"><i class="fas fa-hand-holding-heart"></i> Transparência</div>
+                        <div class="valor-item"><i class="fas fa-chart-line"></i> Impacto positivo</div>
+                        <div class="valor-item"><i class="fas fa-globe"></i> Responsabilidade socioambiental</div>
+                    </div>
+                </div>
+                
+                <h2 style="margin: 40px 0 20px; color: #8b4513;"><i class="fas fa-users"></i> Nossos Fundadores</h2>
+                <div class="fundadores-grid">
+                    ${fundadoresHtml}
+                </div>
+                
+                <div class="link-politica">
+                    <a href="#" onclick="abrirPoliticaPrivacidade(event)"><i class="fas fa-lock"></i> Política de Privacidade</a>
+                    <a href="#" onclick="abrirTermosDeUso(event)"><i class="fas fa-file-contract"></i> Termos de Uso</a>
+                </div>
+            `;
+        }
+        
+        function abrirPoliticaPrivacidade(event) {
+            if(event) event.preventDefault();
+            const modal = document.getElementById('legalModal');
+            const content = document.getElementById('legalContent');
+            content.innerHTML = `
+                <div class="card-moderno modal-texto">
+                    <h2 style="color: #8b4513;">🔒 Política de Privacidade</h2>
+                    <p><strong>Última atualização:</strong> Março de 2026</p>
+                    
+                    <h3>1. Coleta de Informações</h3>
+                    <p>O SustentaPira coleta informações fornecidas voluntariamente pelos usuários durante o cadastro, como nome, e-mail, telefone e cidade. Também coletamos dados de atividade dentro do aplicativo, como desafios completados, pontos acumulados e participação em eventos.</p>
+                    
+                    <h3>2. Uso das Informações</h3>
+                    <p>Utilizamos seus dados para personalizar sua experiência, calcular pontuações no ranking, enviar notificações sobre eventos e desafios, e melhorar continuamente nossos serviços. Seus dados não são vendidos a terceiros.</p>
+                    
+                    <h3>3. Compartilhamento</h3>
+                    <p>Compartilhamos apenas informações agregadas e anônimas em parcerias com a Prefeitura de Piracicaba e organizações ambientais para mensurar o impacto coletivo do projeto.</p>
+                    
+                    <h3>4. Segurança</h3>
+                    <p>Adotamos medidas de segurança técnicas e organizacionais para proteger seus dados contra acesso não autorizado, perda ou destruição.</p>
+                    
+                    <h3>5. Seus Direitos</h3>
+                    <p>Você pode solicitar a correção, atualização ou exclusão de seus dados a qualquer momento entrando em contato pelo e-mail: privacidade@sustentapira.com.br.</p>
+                    
+                    <div style="margin-top: 20px; text-align: center;">
+                        <button class="btn-auth" onclick="fecharModal('legalModal')">Fechar</button>
+                    </div>
+                </div>
+            `;
+            modal.classList.add('active');
+        }
+        
+        function abrirTermosDeUso(event) {
+            if(event) event.preventDefault();
+            const modal = document.getElementById('legalModal');
+            const content = document.getElementById('legalContent');
+            content.innerHTML = `
+                <div class="card-moderno modal-texto">
+                    <h2 style="color: #8b4513;">📜 Termos de Uso</h2>
+                    <p><strong>Última atualização:</strong> Março de 2026</p>
+                    
+                    <h3>1. Aceitação dos Termos</h3>
+                    <p>Ao acessar ou usar o aplicativo SustentaPira, você concorda em cumprir estes Termos de Uso. Se não concordar, não utilize o serviço.</p>
+                    
+                    <h3>2. Cadastro e Conta</h3>
+                    <p>Você é responsável por manter a confidencialidade de sua senha e por todas as atividades realizadas em sua conta. As informações fornecidas devem ser verdadeiras e atualizadas.</p>
+                    
+                    <h3>3. Comprovação de Desafios</h3>
+                    <p>Os comprovantes de desafios enviados serão analisados pela equipe. Reservamo-nos o direito de recusar comprovantes que não atendam aos critérios estabelecidos ou que sejam fraudulentos.</p>
+                    
+                    <h3>4. Pontuação e Ranking</h3>
+                    <p>A pontuação é concedida mediante validação das atividades. Qualquer tentativa de manipulação resultará na perda de pontos e possível suspensão da conta.</p>
+                    
+                    <h3>5. Modificações</h3>
+                    <p>Podemos alterar estes termos a qualquer momento. As alterações serão publicadas no aplicativo e entram em vigor imediatamente.</p>
+                    
+                    <h3>6. Contato</h3>
+                    <p>Dúvidas? Entre em contato: suporte@sustentapira.com.br</p>
+                    
+                    <div style="margin-top: 20px; text-align: center;">
+                        <button class="btn-auth" onclick="fecharModal('legalModal')">Fechar</button>
+                    </div>
+                </div>
+            `;
+            modal.classList.add('active');
         }
 
         function renderDesafios(container) {
@@ -3196,13 +3477,13 @@
             
             // Cores para cada categoria
             const coresCategoria = {
-                'geral': '#8b4513',     // marrom
-                'pilhas': '#ff9800',    // laranja
-                'eletronicos': '#2196f3', // azul
-                'oleo': '#4caf50',      // verde
-                'vidros': '#9c27b0',    // roxo
-                'papel': '#00bcd4',     // ciano
-                'roupas': '#e91e63'      // rosa
+                'geral': '#8b4513',
+                'pilhas': '#ff9800',
+                'eletronicos': '#2196f3',
+                'oleo': '#4caf50',
+                'vidros': '#9c27b0',
+                'papel': '#00bcd4',
+                'roupas': '#e91e63'
             };
             
             // Adicionar marcadores para cada ponto
@@ -3210,7 +3491,6 @@
                 if (ponto.lat && ponto.lng) {
                     const cor = coresCategoria[ponto.categoria] || '#8b4513';
                     
-                    // Criar ícone personalizado
                     const markerIcon = L.divIcon({
                         className: 'custom-marker',
                         html: `<div style="background-color: ${cor}; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">${ponto.icone}</div>`,
@@ -3218,7 +3498,6 @@
                         popupAnchor: [0, -15]
                     });
                     
-                    // Criar o popup com as informações
                     const estrelas = '★'.repeat(Math.round(ponto.avaliacao)) + '☆'.repeat(5 - Math.round(ponto.avaliacao));
                     const popupContent = `
                         <div style="font-family: 'Inter', sans-serif; min-width: 200px;">
@@ -3346,14 +3625,12 @@
 
             const desafio = desafios.find(d => d.id === desafioId);
             
-            // Simular validação
             const pontosAtuais = parseInt(usuarioLogado.pontos) || 0;
             usuarioLogado.pontos = (pontosAtuais + desafio.pontos).toString();
             
             const desafiosAtuais = parseInt(usuarioLogado.desafios) || 0;
             usuarioLogado.desafios = (desafiosAtuais + 1).toString();
             
-            // Atualizar nível
             const pontos = parseInt(usuarioLogado.pontos);
             if (pontos >= 5000) usuarioLogado.nivel = "🏆 EcoHerói";
             else if (pontos >= 1000) usuarioLogado.nivel = "🌳 EcoMestre";
