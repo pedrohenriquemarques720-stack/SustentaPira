@@ -2878,13 +2878,62 @@
             headerAvatar.innerHTML = usuarioLogado.nome.charAt(0).toUpperCase() + '<span class="online-indicator"></span>';
         }
 
+        // ========== FUNÇÃO COM EFEITO DE ÁGUA ==========
+        function triggerWaterCleaningEffect(targetElement, callback) {
+            if (!targetElement) return;
+            targetElement.classList.add('tab-water-cleaning');
+            const rect = targetElement.getBoundingClientRect();
+            
+            for (let i = 0; i < 32; i++) {
+                setTimeout(() => {
+                    const drop = document.createElement('div');
+                    drop.className = 'water-drop-effect';
+                    const x = rect.left + Math.random() * rect.width;
+                    const y = rect.top + Math.random() * rect.height;
+                    drop.style.left = x + 'px';
+                    drop.style.top = y + 'px';
+                    drop.style.setProperty('--x', (Math.random() - 0.5) * 40 + 'px');
+                    drop.style.setProperty('--y', (Math.random() - 0.5) * 40 + 'px');
+                    document.body.appendChild(drop);
+                    setTimeout(() => drop.remove(), 900);
+                }, i * 20);
+            }
+            
+            const overlay = document.getElementById('splashOverlay');
+            if (overlay) {
+                overlay.style.setProperty('--x', (rect.left + rect.width/2) + 'px');
+                overlay.style.setProperty('--y', (rect.top + rect.height/2) + 'px');
+                overlay.style.opacity = '0.8';
+                setTimeout(() => overlay.style.opacity = '0', 500);
+            }
+            
+            setTimeout(() => {
+                targetElement.classList.remove('tab-water-cleaning');
+                if (callback) callback();
+            }, 700);
+        }
+
         function mudarTabApp(tab) {
-            tabAppAtiva = tab;
+            if (tabAppAtiva === tab) return;
+            
+            const currentContent = document.querySelector('.app-tab-content.active');
+            
             document.querySelectorAll('.app-tab').forEach(btn => {
                 btn.classList.remove('active');
+                if (btn.getAttribute('data-tab') === tab) {
+                    btn.classList.add('active');
+                }
             });
-            event.target.classList.add('active');
-            renderAppContent();
+            
+            if (currentContent) {
+                triggerWaterCleaningEffect(currentContent, () => {
+                    tabAppAtiva = tab;
+                    renderAppContent();
+                });
+            } else {
+                tabAppAtiva = tab;
+                renderAppContent();
+            }
         }
 
         function renderAppContent() {
