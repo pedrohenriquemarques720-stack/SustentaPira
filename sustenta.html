@@ -118,6 +118,89 @@
             100% { filter: drop-shadow(0 0 5px rgba(139, 69, 19, 0.3)); }
         }
 
+                /* ===== ANIMAÇÃO DE BALDE DE ÁGUA ===== */
+        @keyframes splashWaterAnimation {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0px);
+            }
+            20% {
+                opacity: 0.8;
+                transform: translateY(-15px) scale(1.05) rotate(2deg);
+                filter: blur(1px);
+            }
+            45% {
+                opacity: 0.5;
+                transform: translateY(25px) scale(0.98);
+                filter: blur(3px);
+            }
+            70% {
+                opacity: 0.2;
+                transform: translateY(55px) scale(0.94);
+                filter: blur(5px);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(90px) scale(0.9);
+                filter: blur(7px);
+                visibility: hidden;
+            }
+        }
+
+        @keyframes waterDropFall {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(calc(var(--dx, 0) * 1.2), calc(var(--dy, 0) * 1.2 + 80px)) scale(0.4);
+            }
+        }
+
+        .app-tab-content {
+            display: none;
+            position: relative;
+        }
+
+        .app-tab-content.active {
+            display: block;
+        }
+
+        .tab-water-splash {
+            animation: splashWaterAnimation 0.65s cubic-bezier(0.4, 1.2, 0.6, 1) forwards !important;
+            pointer-events: none;
+            position: relative;
+            z-index: 10;
+        }
+
+        .water-drop {
+            position: fixed;
+            pointer-events: none;
+            z-index: 10000;
+            width: 7px;
+            height: 11px;
+            background: radial-gradient(circle, #6ec8ff 0%, #2a8eff 80%);
+            border-radius: 50% 50% 45% 55%;
+            filter: blur(1px);
+            box-shadow: 0 0 6px #3a9eff;
+            animation: waterDropFall 0.85s ease-out forwards;
+        }
+
+        .water-ripple-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(100, 200, 255, 0.45) 0%, rgba(70, 130, 200, 0.25) 40%, transparent 85%);
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
         /* ===== ANIMAÇÃO DE BALDE DE ÁGUA / LIMPEZA NAS ABAS ===== */
         @keyframes splashWater {
             0% {
@@ -2358,12 +2441,12 @@
             </div>
 
             <div class="app-tabs">
-             <button class="app-tab" data-tab="inicio" onclick="mudarTabApp('inicio')">🏠 Início</button>
-             <button class="app-tab active" data-tab="desafios" onclick="mudarTabApp('desafios')">🌱 Desafios</button>
-             <button class="app-tab" data-tab="perfil" onclick="mudarTabApp('perfil')">👤 Perfil</button>
-             <button class="app-tab" data-tab="ranking" onclick="mudarTabApp('ranking')">🏆 Ranking</button>
-             <button class="app-tab" data-tab="eventos" onclick="mudarTabApp('eventos')">📅 Eventos</button>
-             <button class="app-tab" data-tab="pontos" onclick="mudarTabApp('pontos')">📍 Pontos</button>
+                <button class="app-tab" data-tab="inicio" onclick="mudarTabApp('inicio')">🏠 Início</button>
+                <button class="app-tab active" data-tab="desafios" onclick="mudarTabApp('desafios')">🌱 Desafios</button>
+                <button class="app-tab" data-tab="perfil" onclick="mudarTabApp('perfil')">👤 Perfil</button>
+                <button class="app-tab" data-tab="ranking" onclick="mudarTabApp('ranking')">🏆 Ranking</button>
+                <button class="app-tab" data-tab="eventos" onclick="mudarTabApp('eventos')">📅 Eventos</button>
+                <button class="app-tab" data-tab="pontos" onclick="mudarTabApp('pontos')">📍 Pontos</button>
             </div>
 
             <!-- Conteúdo das tabs -->
@@ -2384,6 +2467,7 @@
     <!-- Modal de upload -->
     <div class="modal-overlay" id="uploadModal">
         <div class="modal-content" id="uploadContent"></div>
+        <div class="water-ripple-bg" id="waterRippleBg"></div>
     </div>
 
     <div class="splash-overlay" id="splashOverlay"></div>
@@ -2913,17 +2997,75 @@
             }, 700);
         }
 
-        function mudarTabApp(tab) {
-            if (tabAppAtiva === tab) return;
+                // ========== FUNÇÃO COM EFEITO DE ÁGUA ==========
+        function triggerWaterEffect(targetElement, callback) {
+            if (!targetElement) return;
             
-            const currentContent = document.querySelector('.app-tab-content.active');
+            targetElement.classList.add('tab-water-splash');
+            const rect = targetElement.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
             
-            document.querySelectorAll('.app-tab').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.getAttribute('data-tab') === tab) {
-                    btn.classList.add('active');
+            // Criar gotículas de água
+            for (let i = 0; i < 45; i++) {
+                setTimeout(() => {
+                    const drop = document.createElement('div');
+                    drop.className = 'water-drop';
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.random() * 100;
+                    const x = centerX + Math.cos(angle) * distance - 20;
+                    const y = centerY + Math.sin(angle) * distance - 30;
+                    drop.style.left = x + 'px';
+                    drop.style.top = y + 'px';
+                    drop.style.setProperty('--dx', (Math.random() - 0.5) * 70 + 'px');
+                    drop.style.setProperty('--dy', (Math.random() - 0.5) * 50 + 'px');
+                    document.body.appendChild(drop);
+                    setTimeout(() => drop.remove(), 850);
+                }, i * 12);
+            }
+            
+            // Efeito de brilho/onda
+            const bg = document.getElementById('waterRippleBg');
+            if (bg) {
+                bg.style.setProperty('--x', centerX + 'px');
+                bg.style.setProperty('--y', centerY + 'px');
+                bg.style.opacity = '0.7';
+                setTimeout(() => bg.style.opacity = '0', 450);
+            }
+            
+            setTimeout(() => {
+                targetElement.classList.remove('tab-water-splash');
+                if (callback) callback();
+            }, 650);
+        }
+
+            function mudarTabApp(tab) {
+                if (tabAppAtiva === tab) return;
+                
+                const currentContent = document.querySelector('.app-tab-content.active');
+                
+                document.querySelectorAll('.app-tab').forEach(btn => {
+                    btn.classList.remove('active');
+                    if ((tab === 'inicio' && btn.textContent.includes('Início')) ||
+                        (tab === 'desafios' && btn.textContent.includes('Desafios')) ||
+                        (tab === 'perfil' && btn.textContent.includes('Perfil')) ||
+                        (tab === 'ranking' && btn.textContent.includes('Ranking')) ||
+                        (tab === 'eventos' && btn.textContent.includes('Eventos')) ||
+                        (tab === 'pontos' && btn.textContent.includes('Pontos'))) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                if (currentContent) {
+                    triggerWaterEffect(currentContent, () => {
+                        tabAppAtiva = tab;
+                        renderAppContent();
+                    });
+                } else {
+                    tabAppAtiva = tab;
+                    renderAppContent();
                 }
-            });
+            }
             
             if (currentContent) {
                 triggerWaterCleaningEffect(currentContent, () => {
