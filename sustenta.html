@@ -3106,7 +3106,7 @@
         }
 
         // Função para renderizar a aba Início
-        function renderInicio(container) {
+            function renderInicio(container) {
             const fundadores = [
                 { nome: "Pedro", cargo: "CEO & Fundador", icone: "🌱" },
                 { nome: "Pablo", cargo: "CTO & Fundador", icone: "💻" },
@@ -3127,38 +3127,40 @@
             });
             
             container.innerHTML = `
-                <h1 class="titulo-secao">🏠 Sobre o SustentaPira</h1>
-                
-                <div class="missao-card">
-                    <h2><i class="fas fa-bullseye"></i> Missão</h2>
-                    <p>Promover a sustentabilidade em Piracicaba através de um ecossistema digital que conecta cidadãos, empresas e poder público, incentivando práticas ambientais responsáveis e recompensando quem faz a diferença.</p>
-                </div>
-                
-                <div class="visao-card">
-                    <h2><i class="fas fa-eye"></i> Visão</h2>
-                    <p>Ser a principal plataforma de engajamento sustentável do Brasil, transformando Piracicaba em referência nacional em economia circular e consciência ambiental até 2030.</p>
-                </div>
-                
-                <div class="valores-card">
-                    <h2><i class="fas fa-heart"></i> Valores</h2>
-                    <div class="valores-lista">
-                        <div class="valor-item"><i class="fas fa-leaf"></i> Sustentabilidade</div>
-                        <div class="valor-item"><i class="fas fa-users"></i> Colaboração</div>
-                        <div class="valor-item"><i class="fas fa-lightbulb"></i> Inovação</div>
-                        <div class="valor-item"><i class="fas fa-hand-holding-heart"></i> Transparência</div>
-                        <div class="valor-item"><i class="fas fa-chart-line"></i> Impacto positivo</div>
-                        <div class="valor-item"><i class="fas fa-globe"></i> Responsabilidade socioambiental</div>
+                <div class="app-tab-content active">
+                    <h1 class="titulo-secao">🏠 Sobre o SustentaPira</h1>
+                    
+                    <div class="missao-card">
+                        <h2><i class="fas fa-bullseye"></i> Missão</h2>
+                        <p>Promover a sustentabilidade em Piracicaba através de um ecossistema digital que conecta cidadãos, empresas e poder público, incentivando práticas ambientais responsáveis e recompensando quem faz a diferença.</p>
                     </div>
-                </div>
-                
-                <h2 style="margin: 40px 0 20px; color: #8b4513;"><i class="fas fa-users"></i> Nossos Fundadores</h2>
-                <div class="fundadores-grid">
-                    ${fundadoresHtml}
-                </div>
-                
-                <div class="link-politica">
-                    <a href="#" onclick="abrirPoliticaPrivacidade(event)"><i class="fas fa-lock"></i> Política de Privacidade</a>
-                    <a href="#" onclick="abrirTermosDeUso(event)"><i class="fas fa-file-contract"></i> Termos de Uso</a>
+                    
+                    <div class="visao-card">
+                        <h2><i class="fas fa-eye"></i> Visão</h2>
+                        <p>Ser a principal plataforma de engajamento sustentável do Brasil, transformando Piracicaba em referência nacional em economia circular e consciência ambiental até 2030.</p>
+                    </div>
+                    
+                    <div class="valores-card">
+                        <h2><i class="fas fa-heart"></i> Valores</h2>
+                        <div class="valores-lista">
+                            <div class="valor-item"><i class="fas fa-leaf"></i> Sustentabilidade</div>
+                            <div class="valor-item"><i class="fas fa-users"></i> Colaboração</div>
+                            <div class="valor-item"><i class="fas fa-lightbulb"></i> Inovação</div>
+                            <div class="valor-item"><i class="fas fa-hand-holding-heart"></i> Transparência</div>
+                            <div class="valor-item"><i class="fas fa-chart-line"></i> Impacto positivo</div>
+                            <div class="valor-item"><i class="fas fa-globe"></i> Responsabilidade socioambiental</div>
+                        </div>
+                    </div>
+                    
+                    <h2 style="margin: 40px 0 20px; color: #8b4513;"><i class="fas fa-users"></i> Nossos Fundadores</h2>
+                    <div class="fundadores-grid">
+                        ${fundadoresHtml}
+                    </div>
+                    
+                    <div class="link-politica">
+                        <a href="#" onclick="abrirPoliticaPrivacidade(event)"><i class="fas fa-lock"></i> Política de Privacidade</a>
+                        <a href="#" onclick="abrirTermosDeUso(event)"><i class="fas fa-file-contract"></i> Termos de Uso</a>
+                    </div>
                 </div>
             `;
         }
@@ -3231,8 +3233,7 @@
         }
 
         function renderDesafios(container) {
-            let html = '<h1 class="titulo-secao">Desafios Ambientais</h1>';
-            html += '<div class="card-grid">';
+            let html = '<div class="app-tab-content active"><h1 class="titulo-secao">Desafios Ambientais</h1><div class="card-grid">';
             
             desafios.forEach(desafio => {
                 html += `
@@ -3251,7 +3252,7 @@
                 `;
             });
             
-            html += '</div>';
+            html += '</div></div>';
             container.innerHTML = html;
         }
 
@@ -3311,116 +3312,117 @@
                 `;
             });
             
-            container.innerHTML = `
-                <div class="perfil-container">
-                    <h1 class="titulo-secao">👤 Meu Perfil</h1>
-                    
-                    <div class="perfil-card-destaque">
-                        <div class="perfil-header-melhorado">
-                            <div class="perfil-avatar-melhorado">
-                                ${usuarioLogado.nome.charAt(0)}
+                        container.innerHTML = `
+                <div class="app-tab-content active">
+                    <div class="perfil-container">
+                        <h1 class="titulo-secao">👤 Meu Perfil</h1>
+                        
+                        <div class="perfil-card-destaque">
+                            <div class="perfil-header-melhorado">
+                                <div class="perfil-avatar-melhorado">
+                                    ${usuarioLogado.nome.charAt(0)}
+                                </div>
+                                <div class="perfil-info-melhorado">
+                                    <h3>${usuarioLogado.nome}</h3>
+                                    <div class="perfil-badge-container">
+                                        <span class="perfil-badge"><i class="fas fa-map-marker-alt"></i> ${usuarioLogado.cidade || 'Piracicaba'}</span>
+                                        <span class="perfil-badge"><i class="fas fa-calendar-alt"></i> Membro desde ${usuarioLogado.data_cadastro}</span>
+                                        <span class="perfil-badge"><i class="fas fa-envelope"></i> ${usuarioLogado.email}</span>
+                                        <span class="perfil-badge"><i class="fas fa-phone"></i> ${usuarioLogado.telefone || 'Não informado'}</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="perfil-info-melhorado">
-                                <h3>${usuarioLogado.nome}</h3>
-                                <div class="perfil-badge-container">
-                                    <span class="perfil-badge"><i class="fas fa-map-marker-alt"></i> ${usuarioLogado.cidade || 'Piracicaba'}</span>
-                                    <span class="perfil-badge"><i class="fas fa-calendar-alt"></i> Membro desde ${usuarioLogado.data_cadastro}</span>
-                                    <span class="perfil-badge"><i class="fas fa-envelope"></i> ${usuarioLogado.email}</span>
-                                    <span class="perfil-badge"><i class="fas fa-phone"></i> ${usuarioLogado.telefone || 'Não informado'}</span>
+                            
+                            <div class="perfil-info-grid">
+                                <div class="info-item">
+                                    <div class="info-icon"><i class="fas fa-trophy"></i></div>
+                                    <div class="info-text">
+                                        <strong>Ranking</strong>
+                                        <span>#4</span>
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-icon"><i class="fas fa-fire"></i></div>
+                                    <div class="info-text">
+                                        <strong>Streak</strong>
+                                        <span>${usuarioLogado.streak} dias</span>
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-icon"><i class="fas fa-check-circle"></i></div>
+                                    <div class="info-text">
+                                        <strong>Desafios</strong>
+                                        <span>${usuarioLogado.desafios}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="perfil-info-grid">
-                            <div class="info-item">
-                                <div class="info-icon"><i class="fas fa-trophy"></i></div>
-                                <div class="info-text">
-                                    <strong>Ranking</strong>
-                                    <span>#4</span>
+                        <div class="perfil-level-box-melhorado">
+                            <div class="level-header">
+                                <div class="level-title">
+                                    <i class="fas fa-chart-line"></i>
+                                    ${usuarioLogado.nivel}
+                                </div>
+                                <div class="level-points">
+                                    ${usuarioLogado.pontos} / 5000
                                 </div>
                             </div>
-                            <div class="info-item">
-                                <div class="info-icon"><i class="fas fa-fire"></i></div>
-                                <div class="info-text">
-                                    <strong>Streak</strong>
-                                    <span>${usuarioLogado.streak} dias</span>
+                            
+                            <div class="progress-container">
+                                <div class="progress-label">
+                                    <span>Progresso para próximo nível</span>
+                                    <span>${porcentagemProgresso.toFixed(1)}%</span>
+                                </div>
+                                <div class="progress-bar-melhorado">
+                                    <div class="progress-fill-melhorado" style="width: ${porcentagemProgresso}%;"></div>
                                 </div>
                             </div>
-                            <div class="info-item">
-                                <div class="info-icon"><i class="fas fa-check-circle"></i></div>
-                                <div class="info-text">
-                                    <strong>Desafios</strong>
-                                    <span>${usuarioLogado.desafios}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="perfil-level-box-melhorado">
-                        <div class="level-header">
-                            <div class="level-title">
-                                <i class="fas fa-chart-line"></i>
-                                ${usuarioLogado.nivel}
-                            </div>
-                            <div class="level-points">
-                                ${usuarioLogado.pontos} / 5000
+                            
+                            <div class="next-level-info">
+                                <span><i class="fas fa-arrow-up"></i> Faltam ${pontosProximoNivel} pontos</span>
+                                <span>Próximo nível: ${pontos < 5000 ? getProximoNivelNome(pontos) : 'Nível máximo'}</span>
                             </div>
                         </div>
                         
-                        <div class="progress-container">
-                            <div class="progress-label">
-                                <span>Progresso para próximo nível</span>
-                                <span>${porcentagemProgresso.toFixed(1)}%</span>
+                        <div class="stat-cards-grid">
+                            <div class="stat-card-melhorado">
+                                <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+                                <div class="stat-value">${inscricoesUsuario.length}</div>
+                                <div class="stat-label">Eventos</div>
                             </div>
-                            <div class="progress-bar-melhorado">
-                                <div class="progress-fill-melhorado" style="width: ${porcentagemProgresso}%;"></div>
+                            <div class="stat-card-melhorado">
+                                <div class="stat-icon"><i class="fas fa-leaf"></i></div>
+                                <div class="stat-value">${usuarioLogado.desafios || 0}</div>
+                                <div class="stat-label">Desafios</div>
+                            </div>
+                            <div class="stat-card-melhorado">
+                                <div class="stat-icon"><i class="fas fa-map-pin"></i></div>
+                                <div class="stat-value">${Math.floor(Math.random() * 10) + 5}</div>
+                                <div class="stat-label">Visitas</div>
                             </div>
                         </div>
                         
-                        <div class="next-level-info">
-                            <span><i class="fas fa-arrow-up"></i> Faltam ${pontosProximoNivel} pontos</span>
-                            <span>Próximo nível: ${pontos < 5000 ? getProximoNivelNome(pontos) : 'Nível máximo'}</span>
+                        <div class="conquistas-section">
+                            <div class="conquistas-title">
+                                <i class="fas fa-medal"></i>
+                                Conquistas
+                            </div>
+                            <div class="conquistas-grid-melhorado">
+                                ${conquistasHtml}
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="stat-cards-grid">
-                        <div class="stat-card-melhorado">
-                            <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
-                            <div class="stat-value">${inscricoesUsuario.length}</div>
-                            <div class="stat-label">Eventos</div>
+                        
+                        <div class="atividade-recente">
+                            <div class="conquistas-title" style="margin-bottom: 15px;">
+                                <i class="fas fa-history"></i>
+                                Atividade Recente
+                            </div>
+                            ${atividadesHtml}
                         </div>
-                        <div class="stat-card-melhorado">
-                            <div class="stat-icon"><i class="fas fa-leaf"></i></div>
-                            <div class="stat-value">${usuarioLogado.desafios || 0}</div>
-                            <div class="stat-label">Desafios</div>
-                        </div>
-                        <div class="stat-card-melhorado">
-                            <div class="stat-icon"><i class="fas fa-map-pin"></i></div>
-                            <div class="stat-value">${Math.floor(Math.random() * 10) + 5}</div>
-                            <div class="stat-label">Visitas</div>
-                        </div>
-                    </div>
-                    
-                    <div class="conquistas-section">
-                        <div class="conquistas-title">
-                            <i class="fas fa-medal"></i>
-                            Conquistas
-                        </div>
-                        <div class="conquistas-grid-melhorado">
-                            ${conquistasHtml}
-                        </div>
-                    </div>
-                    
-                    <div class="atividade-recente">
-                        <div class="conquistas-title" style="margin-bottom: 15px;">
-                            <i class="fas fa-history"></i>
-                            Atividade Recente
-                        </div>
-                        ${atividadesHtml}
                     </div>
                 </div>
             `;
-        }
 
         function getProximoNivelNome(pontos) {
             if (pontos < 100) return "EcoAmigo";
@@ -3590,7 +3592,7 @@
                 </div>
             `;
             
-            container.innerHTML = html;
+            container.innerHTML = `<div class="app-tab-content active">${html}</div>`;
         }
 
         function mostrarMensagemMotivacional(nome, pontos) {
@@ -3686,7 +3688,7 @@
                 });
             });
             
-            container.innerHTML = html;
+            container.innerHTML = `<div class="app-tab-content active">${html}</div>`;
         }
 
         function renderPontos(container) {
@@ -3761,7 +3763,7 @@
                 html += '</div>';
             });
             
-            container.innerHTML = html;
+            container.innerHTML = `<div class="app-tab-content active">${html}</div>`;
             
             // Inicializar o mapa após adicionar o conteúdo ao DOM
             setTimeout(() => {
