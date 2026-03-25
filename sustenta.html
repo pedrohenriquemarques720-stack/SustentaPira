@@ -3106,6 +3106,7 @@
         }
 
         // Função para renderizar a aba Início
+            // Função para renderizar a aba Início
             function renderInicio(container) {
             const fundadores = [
                 { nome: "Pedro", cargo: "CEO & Fundador", icone: "🌱" },
@@ -3312,7 +3313,7 @@
                 `;
             });
             
-                        container.innerHTML = `
+            container.innerHTML = `
                 <div class="app-tab-content active">
                     <div class="perfil-container">
                         <h1 class="titulo-secao">👤 Meu Perfil</h1>
@@ -3423,6 +3424,7 @@
                     </div>
                 </div>
             `;
+        }
 
         function getProximoNivelNome(pontos) {
             if (pontos < 100) return "EcoAmigo";
@@ -3962,6 +3964,10 @@
             alert(`✅ Comprovante validado! Você ganhou ${desafio.pontos} pontos.`);
             fecharModal('uploadModal');
             renderAppContent();
+        }
+
+        function fecharModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
         }
 
         function fecharModal(modalId) {
