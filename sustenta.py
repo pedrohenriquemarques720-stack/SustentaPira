@@ -68,6 +68,7 @@ def criar_usuario(nome, email, senha, telefone=""):
             return True
         else:
             print(f"❌ Erro ao criar usuário: {response.status_code}")
+            print(f"Resposta: {response.text}")
             return False
     except Exception as e:
         print(f"❌ Erro de conexão: {e}")
@@ -185,7 +186,11 @@ def listar_usuarios():
     print(f"{'NOME':<25} {'EMAIL':<30} {'PONTOS':<10} {'NÍVEL':<20}")
     print("-"*80)
     for u in usuarios:
-        print(f"{u.get('nome', 'N/A'):<25} {u.get('email', 'N/A'):<30} {u.get('pontos', '0'):<10} {u.get('nivel', 'N/A'):<20}")
+        nome = u.get('nome', 'N/A')[:24]
+        email = u.get('email', 'N/A')[:29]
+        pontos = u.get('pontos', '0')
+        nivel = u.get('nivel', 'N/A')[:19]
+        print(f"{nome:<25} {email:<30} {pontos:<10} {nivel:<20}")
     print("-"*80)
     print(f"Total: {len(usuarios)} usuários")
 
@@ -256,7 +261,10 @@ def ver_ranking():
     
     for i, u in enumerate(stats["ranking"], 1):
         medalha = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else f"{i}º"
-        print(f"{medalha:<5} {u.get('nome', 'N/A'):<25} {u.get('pontos', 0):<10} {u.get('nivel', 'N/A'):<20}")
+        nome = u.get('nome', 'N/A')[:24]
+        pontos = u.get('pontos', 0)
+        nivel = u.get('nivel', 'N/A')[:19]
+        print(f"{medalha:<5} {nome:<25} {pontos:<10} {nivel:<20}")
     
     print("="*60)
 
@@ -274,7 +282,8 @@ def ver_estatisticas():
     print(f"⭐ Total de pontos acumulados: {stats['total_pontos']}")
     print(f"📈 Média de pontos por usuário: {stats['media_pontos']}")
     print(f"✅ Total de desafios completados: {stats['total_desafios']}")
-    print(f"🏆 Média de desafios por usuário: {stats['total_desafios'] // stats['total_usuarios'] if stats['total_usuarios'] > 0 else 0}")
+    if stats['total_usuarios'] > 0:
+        print(f"🏆 Média de desafios por usuário: {stats['total_desafios'] // stats['total_usuarios']}")
     print("="*50)
 
 def adicionar_conquista_interativo():
