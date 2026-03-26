@@ -2697,26 +2697,283 @@
             container.innerHTML = html;
         }
 
-        function renderPerfil(container) {
+                function renderPerfil(container) {
             if (!usuarioLogado) {
-                container.innerHTML = '<div class="app-tab-content active"><div class="card-moderno"><p>Faça login para ver seu perfil</p></div></div>';
+                container.innerHTML = `
+                    <div class="app-tab-content active">
+                        <div style="text-align: center; padding: 60px 20px;">
+                            <div style="font-size: 80px; margin-bottom: 20px;">🔐</div>
+                            <h2 style="color: #8b4513; margin-bottom: 15px;">Acesse seu perfil</h2>
+                            <p style="color: #5d3a1a; margin-bottom: 25px;">Faça login para visualizar suas conquistas e acompanhar seu progresso</p>
+                            <button class="btn-auth" style="width: auto; padding: 12px 30px;" onclick="document.getElementById('tabLogin').click()">
+                                <i class="fas fa-sign-in-alt"></i> Fazer Login
+                            </button>
+                        </div>
+                    </div>
+                `;
                 return;
             }
+            
+            const pontos = parseInt(usuarioLogado.pontos) || 0;
+            
+            // Determinar nível baseado nos pontos
+            let nivelAtual = usuarioLogado.nivel;
+            let proximoNivel = "🏆 EcoHerói Supremo";
+            let pontosProximoNivel = 0;
+            
+            if (pontos < 100) { nivelAtual = "🌱 EcoIniciante"; proximoNivel = "🌿 EcoAprendiz"; pontosProximoNivel = 100 - pontos; }
+            else if (pontos < 500) { nivelAtual = "🌿 EcoAprendiz"; proximoNivel = "🍃 EcoGuardião"; pontosProximoNivel = 500 - pontos; }
+            else if (pontos < 1000) { nivelAtual = "🍃 EcoGuardião"; proximoNivel = "🌳 EcoMestre"; pontosProximoNivel = 1000 - pontos; }
+            else if (pontos < 5000) { nivelAtual = "🌳 EcoMestre"; proximoNivel = "🏆 EcoHerói"; pontosProximoNivel = 5000 - pontos; }
+            else { nivelAtual = "🏆 EcoHerói Supremo"; proximoNivel = "🏆 Lenda Ambiental"; pontosProximoNivel = 0; }
+            
+            const porcentagemProgresso = Math.min(100, (pontos / 5000) * 100);
+            const conquistasArray = usuarioLogado.conquistas ? usuarioLogado.conquistas.split(',') : ['Primeiro Passo'];
+            
+            // Lista completa de conquistas
+            const todasConquistas = [
+                { nome: "Primeiro Passo", icone: "🌱", descricao: "Complete seu primeiro desafio", pontos: 50, condicao: true },
+                { nome: "Reciclador", icone: "♻️", descricao: "Recicle 10kg de materiais", pontos: 100, condicao: pontos >= 500 },
+                { nome: "Plantador", icone: "🌳", descricao: "Plante 5 árvores", pontos: 150, condicao: pontos >= 800 },
+                { nome: "Eventos", icone: "📅", descricao: "Participe de 3 eventos", pontos: 120, condicao: inscricoesUsuario.length >= 3 },
+                { nome: "Streak 30", icone: "🔥", descricao: "30 dias consecutivos", pontos: 200, condicao: (usuarioLogado.streak || 0) >= 30 },
+                { nome: "EcoMestre", icone: "🏅", descricao: "Alcance 1000 pontos", pontos: 300, condicao: pontos >= 1000 },
+                { nome: "EcoHerói", icone: "🏆", descricao: "Alcance 5000 pontos", pontos: 500, condicao: pontos >= 5000 },
+                { nome: "Amigo da Natureza", icone: "🦋", descricao: "Convide 5 amigos", pontos: 150, condicao: false },
+                { nome: "Mobilidade Verde", icone: "🚲", descricao: "Use bike 10 vezes", pontos: 180, condicao: pontos >= 400 },
+                { nome: "Guardião das Águas", icone: "💧", descricao: "Economize 1000L de água", pontos: 200, condicao: pontos >= 700 },
+                { nome: "Lenda Ambiental", icone: "👑", descricao: "Top 3 do ranking", pontos: 400, condicao: false }
+            ];
+            
+            // Gerar conquistas
+            let conquistasHtml = '';
+            todasConquistas.forEach((c, idx) => {
+                const desbloqueada = c.condicao || conquistasArray.includes(c.nome);
+                conquistasHtml += `
+                    <div class="conquista-card ${!desbloqueada ? 'locked' : ''}" style="animation-delay: ${idx * 0.05}s" onclick="mostrarDetalheConquista('${c.nome}', '${c.descricao}', ${c.pontos}, ${desbloqueada})">
+                        <div class="conquista-icon" style="${desbloqueada ? 'background: linear-gradient(135deg, #8b4513, #b85e3a); color: white;' : ''}">${c.icone}</div>
+                        <div class="conquista-name">${c.nome}</div>
+                        <div class="conquista-desc">${c.descricao}</div>
+                        ${desbloqueada ? '<span class="badge-tag" style="background: #8b4513;">✓ Desbloqueada</span>' : '<span class="badge-tag" style="background: #999;">🔒 ' + c.pontos + ' pts</span>'}
+                    </div>
+                `;
+            });
+            
+            // Atividades recentes
+            const atividadesRecentes = [
+                { nome: "Reciclar 10kg de materiais", pontos: 200, data: "Hoje", icone: "♻️" },
+                { nome: "Mutirão de Limpeza do Rio", pontos: 150, data: "Ontem", icone: "🧹" },
+                { nome: "Plantar 1 árvore nativa", pontos: 300, data: "3 dias atrás", icone: "🌳" },
+                { nome: "Oficina de Compostagem", pontos: 120, data: "Semana passada", icone: "🌱" },
+                { nome: "Descarte de pilhas", pontos: 150, data: "2 semanas atrás", icone: "🔋" }
+            ];
+            
+            let atividadesHtml = '';
+            atividadesRecentes.forEach((atividade, idx) => {
+                atividadesHtml += `
+                    <div class="atividade-item" style="animation-delay: ${idx * 0.05}s">
+                        <div class="atividade-icon" style="background: linear-gradient(135deg, #f0e9e0, #e8ddcf);">
+                            <span style="font-size: 20px;">${atividade.icone}</span>
+                        </div>
+                        <div class="atividade-details">
+                            <div class="atividade-titulo">${atividade.nome}</div>
+                            <div class="atividade-data"><i class="far fa-clock"></i> ${atividade.data}</div>
+                        </div>
+                        <div class="atividade-pontos">+${atividade.pontos}</div>
+                    </div>
+                `;
+            });
+            
+            // Estatísticas
+            const totalEventos = inscricoesUsuario.length;
+            const totalDesafios = parseInt(usuarioLogado.desafios) || 0;
+            const totalVisitas = Math.floor(Math.random() * 20) + 8;
+            const rankingPosicao = ranking.findIndex(u => u.nome === usuarioLogado.nome) + 1;
+            const rankingNome = rankingPosicao > 0 ? `${rankingPosicao}º lugar` : '--';
+            
+            // Adicionar estilos de animação
+            const perfilStyles = document.createElement('style');
+            perfilStyles.textContent = `
+                @keyframes slideInLeft {
+                    from { opacity: 0; transform: translateX(-30px); }
+                    to { opacity: 1; transform: translateX(0); }
+                }
+                @keyframes slideInRight {
+                    from { opacity: 0; transform: translateX(30px); }
+                    to { opacity: 1; transform: translateX(0); }
+                }
+                @keyframes fadeInUp {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .perfil-card-destaque { animation: slideInLeft 0.5s ease-out; }
+                .perfil-level-box-melhorado { animation: fadeInUp 0.5s ease-out; }
+                .stat-card-melhorado { animation: fadeInUp 0.5s ease-out; animation-fill-mode: both; }
+                .stat-card-melhorado:nth-child(1) { animation-delay: 0.1s; }
+                .stat-card-melhorado:nth-child(2) { animation-delay: 0.2s; }
+                .stat-card-melhorado:nth-child(3) { animation-delay: 0.3s; }
+                .conquista-card { animation: fadeInUp 0.4s ease-out forwards; opacity: 0; animation-fill-mode: forwards; }
+                .atividade-item { animation: slideInRight 0.4s ease-out forwards; opacity: 0; animation-fill-mode: forwards; }
+                .stat-card-melhorado { cursor: pointer; transition: all 0.3s ease; }
+                .stat-card-melhorado:hover { transform: translateY(-8px) scale(1.02); background: linear-gradient(145deg, #fff, #faf0e8); }
+                .perfil-avatar-melhorado { transition: all 0.3s ease; cursor: pointer; }
+                .perfil-avatar-melhorado:hover { transform: scale(1.1) rotate(5deg); }
+                .perfil-badge { transition: all 0.3s ease; }
+                .perfil-badge:hover { transform: translateY(-2px); background: rgba(139, 69, 19, 0.2); }
+            `;
+            document.head.appendChild(perfilStyles);
+            
             container.innerHTML = `
                 <div class="app-tab-content active">
-                    <h1 class="titulo-secao">👤 Meu Perfil</h1>
-                    <div class="card-moderno" style="text-align:center">
-                        <div class="perfil-avatar-melhorado" style="margin:0 auto 20px">${usuarioLogado.nome.charAt(0)}</div>
-                        <h3>${usuarioLogado.nome}</h3>
-                        <p><strong>Nível:</strong> ${usuarioLogado.nivel}</p>
-                        <p><strong>Pontos:</strong> ${usuarioLogado.pontos}</p>
-                        <p><strong>Streak:</strong> ${usuarioLogado.streak} dias</p>
-                        <p><strong>E-mail:</strong> ${usuarioLogado.email}</p>
+                    <div class="perfil-container">
+                        <!-- Cabeçalho do Perfil -->
+                        <div class="perfil-card-destaque">
+                            <div class="perfil-header-melhorado">
+                                <div class="perfil-avatar-melhorado" onclick="mostrarMensagemMotivacional()" style="cursor: pointer;">
+                                    ${usuarioLogado.nome.charAt(0).toUpperCase()}
+                                </div>
+                                <div class="perfil-info-melhorado">
+                                    <h3 style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                        ${usuarioLogado.nome}
+                                        <span class="user-level-tag" style="background: linear-gradient(135deg, #8b4513, #b85e3a); color: white;">${nivelAtual}</span>
+                                    </h3>
+                                    <div class="perfil-badge-container">
+                                        <span class="perfil-badge"><i class="fas fa-map-marker-alt"></i> ${usuarioLogado.cidade || 'Piracicaba, SP'}</span>
+                                        <span class="perfil-badge"><i class="fas fa-calendar-alt"></i> Membro desde ${usuarioLogado.data_cadastro || 'Março 2026'}</span>
+                                        <span class="perfil-badge"><i class="fas fa-envelope"></i> ${usuarioLogado.email}</span>
+                                        <span class="perfil-badge"><i class="fas fa-phone"></i> ${usuarioLogado.telefone || '(19) 9****-****'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="perfil-info-grid">
+                                <div class="info-item">
+                                    <div class="info-icon"><i class="fas fa-trophy"></i></div>
+                                    <div class="info-text">
+                                        <strong>Ranking</strong>
+                                        <span>${rankingNome}</span>
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-icon"><i class="fas fa-fire"></i></div>
+                                    <div class="info-text">
+                                        <strong>Streak</strong>
+                                        <span>${usuarioLogado.streak || 0} dias</span>
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-icon"><i class="fas fa-check-circle"></i></div>
+                                    <div class="info-text">
+                                        <strong>Desafios</strong>
+                                        <span>${totalDesafios} completos</span>
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-icon"><i class="fas fa-star"></i></div>
+                                    <div class="info-text">
+                                        <strong>Pontuação Total</strong>
+                                        <span>${pontos.toLocaleString()} pts</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Progresso de Nível -->
+                        <div class="perfil-level-box-melhorado">
+                            <div class="level-header">
+                                <div class="level-title">
+                                    <i class="fas fa-chart-line"></i>
+                                    ${nivelAtual}
+                                </div>
+                                <div class="level-points">
+                                    ${pontos.toLocaleString()} / 5000
+                                </div>
+                            </div>
+                            
+                            <div class="progress-container">
+                                <div class="progress-label">
+                                    <span><i class="fas fa-arrow-up"></i> Progresso para ${proximoNivel}</span>
+                                    <span>${porcentagemProgresso.toFixed(1)}%</span>
+                                </div>
+                                <div class="progress-bar-melhorado">
+                                    <div class="progress-fill-melhorado" style="width: ${porcentagemProgresso}%;"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="next-level-info">
+                                <span><i class="fas fa-gem"></i> Faltam ${pontosProximoNivel} pontos</span>
+                                <span><i class="fas fa-crown"></i> Próximo nível: ${proximoNivel}</span>
+                                <span><i class="fas fa-calendar-week"></i> ${Math.ceil(pontosProximoNivel / 50)} dias estimados</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Cards de Estatísticas -->
+                        <div class="stat-cards-grid">
+                            <div class="stat-card-melhorado" onclick="mudarTabApp('eventos')">
+                                <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+                                <div class="stat-value">${totalEventos}</div>
+                                <div class="stat-label">Eventos</div>
+                                <div style="font-size: 11px; color: #8b4513; margin-top: 8px;">clique para ver mais</div>
+                            </div>
+                            <div class="stat-card-melhorado" onclick="mudarTabApp('desafios')">
+                                <div class="stat-icon"><i class="fas fa-leaf"></i></div>
+                                <div class="stat-value">${totalDesafios}</div>
+                                <div class="stat-label">Desafios</div>
+                                <div style="font-size: 11px; color: #8b4513; margin-top: 8px;">clique para ver mais</div>
+                            </div>
+                            <div class="stat-card-melhorado" onclick="mudarTabApp('pontos')">
+                                <div class="stat-icon"><i class="fas fa-map-pin"></i></div>
+                                <div class="stat-value">${totalVisitas}</div>
+                                <div class="stat-label">Pontos Visitados</div>
+                                <div style="font-size: 11px; color: #8b4513; margin-top: 8px;">clique para ver mais</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Conquistas -->
+                        <div class="conquistas-section">
+                            <div class="conquistas-title">
+                                <i class="fas fa-medal"></i>
+                                <span>Minhas Conquistas</span>
+                                <span style="font-size: 14px; font-weight: normal; color: #8b4513;">${conquistasArray.length} / ${todasConquistas.length} desbloqueadas</span>
+                            </div>
+                            <div class="conquistas-grid-melhorado" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px;">
+                                ${conquistasHtml}
+                            </div>
+                        </div>
+                        
+                        <!-- Atividades Recentes -->
+                        <div class="atividade-recente">
+                            <div class="conquistas-title" style="margin-bottom: 20px;">
+                                <i class="fas fa-history"></i>
+                                <span>Atividades Recentes</span>
+                            </div>
+                            ${atividadesHtml}
+                            <div style="text-align: center; margin-top: 15px;">
+                                <button class="btn-auth" style="background: transparent; color: #8b4513; border: 1px solid #8b4513; width: auto; padding: 8px 20px;" onclick="mostrarMensagemMotivacional()">
+                                    <i class="fas fa-chart-line"></i> Ver histórico completo
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Dica do Dia -->
+                        <div style="margin-top: 30px; background: linear-gradient(135deg, #f9f5f0, #f0e9e0); border-radius: 20px; padding: 20px; text-align: center; border: 1px solid #8b5a2b;">
+                            <div style="font-size: 32px; margin-bottom: 10px;">💡</div>
+                            <h4 style="color: #8b4513; margin-bottom: 8px;">Dica Sustentável do Dia</h4>
+                            <p style="color: #5d3a1a;">"Economize água fechando a torneira enquanto escova os dentes. Você pode economizar até 12 litros por minuto!"</p>
+                            <div style="margin-top: 10px; font-size: 12px; color: #8b4513;">✓ +5 pontos ao completar esta dica</div>
+                        </div>
                     </div>
                 </div>
             `;
         }
-
+        
+        // Função auxiliar para mostrar detalhes da conquista
+        function mostrarDetalheConquista(nome, descricao, pontos, desbloqueada) {
+            const mensagem = desbloqueada ? 
+                `🏆 ${nome}\n\n${descricao}\n\n✓ Já conquistada! +${pontos} pontos` : 
+                `🔒 ${nome}\n\n${descricao}\n\n🎯 Continue progredindo para desbloquear esta conquista!\n📈 Vale ${pontos} pontos ao desbloquear!`;
+            alert(mensagem);
+        }
         function renderRanking(container) {
             let html = '<div class="app-tab-content active"><h1 class="titulo-secao">🏆 Ranking</h1>';
             ranking.forEach((u, i) => {
