@@ -2507,10 +2507,58 @@
         ];
 
         // ========== PONTOS DE COLETA ==========
-        const pontosColeta = [
-            { id: 1, nome: "Ecoponto Centro", endereco: "Av. Rui Barbosa, 800 - Centro", categoria: "geral", horario: "Seg-Sex 8h-17h", telefone: "(19) 3403-1100", avaliacao: 4.5, icone: "🗑️", tipo: "Ecoponto", lat: -22.7245, lng: -47.6472 },
+                const pontosColeta = [
+            // ========== ECOPONTOS (8) ==========
+            { id: 1, nome: "Ecoponto Centro", endereco: "Av. Rui Barbosa, 800 - Centro", categoria: "geral", horario: "Seg-Sex 8h-17h, Sáb 8h-12h", telefone: "(19) 3403-1100", avaliacao: 4.5, icone: "🗑️", tipo: "Ecoponto", lat: -22.7245, lng: -47.6472 },
             { id: 2, nome: "Ecoponto Paulicéia", endereco: "R. Javari, 150 - Paulicéia", categoria: "geral", horario: "Ter-Sáb 8h-16h", telefone: "(19) 3403-2200", avaliacao: 4.3, icone: "🗑️", tipo: "Ecoponto", lat: -22.7182, lng: -47.6528 },
-            { id: 3, nome: "Shopping Piracicaba", endereco: "Av. Limeira, 700 - Areão", categoria: "pilhas", horario: "Seg-Sáb 10h-22h", telefone: "(19) 3432-4545", avaliacao: 4.8, icone: "🔋", tipo: "Pilhas", lat: -22.7176, lng: -47.6345 },
+            { id: 3, nome: "Ecoponto Santa Terezinha", endereco: "Av. Dr. Paulo de Moraes, 1500", categoria: "geral", horario: "Seg-Sáb 8h-17h", telefone: "(19) 3403-2300", avaliacao: 4.4, icone: "🗑️", tipo: "Ecoponto", lat: -22.7341, lng: -47.6395 },
+            { id: 4, nome: "Ecoponto Vila Sônia", endereco: "R. Benedito Tolosa, 500 - Vila Sônia", categoria: "geral", horario: "Seg-Sáb 8h-17h", telefone: "(19) 3403-2400", avaliacao: 4.2, icone: "🗑️", tipo: "Ecoponto", lat: -22.7423, lng: -47.6418 },
+            { id: 5, nome: "Ecoponto Nova Piracicaba", endereco: "Av. Cruzeiro do Sul, 2000", categoria: "geral", horario: "Seg-Sáb 8h-17h", telefone: "(19) 3403-2500", avaliacao: 4.6, icone: "🗑️", tipo: "Ecoponto", lat: -22.7289, lng: -47.6581 },
+            { id: 6, nome: "Ecoponto Vila Rezende", endereco: "R. dos Operários, 500 - Vila Rezende", categoria: "geral", horario: "Seg-Sáb 8h-16h", telefone: "(19) 3403-2600", avaliacao: 4.3, icone: "🗑️", tipo: "Ecoponto", lat: -22.7154, lng: -47.6485 },
+            { id: 7, nome: "Ecoponto Ártemis", endereco: "Av. 1º de Agosto, 1000 - Ártemis", categoria: "geral", horario: "Seg-Sáb 8h-16h", telefone: "(19) 3403-2700", avaliacao: 4.2, icone: "🗑️", tipo: "Ecoponto", lat: -22.7567, lng: -47.6423 },
+            { id: 8, nome: "Ecoponto Tupi", endereco: "R. Tiradentes, 300 - Tupi", categoria: "geral", horario: "Seg-Sáb 8h-16h", telefone: "(19) 3403-2800", avaliacao: 4.1, icone: "🗑️", tipo: "Ecoponto", lat: -22.7089, lng: -47.6574 },
+
+            // ========== PILHAS E BATERIAS (8) ==========
+            { id: 9, nome: "Shopping Piracicaba", endereco: "Av. Limeira, 700 - Areão", categoria: "pilhas", horario: "Seg-Sáb 10h-22h, Dom 14h-20h", telefone: "(19) 3432-4545", avaliacao: 4.8, icone: "🔋", tipo: "Pilhas", lat: -22.7176, lng: -47.6345 },
+            { id: 10, nome: "Unimed Sede", endereco: "R. Voluntários, 450 - Centro", categoria: "pilhas", horario: "Seg-Sex 7h-19h", telefone: "(19) 3432-9000", avaliacao: 4.6, icone: "🔋", tipo: "Pilhas", lat: -22.7278, lng: -47.6492 },
+            { id: 11, nome: "Santa Casa", endereco: "Av. Independência, 950 - Centro", categoria: "pilhas", horario: "Seg-Sex 8h-18h", telefone: "(19) 3412-2000", avaliacao: 4.4, icone: "🔋", tipo: "Pilhas", lat: -22.7224, lng: -47.6421 },
+            { id: 12, nome: "Prefeitura Municipal", endereco: "R. Antônio Corrêa Barbosa, 2233", categoria: "pilhas", horario: "Seg-Sex 8h-17h", telefone: "(19) 3403-1000", avaliacao: 4.5, icone: "🔋", tipo: "Pilhas", lat: -22.7302, lng: -47.6458 },
+            { id: 13, nome: "Câmara Municipal", endereco: "R. do Rosário, 833 - Centro", categoria: "pilhas", horario: "Seg-Sex 8h-17h", telefone: "(19) 3403-1500", avaliacao: 4.4, icone: "🔋", tipo: "Pilhas", lat: -22.7267, lng: -47.6483 },
+            { id: 14, nome: "Terminal Central", endereco: "Av. Dr. Paulo de Moraes, 200", categoria: "pilhas", horario: "Seg-Dom 5h-23h", telefone: "(19) 3403-3000", avaliacao: 4.3, icone: "🔋", tipo: "Pilhas", lat: -22.7348, lng: -47.6391 },
+            { id: 15, nome: "Estação da Paulista", endereco: "Av. Rio Claro, 500 - Paulista", categoria: "pilhas", horario: "Seg-Dom 5h-23h", telefone: "(19) 3403-3100", avaliacao: 4.2, icone: "🔋", tipo: "Pilhas", lat: -22.7195, lng: -47.6543 },
+            { id: 16, nome: "Farmácias Pague Menos", endereco: "Av. Independência, 1000", categoria: "pilhas", horario: "Seg-Dom 8h-22h", telefone: "(19) 3412-9000", avaliacao: 4.6, icone: "🔋", tipo: "Pilhas", lat: -22.7241, lng: -47.6419 },
+
+            // ========== ELETRÔNICOS (6) ==========
+            { id: 17, nome: "CDI Eletrônicos", endereco: "R. do Porto, 234 - Centro", categoria: "eletronicos", horario: "Seg-Sex 9h-18h", telefone: "(19) 3433-5678", avaliacao: 4.7, icone: "💻", tipo: "Eletrônicos", lat: -22.7232, lng: -47.6501 },
+            { id: 18, nome: "ESALQ/USP", endereco: "Av. Pádua Dias, 11", categoria: "eletronicos", horario: "Seg-Sex 8h-17h", telefone: "(19) 3447-8500", avaliacao: 4.9, icone: "💻", tipo: "Eletrônicos", lat: -22.7082, lng: -47.6445 },
+            { id: 19, nome: "UNIMEP", endereco: "R. do Rosário, 1301", categoria: "eletronicos", horario: "Seg-Sex 8h-22h", telefone: "(19) 3421-3000", avaliacao: 4.7, icone: "💻", tipo: "Eletrônicos", lat: -22.7295, lng: -47.6532 },
+            { id: 20, nome: "FUMEP", endereco: "Av. Monsenhor Martinho Salgot, 560", categoria: "eletronicos", horario: "Seg-Sex 8h-17h", telefone: "(19) 3412-4000", avaliacao: 4.4, icone: "💻", tipo: "Eletrônicos", lat: -22.7364, lng: -47.6387 },
+            { id: 21, nome: "Senai", endereco: "Av. Luiz Ralph Benatti, 500", categoria: "eletronicos", horario: "Seg-Sex 8h-17h", telefone: "(19) 3412-5000", avaliacao: 4.6, icone: "💻", tipo: "Eletrônicos", lat: -22.7248, lng: -47.6289 },
+            { id: 22, nome: "Sesc", endereco: "R. Ipiranga, 155 - Centro", categoria: "eletronicos", horario: "Seg-Sex 9h-21h", telefone: "(19) 3437-9292", avaliacao: 4.8, icone: "💻", tipo: "Eletrônicos", lat: -22.7251, lng: -47.6465 },
+
+            // ========== ÓLEO DE COZINHA (5) ==========
+            { id: 23, nome: "Oleobom", endereco: "R. São João, 678 - Centro", categoria: "oleo", horario: "Seg-Sex 9h-18h", telefone: "(19) 3421-5678", avaliacao: 4.6, icone: "🫒", tipo: "Óleo", lat: -22.7281, lng: -47.6478 },
+            { id: 24, nome: "Supermercados Pague Menos", endereco: "Av. Limeira, 1200", categoria: "oleo", horario: "Seg-Dom 8h-22h", telefone: "(19) 3434-2000", avaliacao: 4.5, icone: "🫒", tipo: "Óleo", lat: -22.7152, lng: -47.6327 },
+            { id: 25, nome: "Supermercados Savegnago", endereco: "Av. Cruzeiro do Sul, 800", categoria: "oleo", horario: "Seg-Dom 8h-22h", telefone: "(19) 3433-3000", avaliacao: 4.7, icone: "🫒", tipo: "Óleo", lat: -22.7274, lng: -47.6589 },
+            { id: 26, nome: "Atacadão", endereco: "Av. Limeira, 2000", categoria: "oleo", horario: "Seg-Dom 8h-22h", telefone: "(19) 3434-5000", avaliacao: 4.4, icone: "🫒", tipo: "Óleo", lat: -22.7118, lng: -47.6274 },
+            { id: 27, nome: "Feira Noturna", endereco: "Praça José Bonifácio", categoria: "oleo", horario: "Qui 17h-22h", telefone: "(19) 3403-1100", avaliacao: 4.2, icone: "🫒", tipo: "Óleo", lat: -22.7262, lng: -47.6471 },
+
+            // ========== VIDROS (3) ==========
+            { id: 28, nome: "Coopervidros", endereco: "R. Treze de Maio, 300", categoria: "vidros", horario: "Seg-Sex 8h-17h", telefone: "(19) 3421-1234", avaliacao: 4.2, icone: "🥃", tipo: "Vidros", lat: -22.7325, lng: -47.6428 },
+            { id: 29, nome: "Recicla Vidros", endereco: "Av. Rio Claro, 450", categoria: "vidros", horario: "Seg-Sex 8h-16h", telefone: "(19) 3434-5678", avaliacao: 4.3, icone: "🥃", tipo: "Vidros", lat: -22.7189, lng: -47.6549 },
+            { id: 30, nome: "Vidrocenter", endereco: "R. do Vergueiro, 600", categoria: "vidros", horario: "Seg-Sex 8h-18h", telefone: "(19) 3422-3344", avaliacao: 4.4, icone: "🥃", tipo: "Vidros", lat: -22.7301, lng: -47.6512 },
+
+            // ========== PAPEL E PAPELÃO (4) ==========
+            { id: 31, nome: "Cooperativa Recicla", endereco: "R. dos Operários, 200", categoria: "papel", horario: "Seg-Sex 8h-16h", telefone: "(19) 3422-3344", avaliacao: 4.4, icone: "📄", tipo: "Papel", lat: -22.7159, lng: -47.6498 },
+            { id: 32, nome: "Papelão Recicla", endereco: "Av. Independência, 1800", categoria: "papel", horario: "Seg-Sex 8h-17h", telefone: "(19) 3433-4455", avaliacao: 4.2, icone: "📄", tipo: "Papel", lat: -22.7201, lng: -47.6392 },
+            { id: 33, nome: "Recicla Papel", endereco: "R. do Porto, 567", categoria: "papel", horario: "Seg-Sex 8h-16h", telefone: "(19) 3423-4567", avaliacao: 4.3, icone: "📄", tipo: "Papel", lat: -22.7247, lng: -47.6514 },
+            { id: 34, nome: "Gráficas Unidas", endereco: "Av. Rio Claro, 300", categoria: "papel", horario: "Seg-Sex 8h-18h", telefone: "(19) 3423-4567", avaliacao: 4.3, icone: "📄", tipo: "Papel", lat: -22.7182, lng: -47.6545 },
+
+            // ========== ROUPAS (4) ==========
+            { id: 35, nome: "Brechó Solidário", endereco: "R. Governador, 400", categoria: "roupas", horario: "Seg-Sex 9h-17h", telefone: "(19) 3421-4321", avaliacao: 4.5, icone: "👕", tipo: "Roupas", lat: -22.7292, lng: -47.6487 },
+            { id: 36, nome: "Casa da Fraternidade", endereco: "R. do Vergueiro, 200", categoria: "roupas", horario: "Seg-Sex 8h-16h", telefone: "(19) 3422-1234", avaliacao: 4.7, icone: "👕", tipo: "Roupas", lat: -22.7311, lng: -47.6505 },
+            { id: 37, nome: "Sesc", endereco: "R. Ipiranga, 155", categoria: "roupas", horario: "Seg-Sex 9h-21h", telefone: "(19) 3437-9292", avaliacao: 4.6, icone: "👕", tipo: "Roupas", lat: -22.7251, lng: -47.6465 },
+            { id: 38, nome: "Senac", endereco: "R. Santa Cruz, 1145", categoria: "roupas", horario: "Seg-Sex 8h-17h", telefone: "(19) 3412-3000", avaliacao: 4.5, icone: "👕", tipo: "Roupas", lat: -22.7274, lng: -47.6443 }
         ];
 
         // ========== RANKING ==========
