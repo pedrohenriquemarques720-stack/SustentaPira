@@ -3551,52 +3551,219 @@
             return "Nível Máximo";
         }
 
-        function renderRanking(container) {
-            let html = '<h1 class="titulo-secao">🏆 Ranking EcoCidadãos</h1>';
+                function renderRanking(container) {
+            // Animações adicionais para o ranking
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes rankingGlow {
+                    0% { box-shadow: 0 0 5px rgba(139, 69, 19, 0.3); }
+                    50% { box-shadow: 0 0 25px rgba(139, 69, 19, 0.6); }
+                    100% { box-shadow: 0 0 5px rgba(139, 69, 19, 0.3); }
+                }
+                
+                @keyframes slideUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(30px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                
+                @keyframes medalSpin {
+                    0% { transform: rotate(0deg) scale(1); }
+                    50% { transform: rotate(360deg) scale(1.2); }
+                    100% { transform: rotate(720deg) scale(1); }
+                }
+                
+                .ranking-stat-card {
+                    transition: all 0.3s ease;
+                    cursor: pointer;
+                }
+                
+                .ranking-stat-card:hover {
+                    transform: translateY(-8px) scale(1.02);
+                    background: linear-gradient(145deg, #fff, #f8f0e8);
+                }
+                
+                .ranking-stat-card .stat-icon {
+                    font-size: 32px;
+                    margin-bottom: 10px;
+                    display: inline-block;
+                }
+                
+                .podium-spot {
+                    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                }
+                
+                .podium-spot:hover {
+                    transform: translateY(-20px) scale(1.05);
+                }
+                
+                .podium-spot.first:hover .podium-avatar-giant {
+                    animation: medalSpin 0.6s ease-out;
+                }
+                
+                .ranking-item-premium {
+                    animation: slideUp 0.4s ease-out forwards;
+                    animation-delay: calc(var(--delay, 0) * 0.05s);
+                    opacity: 0;
+                    animation-fill-mode: forwards;
+                }
+                
+                .rank-badge {
+                    display: inline-block;
+                    width: 40px;
+                    height: 40px;
+                    line-height: 40px;
+                    text-align: center;
+                    border-radius: 50%;
+                    font-weight: 800;
+                    font-size: 18px;
+                    background: linear-gradient(135deg, #f5f5f5, #e8e0d8);
+                    color: #8b4513;
+                    transition: all 0.3s ease;
+                }
+                
+                .ranking-item-premium:hover .rank-badge {
+                    transform: scale(1.1);
+                    background: linear-gradient(135deg, #8b4513, #b85e3a);
+                    color: white;
+                }
+                
+                .trend-up {
+                    color: #4caf50;
+                    animation: pulse 1s infinite;
+                }
+                
+                .trend-down {
+                    color: #f44336;
+                }
+                
+                .user-level-tag {
+                    display: inline-block;
+                    padding: 4px 12px;
+                    border-radius: 20px;
+                    font-size: 11px;
+                    font-weight: 600;
+                    background: rgba(139, 69, 19, 0.1);
+                    color: #8b4513;
+                }
+                
+                .ranking-progress-bar {
+                    position: relative;
+                    overflow: visible;
+                }
+                
+                .ranking-progress-fill {
+                    position: relative;
+                    transition: width 1s ease-out;
+                }
+                
+                .ranking-progress-fill::after {
+                    content: '';
+                    position: absolute;
+                    right: 0;
+                    top: -3px;
+                    width: 8px;
+                    height: 12px;
+                    background: #8b4513;
+                    border-radius: 2px;
+                }
+                
+                .motivation-premium {
+                    transition: all 0.3s ease;
+                }
+                
+                .motivation-premium:hover {
+                    transform: scale(1.02);
+                    box-shadow: 0 15px 40px rgba(139, 69, 19, 0.2);
+                }
+                
+                .achievement-card {
+                    transition: all 0.3s ease;
+                }
+                
+                .achievement-card:hover .achievement-icon {
+                    animation: pulse 0.5s ease;
+                }
+                
+                .podium-stats-giant span {
+                    transition: all 0.3s ease;
+                }
+                
+                .podium-spot:hover .podium-stats-giant span {
+                    transform: translateY(-2px);
+                }
+            `;
+            document.head.appendChild(style);
             
-            // Estatísticas do ranking
+            let html = '<div class="app-tab-content active"><div class="ranking-container">';
+            
+            // Título decorado
+            html += `
+                <div style="text-align: center; margin-bottom: 40px;">
+                    <h1 class="titulo-secao" style="display: inline-block; text-align: center;">🏆 Ranking EcoCidadãos</h1>
+                    <p style="color: #8b4513; margin-top: 10px;">✨ Conheça os heróis da sustentabilidade em Piracicaba ✨</p>
+                </div>
+            `;
+            
+            // Estatísticas do ranking com ícones
             const totalUsuarios = ranking.length;
             const totalPontosRanking = ranking.reduce((acc, user) => acc + user.pontos, 0);
             const mediaPontos = Math.round(totalPontosRanking / totalUsuarios);
             
             html += `
-                <div class="ranking-stats-bar">
-                    <div class="ranking-stat-card">
+                <div class="ranking-stats-bar" style="margin-bottom: 50px;">
+                    <div class="ranking-stat-card" onclick="mostrarMensagemMotivacional()">
+                        <div class="stat-icon">👥</div>
                         <div class="ranking-stat-value">${totalUsuarios}</div>
-                        <div class="ranking-stat-label">Participantes</div>
-                        <div class="ranking-stat-trend"><i class="fas fa-arrow-up"></i> +12 esta semana</div>
+                        <div class="ranking-stat-label">Participantes Ativos</div>
+                        <div class="ranking-stat-trend"><i class="fas fa-arrow-up trend-up"></i> +12 esta semana</div>
                     </div>
-                    <div class="ranking-stat-card">
+                    <div class="ranking-stat-card" onclick="mostrarMensagemMotivacional()">
+                        <div class="stat-icon">⭐</div>
                         <div class="ranking-stat-value">${mediaPontos}</div>
-                        <div class="ranking-stat-label">Média de pontos</div>
-                        <div class="ranking-stat-trend"><i class="fas fa-chart-line"></i> +5%</div>
+                        <div class="ranking-stat-label">Média de Pontos</div>
+                        <div class="ranking-stat-trend"><i class="fas fa-chart-line trend-up"></i> +5% crescimento</div>
                     </div>
-                    <div class="ranking-stat-card">
-                        <div class="ranking-stat-value">🔥 99</div>
-                        <div class="ranking-stat-label">Maior streak</div>
-                        <div class="ranking-stat-trend"><i class="fas fa-crown"></i> Pedro Graciano</div>
+                    <div class="ranking-stat-card" onclick="mostrarMensagemMotivacional()">
+                        <div class="stat-icon">🔥</div>
+                        <div class="ranking-stat-value">${ranking[0].streak}</div>
+                        <div class="ranking-stat-label">Maior Streak</div>
+                        <div class="ranking-stat-trend"><i class="fas fa-crown" style="color: #FFD700;"></i> ${ranking[0].nome}</div>
                     </div>
                 </div>
             `;
             
             // Pódio espetacular
-            html += '<div class="podium-spectacular">';
+            html += '<div class="podium-spectacular" style="margin-bottom: 60px;">';
             
             ranking.slice(0, 3).forEach((user, index) => {
                 const posicao = index === 0 ? "first" : index === 1 ? "second" : "third";
                 const medalha = index === 0 ? "👑" : index === 1 ? "🥈" : "🥉";
-                const avatarIcon = index === 0 ? "👑" : index === 1 ? "🌟" : "✨";
+                const avatarIcon = index === 0 ? "🏆" : index === 1 ? "⭐" : "🌟";
+                const bgGradient = index === 0 ? "linear-gradient(135deg, #FFD700, #FFA500)" : 
+                                   index === 1 ? "linear-gradient(135deg, #C0C0C0, #A9A9A9)" : 
+                                   "linear-gradient(135deg, #CD7F32, #B87333)";
                 
                 html += `
                     <div class="podium-spot ${posicao}" onclick="mostrarMensagemMotivacional('${user.nome}', ${user.pontos})">
                         <div class="podium-medal-giant">${medalha}</div>
-                        <div class="podium-avatar-giant">${avatarIcon}</div>
+                        <div class="podium-avatar-giant" style="background: ${bgGradient}">
+                            ${avatarIcon}
+                        </div>
                         <div class="podium-name-giant">${user.nome}</div>
-                        <div class="podium-level-giant">${user.nivel}</div>
-                        <div class="podium-points-giant">${user.pontos} pts</div>
+                        <div class="podium-level-giant">
+                            <span class="user-level-tag">${user.nivel}</span>
+                        </div>
+                        <div class="podium-points-giant">${user.pontos.toLocaleString()} pts</div>
                         <div class="podium-stats-giant">
-                            <span class="podium-stat-item"><i class="fas fa-fire"></i> ${user.streak}</span>
-                            <span class="podium-stat-item"><i class="fas fa-star"></i> Top ${index + 1}</span>
+                            <span class="podium-stat-item"><i class="fas fa-fire" style="color: #ff6b35;"></i> ${user.streak} dias</span>
+                            <span class="podium-stat-item"><i class="fas fa-star" style="color: #FFD700;"></i> Top ${index + 1}</span>
+                            <span class="podium-stat-item"><i class="fas fa-leaf" style="color: #4caf50;"></i> Eco Herói</span>
                         </div>
                     </div>
                 `;
@@ -3605,61 +3772,78 @@
             html += '</div>';
             
             // Mensagem motivacional premium
+            const nextMilestone = usuarioLogado ? (Math.ceil(parseInt(usuarioLogado.pontos || 0) / 500) * 500) : 500;
+            const pointsToNext = usuarioLogado ? Math.max(0, nextMilestone - parseInt(usuarioLogado.pontos || 0)) : 500;
+            
             html += `
                 <div class="motivation-premium" onclick="mostrarMensagemMotivacional()">
                     <div class="motivation-icon">🏆</div>
-                    <div class="motivation-title">Você pode chegar ao topo!</div>
+                    <div class="motivation-title">✨ Continue assim! ✨</div>
                     <div class="motivation-text">Complete desafios, participe de eventos e acumule pontos para subir no ranking e se tornar um EcoHerói!</div>
+                    ${usuarioLogado ? `
                     <div class="motivation-progress">
                         <div class="motivation-progress-bar">
-                            <div class="motivation-progress-fill" style="width: 65%;"></div>
+                            <div class="motivation-progress-fill" style="width: ${(parseInt(usuarioLogado.pontos || 0) % 500 / 500 * 100)}%;"></div>
                         </div>
                         <div class="motivation-stats">
                             <div class="motivation-stat-item">
-                                <div class="motivation-stat-value">1.750</div>
-                                <div class="motivation-stat-label">Pontos para o top 3</div>
+                                <div class="motivation-stat-value">${pointsToNext}</div>
+                                <div class="motivation-stat-label">pontos para próximo marco</div>
                             </div>
                             <div class="motivation-stat-item">
-                                <div class="motivation-stat-value">5</div>
-                                <div class="motivation-stat-label">Desafios restantes</div>
+                                <div class="motivation-stat-value">${Math.abs(ranking.findIndex(u => u.nome === usuarioLogado.nome) + 1) || '--'}</div>
+                                <div class="motivation-stat-label">sua posição</div>
                             </div>
                         </div>
                     </div>
+                    ` : `
+                    <button class="btn-auth" style="width: auto; margin: 0 auto; padding: 12px 30px;" onclick="document.getElementById('tabLogin').click()">
+                        <i class="fas fa-sign-in-alt"></i> Faça login para participar
+                    </button>
+                    `}
                 </div>
             `;
             
-            // Lista de ranking premium
-            html += '<div class="ranking-list-premium">';
+            // Lista de ranking premium com animação
             html += `
-                <div class="ranking-list-header">
-                    <div class="ranking-list-title">
-                        <i class="fas fa-list-ol"></i>
-                        <h3>Classificação Geral</h3>
+                <div class="ranking-list-premium">
+                    <div class="ranking-list-header">
+                        <div class="ranking-list-title">
+                            <i class="fas fa-list-ol"></i>
+                            <h3>Classificação Geral</h3>
+                        </div>
+                        <div class="ranking-filter">
+                            <button class="ranking-filter-btn active" onclick="filtrarRanking('todos')">🏆 Todos</button>
+                            <button class="ranking-filter-btn" onclick="filtrarRanking('semana')">📅 Esta semana</button>
+                            <button class="ranking-filter-btn" onclick="filtrarRanking('mes')">🌙 Este mês</button>
+                        </div>
                     </div>
-                    <div class="ranking-filter">
-                        <button class="ranking-filter-btn active">Todos</button>
-                        <button class="ranking-filter-btn">Esta semana</button>
-                        <button class="ranking-filter-btn">Este mês</button>
-                    </div>
-                </div>
             `;
             
-            ranking.slice(3).forEach((user, index) => {
-                const posicao = index + 4;
-                const topClass = posicao <= 3 ? "top-3" : "";
-                const positionClass = posicao === 4 ? "top-4" : posicao === 5 ? "top-5" : "";
+            ranking.forEach((user, index) => {
+                const posicao = index + 1;
+                const isTop3 = posicao <= 3;
+                const medalIcon = posicao === 1 ? '🥇' : posicao === 2 ? '🥈' : posicao === 3 ? '🥉' : '';
+                const delay = index;
                 
                 html += `
-                    <div class="ranking-item-premium ${topClass}" onclick="mostrarMensagemMotivacional('${user.nome}', ${user.pontos})">
-                        <div class="ranking-position-badge ${positionClass} ${posicao === 1 ? 'top-1' : posicao === 2 ? 'top-2' : posicao === 3 ? 'top-3' : ''}">${posicao}º</div>
-                        <div class="ranking-avatar-premium">👤</div>
+                    <div class="ranking-item-premium ${isTop3 ? 'top-3' : ''}" style="--delay: ${delay}" onclick="mostrarMensagemMotivacional('${user.nome}', ${user.pontos})">
+                        <div class="ranking-position-badge ${posicao === 1 ? 'top-1' : posicao === 2 ? 'top-2' : posicao === 3 ? 'top-3' : ''}">
+                            ${medalIcon || posicao}
+                        </div>
+                        <div class="ranking-avatar-premium" style="background: ${isTop3 ? 'linear-gradient(135deg, #8b4513, #b85e3a)' : 'linear-gradient(135deg, #6b4c3a, #9b6e4a)'}">
+                            ${user.nome.charAt(0)}
+                        </div>
                         <div class="ranking-info-premium">
                             <div class="ranking-name-premium">
                                 ${user.nome}
-                                ${user.streak > 50 ? '<span class="ranking-verified"><i class="fas fa-check-circle"></i></span>' : ''}
-                                ${user.pontos > 4000 ? '<span class="ranking-badge-icon"><i class="fas fa-crown"></i></span>' : ''}
+                                ${user.streak > 50 ? '<span class="ranking-verified"><i class="fas fa-check-circle" style="color: #4caf50;"></i> Veterano</span>' : ''}
+                                ${user.pontos > 4000 ? '<span class="ranking-badge-icon"><i class="fas fa-crown" style="color: #FFD700;"></i> Lenda</span>' : ''}
+                                ${user.pontos > 3000 ? '<span class="ranking-badge-icon"><i class="fas fa-gem" style="color: #9b59b6;"></i> Mestre</span>' : ''}
                             </div>
-                            <div class="ranking-level-premium">${user.nivel}</div>
+                            <div class="ranking-level-premium">
+                                <span class="user-level-tag">${user.nivel}</span>
+                            </div>
                             <div class="ranking-progress-premium">
                                 <span>Progresso</span>
                                 <div class="ranking-progress-bar">
@@ -3668,12 +3852,14 @@
                                 <span>${user.progresso || Math.min(100, Math.round(user.pontos/50))}%</span>
                             </div>
                             <div class="ranking-stats-premium">
-                                <span><i class="fas fa-fire"></i> ${user.streak} dias</span>
+                                <span><i class="fas fa-fire" style="color: #ff6b35;"></i> ${user.streak} dias seguidos</span>
                                 <span><i class="fas fa-tasks"></i> ${Math.round(user.pontos/100)} desafios</span>
+                                <span><i class="fas fa-calendar-week"></i> ativo há ${Math.min(30, Math.floor(user.streak/3))} semanas</span>
                             </div>
                         </div>
                         <div class="ranking-points-premium">
-                            ${user.pontos} pts
+                            <i class="fas fa-star" style="font-size: 12px; margin-right: 5px;"></i>
+                            ${user.pontos.toLocaleString()} pts
                         </div>
                     </div>
                 `;
@@ -3681,39 +3867,66 @@
             
             html += '</div>';
             
-            // Conquistas do ranking
+            // Conquistas do ranking com design melhorado
             html += `
-                <div class="ranking-achievements">
-                    <div class="achievement-card unlocked">
-                        <div class="achievement-icon">🏅</div>
-                        <div class="achievement-title">Top 10</div>
-                        <div class="achievement-desc">Fique entre os 10 primeiros</div>
-                        <div class="achievement-progress">4 usuários alcançaram</div>
+                <div style="margin-top: 50px;">
+                    <div class="conquistas-title" style="justify-content: center;">
+                        <i class="fas fa-medal" style="font-size: 28px; color: #8b4513;"></i>
+                        <h2 style="color: #3a2a1a;">Conquistas Especiais</h2>
                     </div>
-                    <div class="achievement-card">
-                        <div class="achievement-icon">🔥</div>
-                        <div class="achievement-title">Streak de 30 dias</div>
-                        <div class="achievement-desc">Mantenha streak por 30 dias</div>
-                        <div class="achievement-progress">12 usuários próximos</div>
-                    </div>
-                    <div class="achievement-card">
-                        <div class="achievement-icon">💯</div>
-                        <div class="achievement-title">1000 pontos</div>
-                        <div class="achievement-desc">Acumule 1000 pontos</div>
-                        <div class="achievement-progress">8 usuários já atingiram</div>
-                    </div>
-                    <div class="achievement-card">
-                        <div class="achievement-icon">👑</div>
-                        <div class="achievement-title">Campeão</div>
-                        <div class="achievement-desc">Seja o primeiro do ranking</div>
-                        <div class="achievement-progress">Pedro Graciano</div>
+                    <div class="ranking-achievements">
+                        <div class="achievement-card unlocked" onclick="mostrarMensagemMotivacional()">
+                            <div class="achievement-icon">🏅</div>
+                            <div class="achievement-title">Top 10</div>
+                            <div class="achievement-desc">Fique entre os 10 primeiros do ranking</div>
+                            <div class="achievement-progress"><i class="fas fa-users"></i> 4 usuários alcançaram</div>
+                        </div>
+                        <div class="achievement-card" onclick="mostrarMensagemMotivacional()">
+                            <div class="achievement-icon">🔥</div>
+                            <div class="achievement-title">Streak de 30 dias</div>
+                            <div class="achievement-desc">Mantenha streak por 30 dias consecutivos</div>
+                            <div class="achievement-progress"><i class="fas fa-chart-line"></i> 12 usuários próximos</div>
+                        </div>
+                        <div class="achievement-card" onclick="mostrarMensagemMotivacional()">
+                            <div class="achievement-icon">💯</div>
+                            <div class="achievement-title">1000 pontos</div>
+                            <div class="achievement-desc">Acumule 1000 pontos totais</div>
+                            <div class="achievement-progress"><i class="fas fa-trophy"></i> 8 usuários já atingiram</div>
+                        </div>
+                        <div class="achievement-card" onclick="mostrarMensagemMotivacional()">
+                            <div class="achievement-icon">👑</div>
+                            <div class="achievement-title">Campeão</div>
+                            <div class="achievement-desc">Seja o primeiro lugar do ranking</div>
+                            <div class="achievement-progress"><i class="fas fa-crown"></i> ${ranking[0].nome}</div>
+                        </div>
+                        <div class="achievement-card" onclick="mostrarMensagemMotivacional()">
+                            <div class="achievement-icon">🌿</div>
+                            <div class="achievement-title">Eco Warrior</div>
+                            <div class="achievement-desc">Complete 50 desafios ambientais</div>
+                            <div class="achievement-progress"><i class="fas fa-seedling"></i> 3 usuários conquistaram</div>
+                        </div>
+                        <div class="achievement-card" onclick="mostrarMensagemMotivacional()">
+                            <div class="achievement-icon">⭐</div>
+                            <div class="achievement-title">Eventos +</div>
+                            <div class="achievement-desc">Participe de 10 eventos diferentes</div>
+                            <div class="achievement-progress"><i class="fas fa-calendar-check"></i> 6 usuários alcançaram</div>
+                        </div>
                     </div>
                 </div>
             `;
             
-            container.innerHTML = `<div class="app-tab-content active">${html}</div>`;
+            html += '</div></div>';
+            container.innerHTML = html;
         }
-
+        
+        // Função auxiliar para filtro do ranking
+        function filtrarRanking(tipo) {
+            if (tipo === 'todos') {
+                renderRanking(document.getElementById('appContent'));
+            } else {
+                mostrarAlerta('info', `Filtro "${tipo === 'semana' ? 'Esta semana' : 'Este mês'}" em desenvolvimento!`);
+            }
+        }
         function mostrarMensagemMotivacional(nome, pontos) {
             const mensagens = [
                 "💪 Continue assim! Você está fazendo a diferença!",
