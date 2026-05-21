@@ -1953,6 +1953,99 @@
             background-color: #e0d5c0;
         }
 
+        /* NOVOS ESTILOS PARA O UPLOAD */
+        .upload-preview {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border: 2px dashed #8b5a2b;
+            padding: 10px;
+            display: none;
+        }
+        
+        .upload-area {
+            background: #f8f9fa;
+            border: 2px dashed #8b4513;
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 20px 0;
+        }
+        
+        .upload-area:hover {
+            background: #f0e9e0;
+            border-color: #b85e3a;
+        }
+        
+        .upload-area i {
+            font-size: 48px;
+            color: #8b4513;
+            margin-bottom: 10px;
+        }
+        
+        .btn-submit-foto {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            border: none;
+            border-radius: 16px;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+        
+        .btn-submit-foto:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .btn-submit-foto:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+        
+        .upload-progress {
+            width: 100%;
+            height: 4px;
+            background: #e0d5c0;
+            border-radius: 2px;
+            margin: 15px 0;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .upload-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .success-animation {
+            animation: successPulse 0.6s ease;
+        }
+        
+        @keyframes successPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .desafio-completado {
+            background: linear-gradient(145deg, #e8f5e9, #c8e6c9) !important;
+            border-color: #4CAF50 !important;
+        }
+        
+        .desafio-completado .badge-success {
+            background: #4CAF50 !important;
+        }
+
         @media (max-width: 768px) {
             .auth-card { padding: 30px 20px; }
             .top-header { flex-direction: column; gap: 15px; text-align: center; }
@@ -2165,7 +2258,7 @@
     </div>
 
     <div class="modal-overlay" id="uploadModal">
-        <div class="modal-content" id="uploadContent"></div>
+        <div class="modal-content card-moderno" id="uploadContent"></div>
     </div>
 
     <div class="water-ripple-bg" id="waterRippleBg"></div>
@@ -2186,18 +2279,18 @@
         
         // ========== DESAFIOS ==========
         const desafios = [
-            { id: 1, titulo: "Recicle 10kg de materiais recicláveis", descricao: "", pontos: 200, icone: "♻️", tipo: "reciclagem", dica: "Tire foto dos materiais na balança" },
-            { id: 2, titulo: "Participe de 1 evento ambiental", descricao: "", pontos: 150, icone: "📅", tipo: "evento", dica: "Tire foto no local do evento" },
-            { id: 3, titulo: "Plante 1 árvore nativa", descricao: "", pontos: 300, icone: "🌳", tipo: "plantio", dica: "Tire foto da muda plantada" },
-            { id: 4, titulo: "Descarte 10 pilhas em ponto de coleta", descricao: "", pontos: 150, icone: "🔋", tipo: "pilhas", dica: "Tire foto das pilhas no ponto" },
-            { id: 5, titulo: "Use bicicleta em vez de carro 5 vezes", descricao: "", pontos: 250, icone: "🚲", tipo: "mobilidade", dica: "Compartilhe seu trajeto" },
-            { id: 6, titulo: "Doe 10kg de alimentos não perecíveis", descricao: "", pontos: 280, icone: "🥫", tipo: "doacao", dica: "Foto dos alimentos no local" },
-            { id: 7, titulo: "Doe 15 peças de roupa", descricao: "", pontos: 200, icone: "👕", tipo: "roupas", dica: "Foto das roupas doadas" },
-            { id: 8, titulo: "Reduza consumo em 20% por 1 mês", descricao: "", pontos: 400, icone: "💧", tipo: "agua", dica: "Compartilhe sua conta" },
-            { id: 9, titulo: "Instale placa solar ou use energia limpa", descricao: "", pontos: 500, icone: "☀️", tipo: "energia", dica: "Foto da instalação" },
-            { id: 10, titulo: "Inicie uma composteira doméstica", descricao: "", pontos: 350, icone: "🌱", tipo: "compostagem", dica: "Foto da sua composteira" },
-            { id: 11, titulo: "Palestre sobre sustentabilidade", descricao: "", pontos: 450, icone: "📚", tipo: "educacao", dica: "Foto do evento" },
-            { id: 12, titulo: "Convide 5 amigos para o app", descricao: "", pontos: 300, icone: "🏆", tipo: "social", dica: "Compartilhe seu código" },
+            { id: 1, titulo: "Recicle 10kg de materiais recicláveis", descricao: "Separe e recicle 10kg de materiais recicláveis", pontos: 200, icone: "♻️", tipo: "reciclagem", dica: "Tire foto dos materiais na balança" },
+            { id: 2, titulo: "Participe de 1 evento ambiental", descricao: "Participe de um evento de sustentabilidade", pontos: 150, icone: "📅", tipo: "evento", dica: "Tire foto no local do evento" },
+            { id: 3, titulo: "Plante 1 árvore nativa", descricao: "Plante uma árvore nativa da região", pontos: 300, icone: "🌳", tipo: "plantio", dica: "Tire foto da muda plantada" },
+            { id: 4, titulo: "Descarte 10 pilhas em ponto de coleta", descricao: "Descarte pilhas usadas corretamente", pontos: 150, icone: "🔋", tipo: "pilhas", dica: "Tire foto das pilhas no ponto" },
+            { id: 5, titulo: "Use bicicleta em vez de carro 5 vezes", descricao: "Substitua o carro pela bicicleta", pontos: 250, icone: "🚲", tipo: "mobilidade", dica: "Compartilhe seu trajeto" },
+            { id: 6, titulo: "Doe 10kg de alimentos não perecíveis", descricao: "Doe alimentos para quem precisa", pontos: 280, icone: "🥫", tipo: "doacao", dica: "Foto dos alimentos no local" },
+            { id: 7, titulo: "Doe 15 peças de roupa", descricao: "Doe roupas em bom estado", pontos: 200, icone: "👕", tipo: "roupas", dica: "Foto das roupas doadas" },
+            { id: 8, titulo: "Reduza consumo em 20% por 1 mês", descricao: "Reduza o consumo de água", pontos: 400, icone: "💧", tipo: "agua", dica: "Compartilhe sua conta" },
+            { id: 9, titulo: "Instale placa solar ou use energia limpa", descricao: "Adote energia renovável", pontos: 500, icone: "☀️", tipo: "energia", dica: "Foto da instalação" },
+            { id: 10, titulo: "Inicie uma composteira doméstica", descricao: "Comece a compostar resíduos orgânicos", pontos: 350, icone: "🌱", tipo: "compostagem", dica: "Foto da sua composteira" },
+            { id: 11, titulo: "Palestre sobre sustentabilidade", descricao: "Compartilhe conhecimento ambiental", pontos: 450, icone: "📚", tipo: "educacao", dica: "Foto do evento" },
+            { id: 12, titulo: "Convide 5 amigos para o app", descricao: "Engaje mais pessoas na causa", pontos: 300, icone: "🏆", tipo: "social", dica: "Compartilhe seu código" },
         ];
 
         // ========== EVENTOS SUSTENTÁVEIS 2026 ==========
@@ -2277,7 +2370,8 @@
                     pontos: parseInt(u.pontos) || 0, 
                     streak: parseInt(u.streak) || 0, 
                     nivel: u.nivel || "🌱 EcoIniciante",
-                    email: u.email 
+                    email: u.email,
+                    desafios: parseInt(u.desafios) || 0
                 }))
                 .sort((a, b) => b.pontos - a.pontos);
         }
@@ -2428,10 +2522,43 @@
             `;
         }
 
+        // ========== RENDER DESAFIOS ATUALIZADO ==========
         function renderDesafios(container) {
-            let html = '<div class="app-tab-content active"><h1 class="titulo-secao">🌱 Desafios Ambientais</h1><div class="card-grid">';
+            let html = '<div class="app-tab-content active"><h1 class="titulo-secao">🌱 Desafios Ambientais</h1>';
+            
+            if (usuarioLogado) {
+                const desafiosCompletados = usuarioLogado.desafios_completados ? 
+                    JSON.parse(usuarioLogado.desafios_completados || '[]') : [];
+                
+                html += `<p style="color: #8b4513; margin-bottom: 20px;">
+                    <i class="fas fa-check-circle" style="color: #4CAF50;"></i> 
+                    ${desafiosCompletados.length} de ${desafios.length} desafios completados
+                </p>`;
+            }
+            
+            html += '<div class="card-grid">';
             desafios.forEach(d => {
-                html += `<div class="card-moderno"><div style="font-size:48px;text-align:center">${d.icone}</div><h3>${d.titulo}</h3><span class="badge badge-success">+${d.pontos} pts</span><p>${d.dica}</p><button class="btn-auth" onclick="abrirUpload(${d.id})">📸 Comprovar</button></div>`;
+                const completado = usuarioLogado && usuarioLogado.desafios_completados ? 
+                    JSON.parse(usuarioLogado.desafios_completados || '[]').includes(d.id) : false;
+                
+                html += `
+                    <div class="card-moderno ${completado ? 'desafio-completado' : ''}">
+                        <div style="font-size:48px;text-align:center;position:relative;">
+                            ${d.icone}
+                            ${completado ? '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:24px;color:#4CAF50;">✅</div>' : ''}
+                        </div>
+                        <h3>${d.titulo}</h3>
+                        <span class="badge ${completado ? 'badge-success' : 'badge-success'}">+${d.pontos} pts</span>
+                        <p style="margin: 10px 0; color: #5d3a1a;">${d.dica}</p>
+                        ${!completado ? 
+                            `<button class="btn-auth" onclick="abrirUpload(${d.id})">
+                                <i class="fas fa-camera"></i> Comprovar Desafio
+                            </button>` : 
+                            '<span class="badge badge-success" style="font-size: 14px; padding: 10px; display: block; text-align: center;">✅ Concluído</span>'
+                        }
+                        ${completado ? `<p style="text-align:center;color:#4CAF50;font-size:12px;margin-top:5px;"><i class="fas fa-star"></i> +${d.pontos} pontos conquistados</p>` : ''}
+                    </div>
+                `;
             });
             html += '</div></div>';
             container.innerHTML = html;
@@ -2563,6 +2690,7 @@
             `;
         }
 
+        // ========== RENDER RANKING ATUALIZADO ==========
         function renderRanking(container) {
             const rankingReal = getRankingReal();
             if (!rankingReal.length) {
@@ -2572,23 +2700,36 @@
             }
             
             let html = '<div class="app-tab-content active"><div class="ranking-container">';
-            html += `<div style="text-align: center; margin-bottom: 40px;"><h1 class="titulo-secao" style="display: inline-block; text-align: center;">🏆 Ranking EcoCidadãos</h1><p style="color: #8b4513; margin-top: 10px;">📊 Ranking gerado com os dados REAIS da sua planilha do Google</p></div>`;
+            html += `<div style="text-align: center; margin-bottom: 40px;"><h1 class="titulo-secao" style="display: inline-block; text-align: center;">🏆 Ranking EcoCidadãos</h1><p style="color: #8b4513; margin-top: 10px;">📊 Classificação atualizada em tempo real</p>`;
+            
+            if (usuarioLogado) {
+                const posicaoUsuario = rankingReal.findIndex(u => u.email === usuarioLogado.email) + 1;
+                if (posicaoUsuario > 0) {
+                    html += `<p style="color: #4CAF50; font-weight: 600; margin-top: 5px;">🎯 Sua posição: ${posicaoUsuario}º lugar</p>`;
+                }
+            }
+            html += `</div>`;
             
             const totalUsuarios = rankingReal.length;
             const totalPontosRanking = rankingReal.reduce((acc, user) => acc + user.pontos, 0);
             const mediaPontos = totalUsuarios > 0 ? Math.round(totalPontosRanking / totalUsuarios) : 0;
             
             html += `<div class="ranking-stats-bar" style="margin-bottom: 50px;">
-                <div class="ranking-stat-card"><div class="stat-icon">👥</div><div class="ranking-stat-value">${totalUsuarios}</div><div class="ranking-stat-label">Participantes Ativos</div></div>
-                <div class="ranking-stat-card"><div class="stat-icon">⭐</div><div class="ranking-stat-value">${mediaPontos}</div><div class="ranking-stat-label">Média de Pontos</div></div>
-                <div class="ranking-stat-card"><div class="stat-icon">🔥</div><div class="ranking-stat-value">${rankingReal[0]?.streak || 0}</div><div class="ranking-stat-label">Maior Streak</div></div>
+                <div class="ranking-stat-card"><div class="stat-icon" style="font-size: 32px;">👥</div><div class="ranking-stat-value">${totalUsuarios}</div><div class="ranking-stat-label">Participantes Ativos</div></div>
+                <div class="ranking-stat-card"><div class="stat-icon" style="font-size: 32px;">⭐</div><div class="ranking-stat-value">${totalPontosRanking.toLocaleString()}</div><div class="ranking-stat-label">Total de Pontos</div></div>
+                <div class="ranking-stat-card"><div class="stat-icon" style="font-size: 32px;">📊</div><div class="ranking-stat-value">${mediaPontos}</div><div class="ranking-stat-label">Média de Pontos</div></div>
             </div>`;
             
             html += '<div class="podium-spectacular" style="margin-bottom: 60px;">';
             rankingReal.slice(0, 3).forEach((user, index) => {
                 const posicao = index === 0 ? "first" : index === 1 ? "second" : "third";
                 const medalha = index === 0 ? "👑" : index === 1 ? "🥈" : "🥉";
-                html += `<div class="podium-spot ${posicao}"><div class="podium-medal-giant">${medalha}</div><div class="podium-avatar-giant">${user.nome.charAt(0).toUpperCase()}</div><div class="podium-name-giant">${user.nome}</div><div class="podium-level-giant">${user.nivel}</div><div class="podium-points-giant">${user.pontos.toLocaleString()} pts</div><div class="podium-stats-giant"><span class="podium-stat-item"><i class="fas fa-fire"></i> ${user.streak} dias</span></div></div>`;
+                const isUserLogado = usuarioLogado && user.email === usuarioLogado.email;
+                
+                html += `<div class="podium-spot ${posicao}" style="${isUserLogado ? 'box-shadow: 0 0 30px rgba(76, 175, 80, 0.5);' : ''}">
+                    ${isUserLogado ? '<div style="position: absolute; top: 10px; right: 10px; background: #4CAF50; color: white; padding: 4px 8px; border-radius: 50px; font-size: 11px;">VOCÊ</div>' : ''}
+                    <div class="podium-medal-giant">${medalha}</div><div class="podium-avatar-giant">${user.nome.charAt(0).toUpperCase()}</div><div class="podium-name-giant">${user.nome}</div><div class="podium-level-giant">${user.nivel}</div><div class="podium-points-giant">${user.pontos.toLocaleString()} pts</div><div class="podium-stats-giant"><span class="podium-stat-item"><i class="fas fa-fire"></i> ${user.streak} dias</span></div>
+                </div>`;
             });
             html += '</div>';
             
@@ -2596,7 +2737,9 @@
             rankingReal.forEach((user, index) => {
                 const posicao = index + 1;
                 const medalIcon = posicao === 1 ? '🥇' : posicao === 2 ? '🥈' : posicao === 3 ? '🥉' : '';
-                html += `<div class="ranking-item-premium ${posicao <= 3 ? 'top-3' : ''}"><div class="ranking-position-badge ${posicao === 1 ? 'top-1' : posicao === 2 ? 'top-2' : posicao === 3 ? 'top-3' : ''}">${medalIcon || posicao}</div><div class="ranking-avatar-premium">${user.nome.charAt(0).toUpperCase()}</div><div class="ranking-info-premium"><div class="ranking-name-premium">${user.nome}</div><div class="ranking-level-premium">${user.nivel}</div></div><div class="ranking-points-premium">${user.pontos.toLocaleString()} pts</div></div>`;
+                const isUserLogado = usuarioLogado && user.email === usuarioLogado.email;
+                
+                html += `<div class="ranking-item-premium ${posicao <= 3 ? 'top-3' : ''} ${isUserLogado ? 'desafio-completado' : ''}"><div class="ranking-position-badge ${posicao === 1 ? 'top-1' : posicao === 2 ? 'top-2' : posicao === 3 ? 'top-3' : ''}">${medalIcon || posicao}${isUserLogado ? ' 👈' : ''}</div><div class="ranking-avatar-premium">${user.nome.charAt(0).toUpperCase()}</div><div class="ranking-info-premium"><div class="ranking-name-premium">${user.nome}${isUserLogado ? '<span style="background: #4CAF50; color: white; padding: 2px 8px; border-radius: 50px; font-size: 10px;">VOCÊ</span>' : ''}</div><div class="ranking-level-premium">${user.nivel}</div></div><div class="ranking-points-premium">${user.pontos.toLocaleString()} pts</div></div>`;
             });
             html += `</div></div></div>`;
             container.innerHTML = html;
@@ -2613,7 +2756,6 @@
         }
 
         function renderPontos(container) {
-            // Conta estatísticas dos pontos
             const totalPontos = pontosColeta.length;
             const pontosPorTipo = {
                 'Ecoponto': pontosColeta.filter(p => p.tipo === 'Ecoponto').length,
@@ -2625,79 +2767,28 @@
                 'Roupas': pontosColeta.filter(p => p.tipo === 'Roupas').length
             };
             
-            // Gera HTML dos filtros e cards
             let html = `
                 <div class="app-tab-content active">
                     <h1 class="titulo-secao">📍 Pontos de Coleta</h1>
-                    
-                    <!-- Estatísticas -->
                     <div class="pontos-stats">
-                        <div class="ponto-stat-card">
-                            <div class="ponto-stat-icon">🗑️</div>
-                            <div class="ponto-stat-number">${totalPontos}</div>
-                            <div class="ponto-stat-label">Pontos de Coleta</div>
-                        </div>
-                        <div class="ponto-stat-card">
-                            <div class="ponto-stat-icon">🏢</div>
-                            <div class="ponto-stat-number">${pontosPorTipo.Ecoponto}</div>
-                            <div class="ponto-stat-label">Ecopontos</div>
-                        </div>
-                        <div class="ponto-stat-card">
-                            <div class="ponto-stat-icon">🔋</div>
-                            <div class="ponto-stat-number">${pontosPorTipo.Pilhas}</div>
-                            <div class="ponto-stat-label">Pontos de Pilhas</div>
-                        </div>
-                        <div class="ponto-stat-card">
-                            <div class="ponto-stat-icon">💻</div>
-                            <div class="ponto-stat-number">${pontosPorTipo.Eletrônicos}</div>
-                            <div class="ponto-stat-label">Eletrônicos</div>
-                        </div>
+                        <div class="ponto-stat-card"><div class="ponto-stat-icon">🗑️</div><div class="ponto-stat-number">${totalPontos}</div><div class="ponto-stat-label">Pontos de Coleta</div></div>
+                        <div class="ponto-stat-card"><div class="ponto-stat-icon">🏢</div><div class="ponto-stat-number">${pontosPorTipo.Ecoponto}</div><div class="ponto-stat-label">Ecopontos</div></div>
+                        <div class="ponto-stat-card"><div class="ponto-stat-icon">🔋</div><div class="ponto-stat-number">${pontosPorTipo.Pilhas}</div><div class="ponto-stat-label">Pontos de Pilhas</div></div>
+                        <div class="ponto-stat-card"><div class="ponto-stat-icon">💻</div><div class="ponto-stat-number">${pontosPorTipo.Eletrônicos}</div><div class="ponto-stat-label">Eletrônicos</div></div>
                     </div>
-                    
-                    <!-- Mapa -->
-                    <div class="mapa-container">
-                        <div id="mapaPontos"></div>
-                    </div>
-                    
-                    <!-- Filtros -->
+                    <div class="mapa-container"><div id="mapaPontos"></div></div>
                     <div class="pontos-filters">
                         <div class="filter-row">
-                            <div class="filter-group">
-                                <label><i class="fas fa-search"></i> Buscar</label>
-                                <input type="text" id="searchPonto" placeholder="Nome ou endereço..." onkeyup="filterPontos()">
-                            </div>
-                            <div class="filter-group">
-                                <label><i class="fas fa-filter"></i> Tipo de Ponto</label>
-                                <select id="tipoPonto" onchange="filterPontos()">
-                                    <option value="todos">Todos os tipos</option>
-                                    <option value="Ecoponto">Ecopontos</option>
-                                    <option value="Pilhas">Pilhas e Baterias</option>
-                                    <option value="Eletrônicos">Eletrônicos</option>
-                                    <option value="Óleo">Óleo de Cozinha</option>
-                                    <option value="Vidros">Vidros</option>
-                                    <option value="Papel">Papel/Papelão</option>
-                                    <option value="Roupas">Roupas</option>
-                                </select>
-                            </div>
-                            <div class="filter-group">
-                                <label><i class="fas fa-star"></i> Avaliação</label>
-                                <select id="avaliacaoPonto" onchange="filterPontos()">
-                                    <option value="todos">Todas</option>
-                                    <option value="4.5">4.5+ estrelas</option>
-                                    <option value="4.0">4.0+ estrelas</option>
-                                    <option value="3.5">3.5+ estrelas</option>
-                                </select>
-                            </div>
+                            <div class="filter-group"><label><i class="fas fa-search"></i> Buscar</label><input type="text" id="searchPonto" placeholder="Nome ou endereço..." onkeyup="filterPontos()"></div>
+                            <div class="filter-group"><label><i class="fas fa-filter"></i> Tipo de Ponto</label><select id="tipoPonto" onchange="filterPontos()"><option value="todos">Todos os tipos</option><option value="Ecoponto">Ecopontos</option><option value="Pilhas">Pilhas e Baterias</option><option value="Eletrônicos">Eletrônicos</option><option value="Óleo">Óleo de Cozinha</option><option value="Vidros">Vidros</option><option value="Papel">Papel/Papelão</option><option value="Roupas">Roupas</option></select></div>
+                            <div class="filter-group"><label><i class="fas fa-star"></i> Avaliação</label><select id="avaliacaoPonto" onchange="filterPontos()"><option value="todos">Todas</option><option value="4.5">4.5+ estrelas</option><option value="4.0">4.0+ estrelas</option><option value="3.5">3.5+ estrelas</option></select></div>
                         </div>
                     </div>
-                    
-                    <!-- Lista de Pontos -->
                     <div id="pontosLista" class="card-grid"></div>
                 </div>
             `;
             container.innerHTML = html;
             
-            // Inicializa o mapa e a lista
             setTimeout(() => {
                 inicializarMapa();
                 renderPontosLista();
@@ -2737,52 +2828,26 @@
             
             let html = '';
             filtered.forEach(ponto => {
-                // Determina classe do badge de material
                 let materialClass = '';
                 if (ponto.tipo === 'Eletrônicos') materialClass = 'eletronicos';
                 else if (ponto.tipo === 'Pilhas') materialClass = 'pilhas';
                 else if (ponto.tipo === 'Óleo') materialClass = 'oleo';
                 else if (ponto.tipo === 'Ecoponto') materialClass = 'geral';
                 
-                // Gera estrelas de avaliação
                 const stars = '★'.repeat(Math.floor(ponto.avaliacao)) + '☆'.repeat(5 - Math.floor(ponto.avaliacao));
                 
                 html += `
                     <div class="ponto-card-premium">
-                        <div class="ponto-card-header">
-                            <div class="ponto-icon">${ponto.icone}</div>
-                            <div class="ponto-title">
-                                <h3>${ponto.nome}</h3>
-                                <p>${ponto.endereco}</p>
-                            </div>
-                        </div>
+                        <div class="ponto-card-header"><div class="ponto-icon">${ponto.icone}</div><div class="ponto-title"><h3>${ponto.nome}</h3><p>${ponto.endereco}</p></div></div>
                         <div class="ponto-card-body">
-                            <div class="ponto-info-row">
-                                <span class="ponto-info-label">📅 Horário:</span>
-                                <span class="ponto-info-value">${ponto.horario}</span>
-                            </div>
-                            <div class="ponto-info-row">
-                                <span class="ponto-info-label">📞 Telefone:</span>
-                                <span class="ponto-info-value">${ponto.telefone}</span>
-                            </div>
-                            <div class="ponto-info-row">
-                                <span class="ponto-info-label">♻️ Materiais:</span>
-                                <div class="ponto-materiais">
-                                    ${ponto.materiais.map(m => `<span class="material-badge ${materialClass}">${m}</span>`).join('')}
-                                </div>
-                            </div>
-                            <div class="ponto-rating">
-                                <span class="stars">${stars}</span>
-                                <span class="rating-value">${ponto.avaliacao}</span>
-                            </div>
+                            <div class="ponto-info-row"><span class="ponto-info-label">📅 Horário:</span><span class="ponto-info-value">${ponto.horario}</span></div>
+                            <div class="ponto-info-row"><span class="ponto-info-label">📞 Telefone:</span><span class="ponto-info-value">${ponto.telefone}</span></div>
+                            <div class="ponto-info-row"><span class="ponto-info-label">♻️ Materiais:</span><div class="ponto-materiais">${ponto.materiais.map(m => `<span class="material-badge ${materialClass}">${m}</span>`).join('')}</div></div>
+                            <div class="ponto-rating"><span class="stars">${stars}</span><span class="rating-value">${ponto.avaliacao}</span></div>
                         </div>
                         <div class="ponto-card-footer">
-                            <button class="btn-route" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${ponto.lat},${ponto.lng}', '_blank')">
-                                <i class="fas fa-directions"></i> Como Chegar
-                            </button>
-                            <button class="btn-details" onclick="alert('${ponto.nome}\\n\\nEndereço: ${ponto.endereco}\\nHorário: ${ponto.horario}\\nMateriais: ${ponto.materiais.join(', ')}\\nAvaliação: ${ponto.avaliacao}★')">
-                                <i class="fas fa-info-circle"></i> Detalhes
-                            </button>
+                            <button class="btn-route" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${ponto.lat},${ponto.lng}', '_blank')"><i class="fas fa-directions"></i> Como Chegar</button>
+                            <button class="btn-details" onclick="alert('${ponto.nome}\\n\\nEndereço: ${ponto.endereco}\\nHorário: ${ponto.horario}\\nMateriais: ${ponto.materiais.join(', ')}\\nAvaliação: ${ponto.avaliacao}★')"><i class="fas fa-info-circle"></i> Detalhes</button>
                         </div>
                     </div>
                 `;
@@ -2806,18 +2871,11 @@
             if (avaliacaoFilter > 0) filtered = filtered.filter(p => p.avaliacao >= avaliacaoFilter);
             
             if (mapaPontos) {
-                // Remove markers existentes                pontosMarkers.forEach(marker => marker.remove());
+                pontosMarkers.forEach(marker => marker.remove());
                 pontosMarkers = [];
                 
-                // Adiciona novos markers
                 filtered.forEach(ponto => {
-                    const marker = L.marker([ponto.lat, ponto.lng]).bindPopup(`
-                        <b>${ponto.nome}</b><br>
-                        ${ponto.endereco}<br>
-                        <i class="fas fa-clock"></i> ${ponto.horario}<br>
-                        <i class="fas fa-phone"></i> ${ponto.telefone}<br>
-                        <i class="fas fa-star" style="color:#ffc107"></i> ${ponto.avaliacao}
-                    `);
+                    const marker = L.marker([ponto.lat, ponto.lng]).bindPopup(`<b>${ponto.nome}</b><br>${ponto.endereco}<br><i class="fas fa-clock"></i> ${ponto.horario}<br><i class="fas fa-phone"></i> ${ponto.telefone}<br><i class="fas fa-star" style="color:#ffc107"></i> ${ponto.avaliacao}`);
                     marker.addTo(mapaPontos);
                     pontosMarkers.push(marker);
                 });
@@ -2842,18 +2900,276 @@
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
             }).addTo(mapaPontos);
             
-            // Adiciona todos os pontos ao mapa
             pontosColeta.forEach(p => {
-                const marker = L.marker([p.lat, p.lng]).bindPopup(`
-                    <b>${p.nome}</b><br>
-                    ${p.endereco}<br>
-                    <i class="fas fa-clock"></i> ${p.horario}<br>
-                    <i class="fas fa-phone"></i> ${p.telefone}<br>
-                    <i class="fas fa-star" style="color:#ffc107"></i> ${p.avaliacao}
-                `);
+                const marker = L.marker([p.lat, p.lng]).bindPopup(`<b>${p.nome}</b><br>${p.endereco}<br><i class="fas fa-clock"></i> ${p.horario}<br><i class="fas fa-phone"></i> ${p.telefone}<br><i class="fas fa-star" style="color:#ffc107"></i> ${p.avaliacao}`);
                 marker.addTo(mapaPontos);
                 pontosMarkers.push(marker);
             });
+        }
+
+        // ========== FUNÇÃO PRINCIPAL DE UPLOAD ==========
+        async function abrirUpload(desafioId) {
+            if (!usuarioLogado) {
+                mostrarAlerta('error', 'Faça login para comprovar desafios!');
+                return;
+            }
+            
+            const desafio = desafios.find(d => d.id === desafioId);
+            if (!desafio) return;
+            
+            const desafiosCompletados = usuarioLogado.desafios_completados ? 
+                JSON.parse(usuarioLogado.desafios_completados || '[]') : [];
+            
+            if (desafiosCompletados.includes(desafioId)) {
+                mostrarAlerta('info', 'Você já completou este desafio!');
+                return;
+            }
+            
+            const modal = document.getElementById('uploadModal');
+            const content = document.getElementById('uploadContent');
+            
+            content.innerHTML = `
+                <div style="padding: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                        <h2 style="color: #8b4513; margin: 0;">
+                            <span style="font-size: 36px;">${desafio.icone}</span> 
+                            Comprovar Desafio
+                        </h2>
+                        <button onclick="fecharModal('uploadModal')" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #8b4513;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="card-moderno" style="margin-bottom: 20px;">
+                        <h3 style="color: #3a2a1a; margin-bottom: 10px;">${desafio.titulo}</h3>
+                        <p style="color: #5d3a1a; margin-bottom: 10px;">
+                            <i class="fas fa-lightbulb" style="color: #ffc107;"></i> 
+                            <strong>Dica:</strong> ${desafio.dica}
+                        </p>
+                        <span class="badge badge-success" style="font-size: 14px;">
+                            <i class="fas fa-star"></i> +${desafio.pontos} pontos
+                        </span>
+                    </div>
+                    
+                    <div class="upload-area" id="uploadArea" onclick="document.getElementById('fotoDesafio').click()">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h3 style="color: #8b4513; margin: 10px 0;">Clique para anexar a foto</h3>
+                        <p style="color: #5d3a1a; font-size: 14px;">Ou arraste e solte o arquivo aqui</p>
+                        <p style="color: #8b4513; font-size: 12px; margin-top: 10px;">
+                            <i class="fas fa-camera"></i> Formatos: JPG, PNG, GIF (máx. 5MB)
+                        </p>
+                    </div>
+                    
+                    <input type="file" id="fotoDesafio" accept="image/*" capture="environment" 
+                           style="display: none;" onchange="previewFoto(this)">
+                    
+                    <div style="text-align: center;">
+                        <img id="previewImagem" class="upload-preview" alt="Preview da foto">
+                    </div>
+                    
+                    <div class="upload-progress" id="uploadProgress">
+                        <div class="upload-progress-bar" id="uploadProgressBar"></div>
+                    </div>
+                    
+                    <button class="btn-submit-foto" id="btnEnviarFoto" disabled 
+                            onclick="enviarComprovante(${desafioId})">
+                        <i class="fas fa-paper-plane"></i> Enviar Comprovante
+                    </button>
+                    
+                    <div id="uploadStatus" style="text-align: center; margin-top: 15px; display: none;"></div>
+                </div>
+            `;
+            
+            modal.classList.add('active');
+            
+            const uploadArea = document.getElementById('uploadArea');
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.style.background = '#f0e9e0';
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.style.background = '#f8f9fa';
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.style.background = '#f8f9fa';
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const input = document.getElementById('fotoDesafio');
+                    input.files = files;
+                    previewFoto(input);
+                }
+            });
+        }
+        
+        function previewFoto(input) {
+            const preview = document.getElementById('previewImagem');
+            const btnEnviar = document.getElementById('btnEnviarFoto');
+            
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                
+                if (!file.type.match('image.*')) {
+                    mostrarAlerta('error', 'Por favor, selecione uma imagem válida!');
+                    return;
+                }
+                
+                if (file.size > 5 * 1024 * 1024) {
+                    mostrarAlerta('error', 'A imagem deve ter no máximo 5MB!');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    btnEnviar.disabled = false;
+                    
+                    preview.classList.add('success-animation');
+                    setTimeout(() => preview.classList.remove('success-animation'), 600);
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        async function enviarComprovante(desafioId) {
+            const desafio = desafios.find(d => d.id === desafioId);
+            if (!desafio) return;
+            
+            const btnEnviar = document.getElementById('btnEnviarFoto');
+            const progressBar = document.getElementById('uploadProgress');
+            const progressBarFill = document.getElementById('uploadProgressBar');
+            const statusDiv = document.getElementById('uploadStatus');
+            
+            btnEnviar.disabled = true;
+            btnEnviar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+            
+            progressBar.style.display = 'block';
+            
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 30;
+                if (progress > 90) {
+                    progress = 90;
+                    clearInterval(progressInterval);
+                }
+                progressBarFill.style.width = progress + '%';
+            }, 300);
+            
+            try {
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                clearInterval(progressInterval);
+                progressBarFill.style.width = '100%';
+                
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                if (usuarioLogado) {
+                    const pontosAtuais = parseInt(usuarioLogado.pontos) || 0;
+                    const novosPontos = pontosAtuais + desafio.pontos;
+                    
+                    const desafiosCompletados = usuarioLogado.desafios_completados ? 
+                        JSON.parse(usuarioLogado.desafios_completados || '[]') : [];
+                    desafiosCompletados.push(desafioId);
+                    
+                    usuarioLogado.pontos = novosPontos.toString();
+                    usuarioLogado.desafios_completados = JSON.stringify(desafiosCompletados);
+                    usuarioLogado.desafios = (parseInt(usuarioLogado.desafios || '0') + 1).toString();
+                    
+                    if (novosPontos >= 5000) {
+                        usuarioLogado.nivel = "🏆 EcoHerói Supremo";
+                    } else if (novosPontos >= 1000) {
+                        usuarioLogado.nivel = "🌳 EcoMestre";
+                    } else if (novosPontos >= 500) {
+                        usuarioLogado.nivel = "🍃 EcoGuardião";
+                    } else if (novosPontos >= 100) {
+                        usuarioLogado.nivel = "🌿 EcoAprendiz";
+                    }
+                    
+                    try {
+                        const response = await fetch(`${SHEETDB_URL}/email/${usuarioLogado.email}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                data: {
+                                    pontos: novosPontos.toString(),
+                                    nivel: usuarioLogado.nivel,
+                                    desafios_completados: usuarioLogado.desafios_completados,
+                                    desafios: usuarioLogado.desafios
+                                }
+                            })
+                        });
+                        
+                        if (response.ok) {
+                            console.log('✅ Pontos atualizados na planilha!');
+                        }
+                    } catch (error) {
+                        console.error('Erro ao atualizar planilha:', error);
+                    }
+                    
+                    statusDiv.style.display = 'block';
+                    statusDiv.innerHTML = `
+                        <div style="animation: fadeInUp 0.5s ease;">
+                            <div style="font-size: 48px; margin-bottom: 10px;">✅</div>
+                            <h3 style="color: #4CAF50; margin-bottom: 10px;">Desafio Comprovado!</h3>
+                            <p style="color: #5d3a1a; margin-bottom: 5px;">
+                                <strong>+${desafio.pontos} pontos</strong> adicionados ao seu perfil
+                            </p>
+                            <p style="color: #8b4513; font-size: 14px;">
+                                Novo total: ${novosPontos.toLocaleString()} pontos
+                            </p>
+                        </div>
+                    `;
+                    
+                    atualizarHeaderInfo();
+                    
+                    setTimeout(() => {
+                        fecharModal('uploadModal');
+                        renderAppContent();
+                        mostrarAlerta('success', `✅ +${desafio.pontos} pontos! Desafio completado com sucesso!`);
+                        
+                        if (tabAppAtiva === 'ranking') {
+                            renderAppContent();
+                        }
+                    }, 3000);
+                }
+            } catch (error) {
+                console.error('Erro no upload:', error);
+                progressBar.style.display = 'none';
+                btnEnviar.disabled = false;
+                btnEnviar.innerHTML = '<i class="fas fa-paper-plane"></i> Tentar Novamente';
+                mostrarAlerta('error', 'Erro ao enviar comprovante. Tente novamente.');
+            }
+        }
+        
+        function fecharModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('active');
+                const preview = document.getElementById('previewImagem');
+                if (preview) {
+                    preview.src = '';
+                    preview.style.display = 'none';
+                }
+                const input = document.getElementById('fotoDesafio');
+                if (input) input.value = '';
+                const btn = document.getElementById('btnEnviarFoto');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Comprovante';
+                }
+                const progress = document.getElementById('uploadProgress');
+                if (progress) progress.style.display = 'none';
+                const progressBar = document.getElementById('uploadProgressBar');
+                if (progressBar) progressBar.style.width = '0%';
+                const status = document.getElementById('uploadStatus');
+                if (status) {
+                    status.style.display = 'none';
+                    status.innerHTML = '';
+                }
+            }
         }
 
         function atualizarHeaderInfo() {
@@ -2924,7 +3240,8 @@
                     pontos: "0",
                     nivel: "🌱 EcoIniciante",
                     streak: "1",
-                    desafios: "0"
+                    desafios: "0",
+                    desafios_completados: "[]"
                 };
 
                 const saveResponse = await fetch(SHEETDB_URL, {
@@ -2967,11 +3284,9 @@
         }
 
         function esqueciSenha(e) { e.preventDefault(); mostrarAlerta('info', 'Recuperação em breve'); }
-        function abrirPoliticaPrivacidade(e) { if(e) e.preventDefault(); alert('Política de Privacidade'); }
-        function abrirTermosDeUso(e) { if(e) e.preventDefault(); alert('Termos de Uso'); }
-        function abrirUpload(id) { alert('Comprovante enviado! +200 pontos'); if(usuarioLogado) { usuarioLogado.pontos = (parseInt(usuarioLogado.pontos) + 200).toString(); atualizarHeaderInfo(); renderAppContent(); } }
+        function abrirPoliticaPrivacidade(e) { if(e) e.preventDefault(); alert('Política de Privacidade do SustentaPira\n\nÚltima atualização: Março 2026\n\nEsta política descreve como coletamos, usamos e protegemos suas informações pessoais.'); }
+        function abrirTermosDeUso(e) { if(e) e.preventDefault(); alert('Termos de Uso do SustentaPira\n\nAo utilizar este aplicativo, você concorda com nossos termos de uso e se compromete a utilizar a plataforma de forma ética e responsável.'); }
         function inscreverEvento(id) { if(!inscricoesUsuario.includes(id)) { inscricoesUsuario.push(id); mostrarAlerta('success', '✅ Inscrição realizada!'); renderAppContent(); } }
-        function fecharModal(id) { document.getElementById(id).classList.remove('active'); }
         function mostrarDetalheConquista(nome, descricao, pontos, desbloqueada) {
             alert(desbloqueada ? `🏆 ${nome}\n\n${descricao}\n\n✓ Já conquistada!` : `🔒 ${nome}\n\n${descricao}\n\n🎯 Complete mais desafios para desbloquear!`);
         }
@@ -3004,6 +3319,8 @@
         window.switchTab = switchTab;
         window.logout = logout;
         window.abrirUpload = abrirUpload;
+        window.previewFoto = previewFoto;
+        window.enviarComprovante = enviarComprovante;
         window.inscreverEvento = inscreverEvento;
         window.fecharModal = fecharModal;
         window.abrirPoliticaPrivacidade = abrirPoliticaPrivacidade;
