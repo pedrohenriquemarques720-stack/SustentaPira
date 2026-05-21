@@ -742,6 +742,11 @@
             color: white;
         }
 
+        .badge-inativo {
+            background: linear-gradient(135deg, #757575 0%, #424242 100%);
+            color: white;
+        }
+
         .titulo-secao {
             font-size: 28px;
             font-weight: 700;
@@ -1037,7 +1042,7 @@
         
         .fundadores-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 25px;
             margin: 30px 0;
         }
@@ -1071,7 +1076,7 @@
         }
         
         .fundador-nome {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
             color: #3a2a1a;
             margin-bottom: 5px;
@@ -1081,6 +1086,7 @@
             font-size: 12px;
             color: #8b4513;
             font-weight: 600;
+            line-height: 1.4;
         }
         
         .link-politica {
@@ -2046,6 +2052,26 @@
             background: #4CAF50 !important;
         }
 
+        .evento-encerrado {
+            opacity: 0.7;
+            position: relative;
+        }
+        
+        .evento-encerrado::after {
+            content: 'ENCERRADO';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-15deg);
+            background: rgba(244, 67, 54, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 18px;
+            letter-spacing: 2px;
+        }
+
         @media (max-width: 768px) {
             .auth-card { padding: 30px 20px; }
             .top-header { flex-direction: column; gap: 15px; text-align: center; }
@@ -2218,10 +2244,6 @@
                 </div>
                 <div class="header-actions">
                     <div class="header-stat">
-                        <i class="fas fa-fire"></i>
-                        <span>Streak <span class="stat-highlight" id="headerStreak">0</span></span>
-                    </div>
-                    <div class="header-stat">
                         <i class="fas fa-star"></i>
                         <span>Pontos <span class="stat-highlight" id="headerPoints">0</span></span>
                     </div>
@@ -2361,6 +2383,18 @@
             { id: 38, nome: "Senac", endereco: "R. Santa Cruz, 1145", categoria: "roupas", horario: "Seg-Sex 8h-17h", telefone: "(19) 3412-3000", avaliacao: 4.5, icone: "👕", tipo: "Roupas", lat: -22.7274, lng: -47.6443, materiais: ["Roupas"] }
         ];
 
+        // ===== FUNÇÃO PARA VERIFICAR SE O EVENTO JÁ ACONTECEU =====
+        function eventoJaAconteceu(dataEvento) {
+            const partes = dataEvento.split('/');
+            const dia = parseInt(partes[0]);
+            const mes = parseInt(partes[1]) - 1;
+            const ano = parseInt(partes[2]);
+            const dataEventoObj = new Date(ano, mes, dia);
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+            return dataEventoObj < hoje;
+        }
+
         // ===== FUNÇÃO QUE GERA O RANKING COM OS USUÁRIOS REAIS DA PLANILHA =====
         function getRankingReal() {
             if (!usuariosReais.length) return [];
@@ -2368,7 +2402,6 @@
                 .map(u => ({ 
                     nome: u.nome || "Usuário", 
                     pontos: parseInt(u.pontos) || 0, 
-                    streak: parseInt(u.streak) || 0, 
                     nivel: u.nivel || "🌱 EcoIniciante",
                     email: u.email,
                     desafios: parseInt(u.desafios) || 0
@@ -2499,11 +2532,10 @@
 
         function renderInicio(container) {
             const fundadores = [
-                { nome: "Pedro", cargo: "CEO & Fundador", icone: "🌱" },
-                { nome: "Pablo", cargo: "CTO & Fundador", icone: "💻" },
-                { nome: "Marcelo", cargo: "CMO & Fundador", icone: "📢" },
-                { nome: "Silvana", cargo: "COO & Fundadora", icone: "⚙️" },
-                { nome: "Gabriel", cargo: "Designer & Fundador", icone: "🎨" }
+                { nome: "Pedro Graciano", cargo: "Desenvolvedor do WebApp", icone: "💻" },
+                { nome: "Pablo Pagano", cargo: "Desenvolvedor da marca", icone: "🎯" },
+                { nome: "Gabriel Magalhães", cargo: "Marketing digital", icone: "📢" },
+                { nome: "Marcelo Cerqueira", cargo: "Engajamento do app e relações interpessoais", icone: "🤝" }
             ];
             let fundadoresHtml = '';
             fundadores.forEach(f => {
@@ -2515,7 +2547,7 @@
                     <div class="missao-card"><h2><i class="fas fa-bullseye"></i> Missão</h2><p>Promover a sustentabilidade em Piracicaba através de um ecossistema digital que conecta cidadãos, empresas e poder público.</p></div>
                     <div class="visao-card"><h2><i class="fas fa-eye"></i> Visão</h2><p>Ser a principal plataforma de engajamento sustentável do Brasil.</p></div>
                     <div class="valores-card"><h2><i class="fas fa-heart"></i> Valores</h2><div class="valores-lista"><div class="valor-item"><i class="fas fa-leaf"></i> Sustentabilidade</div><div class="valor-item"><i class="fas fa-users"></i> Colaboração</div><div class="valor-item"><i class="fas fa-lightbulb"></i> Inovação</div></div></div>
-                    <h2 style="margin: 40px 0 20px; color: #8b4513;"><i class="fas fa-users"></i> Nossos Fundadores</h2>
+                    <h2 style="margin: 40px 0 20px; color: #8b4513;"><i class="fas fa-users"></i> Nossa Equipe</h2>
                     <div class="fundadores-grid">${fundadoresHtml}</div>
                     <div class="link-politica"><a href="#" onclick="abrirPoliticaPrivacidade(event)"><i class="fas fa-lock"></i> Política de Privacidade</a><a href="#" onclick="abrirTermosDeUso(event)"><i class="fas fa-file-contract"></i> Termos de Uso</a></div>
                 </div>
@@ -2600,7 +2632,6 @@
                 { nome: "Reciclador", icone: "♻️", descricao: "Recicle 10kg de materiais", pontos: 100, condicao: pontos >= 500 },
                 { nome: "Plantador", icone: "🌳", descricao: "Plante 5 árvores", pontos: 150, condicao: pontos >= 800 },
                 { nome: "Eventos", icone: "📅", descricao: "Participe de 3 eventos", pontos: 120, condicao: inscricoesUsuario.length >= 3 },
-                { nome: "Streak 30", icone: "🔥", descricao: "30 dias consecutivos", pontos: 200, condicao: (usuarioLogado.streak || 0) >= 30 },
                 { nome: "EcoMestre", icone: "🏅", descricao: "Alcance 1000 pontos", pontos: 300, condicao: pontos >= 1000 },
                 { nome: "EcoHerói", icone: "🏆", descricao: "Alcance 5000 pontos", pontos: 500, condicao: pontos >= 5000 }
             ];
@@ -2667,7 +2698,6 @@
                             </div>
                             <div class="perfil-info-grid">
                                 <div class="info-item"><div class="info-icon"><i class="fas fa-trophy"></i></div><div class="info-text"><strong>Ranking</strong><span>${rankingNome}</span></div></div>
-                                <div class="info-item"><div class="info-icon"><i class="fas fa-fire"></i></div><div class="info-text"><strong>Streak</strong><span>${usuarioLogado.streak || 0} dias</span></div></div>
                                 <div class="info-item"><div class="info-icon"><i class="fas fa-check-circle"></i></div><div class="info-text"><strong>Desafios</strong><span>${totalDesafios} completos</span></div></div>
                                 <div class="info-item"><div class="info-icon"><i class="fas fa-star"></i></div><div class="info-text"><strong>Pontuação Total</strong><span>${pontos.toLocaleString()} pts</span></div></div>
                             </div>
@@ -2728,7 +2758,7 @@
                 
                 html += `<div class="podium-spot ${posicao}" style="${isUserLogado ? 'box-shadow: 0 0 30px rgba(76, 175, 80, 0.5);' : ''}">
                     ${isUserLogado ? '<div style="position: absolute; top: 10px; right: 10px; background: #4CAF50; color: white; padding: 4px 8px; border-radius: 50px; font-size: 11px;">VOCÊ</div>' : ''}
-                    <div class="podium-medal-giant">${medalha}</div><div class="podium-avatar-giant">${user.nome.charAt(0).toUpperCase()}</div><div class="podium-name-giant">${user.nome}</div><div class="podium-level-giant">${user.nivel}</div><div class="podium-points-giant">${user.pontos.toLocaleString()} pts</div><div class="podium-stats-giant"><span class="podium-stat-item"><i class="fas fa-fire"></i> ${user.streak} dias</span></div>
+                    <div class="podium-medal-giant">${medalha}</div><div class="podium-avatar-giant">${user.nome.charAt(0).toUpperCase()}</div><div class="podium-name-giant">${user.nome}</div><div class="podium-level-giant">${user.nivel}</div><div class="podium-points-giant">${user.pontos.toLocaleString()} pts</div><div class="podium-stats-giant"><span class="podium-stat-item"><i class="fas fa-star"></i> ${user.desafios || 0} desafios</span></div>
                 </div>`;
             });
             html += '</div>';
@@ -2745,11 +2775,40 @@
             container.innerHTML = html;
         }
 
+        // ========== RENDER EVENTOS ATUALIZADO ==========
         function renderEventos(container) {
-            let html = '<div class="app-tab-content active"><h1 class="titulo-secao">📅 Eventos Sustentáveis 2026</h1><div class="card-grid">';
+            let html = '<div class="app-tab-content active"><h1 class="titulo-secao">📅 Eventos Sustentáveis 2026</h1>';
+            
+            // Contar eventos futuros
+            const eventosFuturos = eventos.filter(e => !eventoJaAconteceu(e.data));
+            const eventosPassados = eventos.filter(e => eventoJaAconteceu(e.data));
+            
+            html += `<p style="color: #8b4513; margin-bottom: 20px;">
+                <i class="fas fa-calendar-alt"></i> 
+                ${eventosFuturos.length} eventos disponíveis • ${eventosPassados.length} eventos encerrados
+            </p>`;
+            
+            html += '<div class="card-grid">';
             eventos.forEach(e => {
                 const inscrito = inscricoesUsuario.includes(e.id);
-                html += `<div class="card-moderno"><h3>${e.titulo}</h3><p><i class="fas fa-calendar"></i> ${e.data} - ${e.hora}</p><p><i class="fas fa-map-marker-alt"></i> ${e.local}</p><p style="font-size:12px;color:#8b4513">${e.descricao.substring(0,80)}...</p><span class="badge badge-success">+${e.pontos} pts</span><span class="badge badge-info">${e.vagas - e.inscritos} vagas</span>${!inscrito ? `<button class="btn-auth" style="margin-top:15px" onclick="inscreverEvento(${e.id})">📝 Inscrever-se</button>` : '<span class="badge badge-success" style="margin-top:15px;display:inline-block;">✅ Inscrito</span>'}</div>`;
+                const encerrado = eventoJaAconteceu(e.data);
+                
+                html += `
+                    <div class="card-moderno ${encerrado ? 'evento-encerrado' : ''}" style="${encerrado ? 'pointer-events: none;' : ''}">
+                        <h3>${e.titulo}</h3>
+                        <p><i class="fas fa-calendar"></i> ${e.data} - ${e.hora}</p>
+                        <p><i class="fas fa-map-marker-alt"></i> ${e.local}</p>
+                        <p style="font-size:12px;color:#8b4513">${e.descricao.substring(0,80)}...</p>
+                        ${encerrado ? 
+                            '<span class="badge badge-inativo">🔒 Evento Encerrado</span>' : 
+                            `<span class="badge badge-success">+${e.pontos} pts</span><span class="badge badge-info">${e.vagas - e.inscritos} vagas</span>`
+                        }
+                        ${!encerrado && !inscrito ? 
+                            `<button class="btn-auth" style="margin-top:15px" onclick="inscreverEvento(${e.id})">📝 Inscrever-se</button>` : 
+                            !encerrado ? '<span class="badge badge-success" style="margin-top:15px;display:inline-block;">✅ Inscrito</span>' : ''
+                        }
+                    </div>
+                `;
             });
             html += '</div></div>';
             container.innerHTML = html;
@@ -3174,7 +3233,6 @@
 
         function atualizarHeaderInfo() {
             if (usuarioLogado) {
-                document.getElementById('headerStreak').innerText = usuarioLogado.streak || 0;
                 document.getElementById('headerPoints').innerText = usuarioLogado.pontos || 0;
                 document.getElementById('headerAvatar').innerHTML = (usuarioLogado.nome?.charAt(0) || 'U').toUpperCase() + '<span class="online-indicator"></span>';
             }
@@ -3197,7 +3255,7 @@
             const usuario = usuariosReais.find(u => u.email === email && u.senha === senha);
             
             if (usuario) {
-                usuarioLogado = { ...usuario, pontos: parseInt(usuario.pontos) || 0, streak: parseInt(usuario.streak) || 0, nivel: usuario.nivel || "🌱 EcoIniciante" };
+                usuarioLogado = { ...usuario, pontos: parseInt(usuario.pontos) || 0, nivel: usuario.nivel || "🌱 EcoIniciante" };
                 if (lembrar) localStorage.setItem('sustentapira_user', JSON.stringify({ email: usuario.email, nome: usuario.nome }));
                 document.getElementById('loginScreen').classList.add('hidden');
                 document.getElementById('appScreen').classList.remove('hidden');
@@ -3239,7 +3297,6 @@
                     data_cadastro: new Date().toLocaleDateString('pt-BR'),
                     pontos: "0",
                     nivel: "🌱 EcoIniciante",
-                    streak: "1",
                     desafios: "0",
                     desafios_completados: "[]"
                 };
@@ -3299,7 +3356,7 @@
                     await carregarUsuariosReais();
                     const usuario = usuariosReais.find(u => u.email === user.email);
                     if (usuario) {
-                        usuarioLogado = { ...usuario, pontos: parseInt(usuario.pontos) || 0, streak: parseInt(usuario.streak) || 0, nivel: usuario.nivel || "🌱 EcoIniciante" };
+                        usuarioLogado = { ...usuario, pontos: parseInt(usuario.pontos) || 0, nivel: usuario.nivel || "🌱 EcoIniciante" };
                         document.getElementById('loginScreen').classList.add('hidden');
                         document.getElementById('appScreen').classList.remove('hidden');
                         atualizarHeaderInfo();
