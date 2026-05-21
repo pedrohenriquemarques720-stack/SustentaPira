@@ -737,6 +737,11 @@
             color: white;
         }
 
+        .badge-warning {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            color: white;
+        }
+
         .titulo-secao {
             font-size: 28px;
             font-weight: 700;
@@ -755,6 +760,242 @@
             height: 4px;
             background: linear-gradient(90deg, #8b4513, #b85e3a);
             border-radius: 2px;
+        }
+
+        /* ESTILOS PROFISSIONAIS PARA PONTOS DE COLETA */
+        .pontos-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .ponto-stat-card {
+            background: linear-gradient(145deg, #fafafa, #f0f0f0);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            border: 1px solid #8b5a2b;
+            transition: all 0.3s ease;
+        }
+
+        .ponto-stat-card:hover {
+            transform: translateY(-5px);
+            border-color: #8b4513;
+            box-shadow: 0 10px 20px rgba(139, 69, 19, 0.2);
+        }
+
+        .ponto-stat-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+            color: #8b4513;
+        }
+
+        .ponto-stat-number {
+            font-size: 32px;
+            font-weight: 800;
+            color: #3a2a1a;
+        }
+
+        .ponto-stat-label {
+            font-size: 14px;
+            color: #8b4513;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        .pontos-filters {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            border: 1px solid #8b5a2b;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #8b4513;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .filter-group select, .filter-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #8b5a2b;
+            border-radius: 12px;
+            font-family: inherit;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .filter-group select:focus, .filter-group input:focus {
+            outline: none;
+            border-color: #8b4513;
+            box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.1);
+        }
+
+        .ponto-card-premium {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid #8b5a2b;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+
+        .ponto-card-premium:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(139, 69, 19, 0.15);
+            border-color: #8b4513;
+        }
+
+        .ponto-card-header {
+            background: linear-gradient(135deg, #8b4513, #b85e3a);
+            padding: 20px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .ponto-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .ponto-title h3 {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .ponto-title p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .ponto-card-body {
+            padding: 20px;
+        }
+
+        .ponto-info-row {
+            display: flex;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .ponto-info-label {
+            font-weight: 600;
+            min-width: 95px;
+            color: #5d3a1a;
+        }
+
+        .ponto-info-value {
+            color: #3a2a1a;
+            flex: 1;
+        }
+
+        .ponto-materiais {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .material-badge {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .material-badge.eletronicos { background: #e3f2fd; color: #1565c0; }
+        .material-badge.pilhas { background: #fff3e0; color: #e65100; }
+        .material-badge.oleo { background: #fce4ec; color: #c2185b; }
+        .material-badge.geral { background: #f3e5f5; color: #6a1b9a; }
+
+        .ponto-rating {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .stars {
+            color: #ffc107;
+            font-size: 14px;
+        }
+
+        .rating-value {
+            font-weight: 600;
+            color: #8b4513;
+        }
+
+        .ponto-card-footer {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #e0d5c0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-route {
+            flex: 1;
+            padding: 10px;
+            background: #8b4513;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-route:hover {
+            background: #b85e3a;
+            transform: scale(1.02);
+        }
+
+        .btn-details {
+            flex: 1;
+            padding: 10px;
+            background: transparent;
+            color: #8b4513;
+            border: 1px solid #8b4513;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-details:hover {
+            background: #8b4513;
+            color: white;
         }
 
         .missao-card, .visao-card, .valores-card {
@@ -860,7 +1101,7 @@
             align-items: center;
             gap: 8px;
         }
-        
+
         .ranking-container {
             padding: 10px 0;
         }
@@ -1727,6 +1968,8 @@
             .ranking-stats-bar { grid-template-columns: 1fr; }
             .ranking-item-premium { flex-direction: column; align-items: flex-start; }
             .ranking-points-premium { align-self: flex-end; }
+            .pontos-stats { grid-template-columns: 1fr; }
+            .filter-row { flex-direction: column; }
             #mapaPontos { height: 350px; }
         }
 
@@ -1902,11 +2145,11 @@
 
             <div class="app-tabs">
                 <button class="app-tab" data-tab="inicio" onclick="mudarTabApp('inicio')">🏠 Início</button>
-                <button class="app-tab active" data-tab="desafios" onclick="mudarTabApp('desafios')">🌱 Desafios</button>
+                <button class="app-tab" data-tab="desafios" onclick="mudarTabApp('desafios')">🌱 Desafios</button>
                 <button class="app-tab" data-tab="perfil" onclick="mudarTabApp('perfil')">👤 Perfil</button>
                 <button class="app-tab" data-tab="ranking" onclick="mudarTabApp('ranking')">🏆 Ranking</button>
                 <button class="app-tab" data-tab="eventos" onclick="mudarTabApp('eventos')">📅 Eventos</button>
-                <button class="app-tab" data-tab="pontos" onclick="mudarTabApp('pontos')">📍 Pontos</button>
+                <button class="app-tab active" data-tab="pontos" onclick="mudarTabApp('pontos')">📍 Pontos</button>
             </div>
 
             <div id="appContent"></div>
@@ -1933,11 +2176,13 @@
         const SHEETDB_URL = 'https://sheetdb.io/api/v1/pxcozyw0d91x8';
         
         // ========== DADOS ==========
-        let usuariosReais = [];      // Todos os usuários da planilha Google
+        let usuariosReais = [];
         let usuarioLogado = null;
-        let tabAppAtiva = 'desafios';
+        let tabAppAtiva = 'pontos';
         let inscricoesUsuario = [];
         let mapaPontos = null;
+        let pontosMarkers = [];
+        let currentPontoFilter = { search: '', tipo: 'todos', categoria: 'todos' };
         
         // ========== DESAFIOS ==========
         const desafios = [
@@ -1955,55 +2200,72 @@
             { id: 12, titulo: "Convide 5 amigos para o app", descricao: "", pontos: 300, icone: "🏆", tipo: "social", dica: "Compartilhe seu código" },
         ];
 
-        // ========== EVENTOS ==========
+        // ========== EVENTOS SUSTENTÁVEIS 2026 ==========
         const eventos = [
             { id: 1, titulo: "🌱 1º Mutirão de Limpeza 2026", descricao: "Inicie o ano contribuindo com a limpeza das margens do Rio Piracicaba.", data: "10/01/2026", hora: "08:00", local: "Rua do Porto", tipo: "mutirão", vagas: 200, inscritos: 78, pontos: 200 },
             { id: 2, titulo: "♻️ Oficina de Reciclagem de Papel", descricao: "Aprenda a fazer papel reciclado artesanal.", data: "17/01/2026", hora: "14:00", local: "SENAI Piracicaba", tipo: "oficina", vagas: 40, inscritos: 35, pontos: 150 },
             { id: 3, titulo: "🌿 Palestra: Agricultura Urbana", descricao: "Como cultivar alimentos em pequenos espaços.", data: "24/01/2026", hora: "10:00", local: "Horto Municipal", tipo: "palestra", vagas: 100, inscritos: 62, pontos: 120 },
             { id: 4, titulo: "🚴 Pedal do Sol Nascente", descricao: "Passeio ciclístico ao amanhecer.", data: "31/01/2026", hora: "06:00", local: "Largo dos Pescadores", tipo: "passeio", vagas: 150, inscritos: 89, pontos: 180 },
             { id: 5, titulo: "🌊 Expedição Rio Piracicaba", descricao: "Passeio de barco educativo com biólogos.", data: "07/02/2026", hora: "09:00", local: "Rua do Porto", tipo: "passeio", vagas: 60, inscritos: 42, pontos: 200 },
+            { id: 6, titulo: "🌳 Plantio de Mudas Nativas", descricao: "Ajude a reflorestar a cidade plantando árvores nativas.", data: "15/03/2026", hora: "09:00", local: "Parque do Mirante", tipo: "mutirão", vagas: 100, inscritos: 45, pontos: 250 },
+            { id: 7, titulo: "💡 Workshop de Energia Solar", descricao: "Aprenda sobre instalação e benefícios da energia solar.", data: "22/03/2026", hora: "14:00", local: "UNIMEP", tipo: "workshop", vagas: 80, inscritos: 30, pontos: 200 },
+            { id: 8, titulo: "🍽️ Feira de Troca de Roupas", descricao: "Troque roupas que não usa mais por peças novas.", data: "05/04/2026", hora: "10:00", local: "Sesc Piracicaba", tipo: "feira", vagas: 200, inscritos: 95, pontos: 150 },
+            { id: 9, titulo: "🗑️ Coleta Seletiva nos Bairros", descricao: "Ação de conscientização sobre coleta seletiva.", data: "18/04/2026", hora: "08:00", local: "Vários bairros", tipo: "mutirão", vagas: 50, inscritos: 28, pontos: 180 },
+            { id: 10, titulo: "🌻 Dia Mundial do Meio Ambiente", descricao: "Celebração com atividades educativas e plantio.", data: "05/06/2026", hora: "10:00", local: "Engenho Central", tipo: "evento", vagas: 300, inscritos: 120, pontos: 300 },
+            { id: 11, titulo: "🏆 EcoWeek Piracicaba", descricao: "Semana da sustentabilidade com diversas atividades.", data: "10/08/2026", hora: "09:00", local: "Vários locais", tipo: "conferência", vagas: 500, inscritos: 200, pontos: 400 },
+            { id: 12, titulo: "🥫 Campanha de Arrecadação de Alimentos", descricao: "Doe alimentos não perecíveis para famílias carentes.", data: "20/09/2026", hora: "08:00", local: "Supermercados da cidade", tipo: "campanha", vagas: 100, inscritos: 55, pontos: 250 },
+            { id: 13, titulo: "📚 Simpósio de Sustentabilidade", descricao: "Palestras com especialistas em sustentabilidade.", data: "15/10/2026", hora: "09:00", local: "Teatro Municipal", tipo: "simpósio", vagas: 200, inscritos: 80, pontos: 350 },
+            { id: 14, titulo: "🎨 Exposição de Arte com Recicláveis", descricao: "Obras de arte criadas com materiais recicláveis.", data: "01/11/2026", hora: "14:00", local: "Pinacoteca", tipo: "exposição", vagas: 150, inscritos: 40, pontos: 200 },
+            { id: 15, titulo: "🏅 Premiação EcoHeróis 2026", descricao: "Cerimônia de premiação dos destaques ambientais.", data: "10/12/2026", hora: "19:00", local: "Centro de Convenções", tipo: "premiação", vagas: 300, inscritos: 100, pontos: 500 }
         ];
 
-        // ========== PONTOS DE COLETA ==========
+        // ========== PONTOS DE COLETA COMPLETOS ==========
         const pontosColeta = [
-            { id: 1, nome: "Ecoponto Centro", endereco: "Av. Rui Barbosa, 800 - Centro", categoria: "geral", horario: "Seg-Sex 8h-17h, Sáb 8h-12h", telefone: "(19) 3403-1100", avaliacao: 4.5, icone: "🗑️", tipo: "Ecoponto", lat: -22.7245, lng: -47.6472 },
-            { id: 2, nome: "Ecoponto Paulicéia", endereco: "R. Javari, 150 - Paulicéia", categoria: "geral", horario: "Ter-Sáb 8h-16h", telefone: "(19) 3403-2200", avaliacao: 4.3, icone: "🗑️", tipo: "Ecoponto", lat: -22.7182, lng: -47.6528 },
-            { id: 3, nome: "Ecoponto Santa Terezinha", endereco: "Av. Dr. Paulo de Moraes, 1500", categoria: "geral", horario: "Seg-Sáb 8h-17h", telefone: "(19) 3403-2300", avaliacao: 4.4, icone: "🗑️", tipo: "Ecoponto", lat: -22.7341, lng: -47.6395 },
-            { id: 4, nome: "Ecoponto Vila Sônia", endereco: "R. Benedito Tolosa, 500 - Vila Sônia", categoria: "geral", horario: "Seg-Sáb 8h-17h", telefone: "(19) 3403-2400", avaliacao: 4.2, icone: "🗑️", tipo: "Ecoponto", lat: -22.7423, lng: -47.6418 },
-            { id: 5, nome: "Ecoponto Nova Piracicaba", endereco: "Av. Cruzeiro do Sul, 2000", categoria: "geral", horario: "Seg-Sáb 8h-17h", telefone: "(19) 3403-2500", avaliacao: 4.6, icone: "🗑️", tipo: "Ecoponto", lat: -22.7289, lng: -47.6581 },
-            { id: 6, nome: "Ecoponto Vila Rezende", endereco: "R. dos Operários, 500 - Vila Rezende", categoria: "geral", horario: "Seg-Sáb 8h-16h", telefone: "(19) 3403-2600", avaliacao: 4.3, icone: "🗑️", tipo: "Ecoponto", lat: -22.7154, lng: -47.6485 },
-            { id: 7, nome: "Ecoponto Ártemis", endereco: "Av. 1º de Agosto, 1000 - Ártemis", categoria: "geral", horario: "Seg-Sáb 8h-16h", telefone: "(19) 3403-2700", avaliacao: 4.2, icone: "🗑️", tipo: "Ecoponto", lat: -22.7567, lng: -47.6423 },
-            { id: 8, nome: "Ecoponto Tupi", endereco: "R. Tiradentes, 300 - Tupi", categoria: "geral", horario: "Seg-Sáb 8h-16h", telefone: "(19) 3403-2800", avaliacao: 4.1, icone: "🗑️", tipo: "Ecoponto", lat: -22.7089, lng: -47.6574 },
-            { id: 9, nome: "Shopping Piracicaba", endereco: "Av. Limeira, 700 - Areão", categoria: "pilhas", horario: "Seg-Sáb 10h-22h, Dom 14h-20h", telefone: "(19) 3432-4545", avaliacao: 4.8, icone: "🔋", tipo: "Pilhas", lat: -22.7176, lng: -47.6345 },
-            { id: 10, nome: "Unimed Sede", endereco: "R. Voluntários, 450 - Centro", categoria: "pilhas", horario: "Seg-Sex 7h-19h", telefone: "(19) 3432-9000", avaliacao: 4.6, icone: "🔋", tipo: "Pilhas", lat: -22.7278, lng: -47.6492 },
-            { id: 11, nome: "Santa Casa", endereco: "Av. Independência, 950 - Centro", categoria: "pilhas", horario: "Seg-Sex 8h-18h", telefone: "(19) 3412-2000", avaliacao: 4.4, icone: "🔋", tipo: "Pilhas", lat: -22.7224, lng: -47.6421 },
-            { id: 12, nome: "Prefeitura Municipal", endereco: "R. Antônio Corrêa Barbosa, 2233", categoria: "pilhas", horario: "Seg-Sex 8h-17h", telefone: "(19) 3403-1000", avaliacao: 4.5, icone: "🔋", tipo: "Pilhas", lat: -22.7302, lng: -47.6458 },
-            { id: 13, nome: "Câmara Municipal", endereco: "R. do Rosário, 833 - Centro", categoria: "pilhas", horario: "Seg-Sex 8h-17h", telefone: "(19) 3403-1500", avaliacao: 4.4, icone: "🔋", tipo: "Pilhas", lat: -22.7267, lng: -47.6483 },
-            { id: 14, nome: "Terminal Central", endereco: "Av. Dr. Paulo de Moraes, 200", categoria: "pilhas", horario: "Seg-Dom 5h-23h", telefone: "(19) 3403-3000", avaliacao: 4.3, icone: "🔋", tipo: "Pilhas", lat: -22.7348, lng: -47.6391 },
-            { id: 15, nome: "Estação da Paulista", endereco: "Av. Rio Claro, 500 - Paulista", categoria: "pilhas", horario: "Seg-Dom 5h-23h", telefone: "(19) 3403-3100", avaliacao: 4.2, icone: "🔋", tipo: "Pilhas", lat: -22.7195, lng: -47.6543 },
-            { id: 16, nome: "Farmácias Pague Menos", endereco: "Av. Independência, 1000", categoria: "pilhas", horario: "Seg-Dom 8h-22h", telefone: "(19) 3412-9000", avaliacao: 4.6, icone: "🔋", tipo: "Pilhas", lat: -22.7241, lng: -47.6419 },
-            { id: 17, nome: "CDI Eletrônicos", endereco: "R. do Porto, 234 - Centro", categoria: "eletronicos", horario: "Seg-Sex 9h-18h", telefone: "(19) 3433-5678", avaliacao: 4.7, icone: "💻", tipo: "Eletrônicos", lat: -22.7232, lng: -47.6501 },
-            { id: 18, nome: "ESALQ/USP", endereco: "Av. Pádua Dias, 11", categoria: "eletronicos", horario: "Seg-Sex 8h-17h", telefone: "(19) 3447-8500", avaliacao: 4.9, icone: "💻", tipo: "Eletrônicos", lat: -22.7082, lng: -47.6445 },
-            { id: 19, nome: "UNIMEP", endereco: "R. do Rosário, 1301", categoria: "eletronicos", horario: "Seg-Sex 8h-22h", telefone: "(19) 3421-3000", avaliacao: 4.7, icone: "💻", tipo: "Eletrônicos", lat: -22.7295, lng: -47.6532 },
-            { id: 20, nome: "FUMEP", endereco: "Av. Monsenhor Martinho Salgot, 560", categoria: "eletronicos", horario: "Seg-Sex 8h-17h", telefone: "(19) 3412-4000", avaliacao: 4.4, icone: "💻", tipo: "Eletrônicos", lat: -22.7364, lng: -47.6387 },
-            { id: 21, nome: "Senai", endereco: "Av. Luiz Ralph Benatti, 500", categoria: "eletronicos", horario: "Seg-Sex 8h-17h", telefone: "(19) 3412-5000", avaliacao: 4.6, icone: "💻", tipo: "Eletrônicos", lat: -22.7248, lng: -47.6289 },
-            { id: 22, nome: "Sesc", endereco: "R. Ipiranga, 155 - Centro", categoria: "eletronicos", horario: "Seg-Sex 9h-21h", telefone: "(19) 3437-9292", avaliacao: 4.8, icone: "💻", tipo: "Eletrônicos", lat: -22.7251, lng: -47.6465 },
-            { id: 23, nome: "Oleobom", endereco: "R. São João, 678 - Centro", categoria: "oleo", horario: "Seg-Sex 9h-18h", telefone: "(19) 3421-5678", avaliacao: 4.6, icone: "🫒", tipo: "Óleo", lat: -22.7281, lng: -47.6478 },
-            { id: 24, nome: "Supermercados Pague Menos", endereco: "Av. Limeira, 1200", categoria: "oleo", horario: "Seg-Dom 8h-22h", telefone: "(19) 3434-2000", avaliacao: 4.5, icone: "🫒", tipo: "Óleo", lat: -22.7152, lng: -47.6327 },
-            { id: 25, nome: "Supermercados Savegnago", endereco: "Av. Cruzeiro do Sul, 800", categoria: "oleo", horario: "Seg-Dom 8h-22h", telefone: "(19) 3433-3000", avaliacao: 4.7, icone: "🫒", tipo: "Óleo", lat: -22.7274, lng: -47.6589 },
-            { id: 26, nome: "Atacadão", endereco: "Av. Limeira, 2000", categoria: "oleo", horario: "Seg-Dom 8h-22h", telefone: "(19) 3434-5000", avaliacao: 4.4, icone: "🫒", tipo: "Óleo", lat: -22.7118, lng: -47.6274 },
-            { id: 27, nome: "Feira Noturna", endereco: "Praça José Bonifácio", categoria: "oleo", horario: "Qui 17h-22h", telefone: "(19) 3403-1100", avaliacao: 4.2, icone: "🫒", tipo: "Óleo", lat: -22.7262, lng: -47.6471 },
-            { id: 28, nome: "Coopervidros", endereco: "R. Treze de Maio, 300", categoria: "vidros", horario: "Seg-Sex 8h-17h", telefone: "(19) 3421-1234", avaliacao: 4.2, icone: "🥃", tipo: "Vidros", lat: -22.7325, lng: -47.6428 },
-            { id: 29, nome: "Recicla Vidros", endereco: "Av. Rio Claro, 450", categoria: "vidros", horario: "Seg-Sex 8h-16h", telefone: "(19) 3434-5678", avaliacao: 4.3, icone: "🥃", tipo: "Vidros", lat: -22.7189, lng: -47.6549 },
-            { id: 30, nome: "Vidrocenter", endereco: "R. do Vergueiro, 600", categoria: "vidros", horario: "Seg-Sex 8h-18h", telefone: "(19) 3422-3344", avaliacao: 4.4, icone: "🥃", tipo: "Vidros", lat: -22.7301, lng: -47.6512 },
-            { id: 31, nome: "Cooperativa Recicla", endereco: "R. dos Operários, 200", categoria: "papel", horario: "Seg-Sex 8h-16h", telefone: "(19) 3422-3344", avaliacao: 4.4, icone: "📄", tipo: "Papel", lat: -22.7159, lng: -47.6498 },
-            { id: 32, nome: "Papelão Recicla", endereco: "Av. Independência, 1800", categoria: "papel", horario: "Seg-Sex 8h-17h", telefone: "(19) 3433-4455", avaliacao: 4.2, icone: "📄", tipo: "Papel", lat: -22.7201, lng: -47.6392 },
-            { id: 33, nome: "Recicla Papel", endereco: "R. do Porto, 567", categoria: "papel", horario: "Seg-Sex 8h-16h", telefone: "(19) 3423-4567", avaliacao: 4.3, icone: "📄", tipo: "Papel", lat: -22.7247, lng: -47.6514 },
-            { id: 34, nome: "Gráficas Unidas", endereco: "Av. Rio Claro, 300", categoria: "papel", horario: "Seg-Sex 8h-18h", telefone: "(19) 3423-4567", avaliacao: 4.3, icone: "📄", tipo: "Papel", lat: -22.7182, lng: -47.6545 },
-            { id: 35, nome: "Brechó Solidário", endereco: "R. Governador, 400", categoria: "roupas", horario: "Seg-Sex 9h-17h", telefone: "(19) 3421-4321", avaliacao: 4.5, icone: "👕", tipo: "Roupas", lat: -22.7292, lng: -47.6487 },
-            { id: 36, nome: "Casa da Fraternidade", endereco: "R. do Vergueiro, 200", categoria: "roupas", horario: "Seg-Sex 8h-16h", telefone: "(19) 3422-1234", avaliacao: 4.7, icone: "👕", tipo: "Roupas", lat: -22.7311, lng: -47.6505 },
-            { id: 37, nome: "Sesc", endereco: "R. Ipiranga, 155", categoria: "roupas", horario: "Seg-Sex 9h-21h", telefone: "(19) 3437-9292", avaliacao: 4.6, icone: "👕", tipo: "Roupas", lat: -22.7251, lng: -47.6465 },
-            { id: 38, nome: "Senac", endereco: "R. Santa Cruz, 1145", categoria: "roupas", horario: "Seg-Sex 8h-17h", telefone: "(19) 3412-3000", avaliacao: 4.5, icone: "👕", tipo: "Roupas", lat: -22.7274, lng: -47.6443 }
+            // Ecopontos (geral)
+            { id: 1, nome: "Ecoponto Centro", endereco: "Av. Rui Barbosa, 800 - Centro", categoria: "geral", horario: "Seg-Sex 8h-17h, Sáb 8h-12h", telefone: "(19) 3403-1100", avaliacao: 4.5, icone: "🗑️", tipo: "Ecoponto", lat: -22.7245, lng: -47.6472, materiais: ["Plástico", "Papel", "Vidro", "Metal"] },
+            { id: 2, nome: "Ecoponto Paulicéia", endereco: "R. Javari, 150 - Paulicéia", categoria: "geral", horario: "Ter-Sáb 8h-16h", telefone: "(19) 3403-2200", avaliacao: 4.3, icone: "🗑️", tipo: "Ecoponto", lat: -22.7182, lng: -47.6528, materiais: ["Plástico", "Papel", "Vidro", "Metal"] },
+            { id: 3, nome: "Ecoponto Santa Terezinha", endereco: "Av. Dr. Paulo de Moraes, 1500", categoria: "geral", horario: "Seg-Sáb 8h-17h", telefone: "(19) 3403-2300", avaliacao: 4.4, icone: "🗑️", tipo: "Ecoponto", lat: -22.7341, lng: -47.6395, materiais: ["Plástico", "Papel", "Vidro", "Metal"] },
+            { id: 4, nome: "Ecoponto Vila Sônia", endereco: "R. Benedito Tolosa, 500 - Vila Sônia", categoria: "geral", horario: "Seg-Sáb 8h-17h", telefone: "(19) 3403-2400", avaliacao: 4.2, icone: "🗑️", tipo: "Ecoponto", lat: -22.7423, lng: -47.6418, materiais: ["Plástico", "Papel", "Vidro", "Metal"] },
+            { id: 5, nome: "Ecoponto Nova Piracicaba", endereco: "Av. Cruzeiro do Sul, 2000", categoria: "geral", horario: "Seg-Sáb 8h-17h", telefone: "(19) 3403-2500", avaliacao: 4.6, icone: "🗑️", tipo: "Ecoponto", lat: -22.7289, lng: -47.6581, materiais: ["Plástico", "Papel", "Vidro", "Metal"] },
+            { id: 6, nome: "Ecoponto Vila Rezende", endereco: "R. dos Operários, 500 - Vila Rezende", categoria: "geral", horario: "Seg-Sáb 8h-16h", telefone: "(19) 3403-2600", avaliacao: 4.3, icone: "🗑️", tipo: "Ecoponto", lat: -22.7154, lng: -47.6485, materiais: ["Plástico", "Papel", "Vidro", "Metal"] },
+            { id: 7, nome: "Ecoponto Ártemis", endereco: "Av. 1º de Agosto, 1000 - Ártemis", categoria: "geral", horario: "Seg-Sáb 8h-16h", telefone: "(19) 3403-2700", avaliacao: 4.2, icone: "🗑️", tipo: "Ecoponto", lat: -22.7567, lng: -47.6423, materiais: ["Plástico", "Papel", "Vidro", "Metal"] },
+            { id: 8, nome: "Ecoponto Tupi", endereco: "R. Tiradentes, 300 - Tupi", categoria: "geral", horario: "Seg-Sáb 8h-16h", telefone: "(19) 3403-2800", avaliacao: 4.1, icone: "🗑️", tipo: "Ecoponto", lat: -22.7089, lng: -47.6574, materiais: ["Plástico", "Papel", "Vidro", "Metal"] },
+            // Pontos de Pilhas e Baterias
+            { id: 9, nome: "Shopping Piracicaba", endereco: "Av. Limeira, 700 - Areão", categoria: "pilhas", horario: "Seg-Sáb 10h-22h, Dom 14h-20h", telefone: "(19) 3432-4545", avaliacao: 4.8, icone: "🔋", tipo: "Pilhas", lat: -22.7176, lng: -47.6345, materiais: ["Pilhas", "Baterias"] },
+            { id: 10, nome: "Unimed Sede", endereco: "R. Voluntários, 450 - Centro", categoria: "pilhas", horario: "Seg-Sex 7h-19h", telefone: "(19) 3432-9000", avaliacao: 4.6, icone: "🔋", tipo: "Pilhas", lat: -22.7278, lng: -47.6492, materiais: ["Pilhas", "Baterias"] },
+            { id: 11, nome: "Santa Casa", endereco: "Av. Independência, 950 - Centro", categoria: "pilhas", horario: "Seg-Sex 8h-18h", telefone: "(19) 3412-2000", avaliacao: 4.4, icone: "🔋", tipo: "Pilhas", lat: -22.7224, lng: -47.6421, materiais: ["Pilhas", "Baterias"] },
+            { id: 12, nome: "Prefeitura Municipal", endereco: "R. Antônio Corrêa Barbosa, 2233", categoria: "pilhas", horario: "Seg-Sex 8h-17h", telefone: "(19) 3403-1000", avaliacao: 4.5, icone: "🔋", tipo: "Pilhas", lat: -22.7302, lng: -47.6458, materiais: ["Pilhas", "Baterias"] },
+            { id: 13, nome: "Câmara Municipal", endereco: "R. do Rosário, 833 - Centro", categoria: "pilhas", horario: "Seg-Sex 8h-17h", telefone: "(19) 3403-1500", avaliacao: 4.4, icone: "🔋", tipo: "Pilhas", lat: -22.7267, lng: -47.6483, materiais: ["Pilhas", "Baterias"] },
+            { id: 14, nome: "Terminal Central", endereco: "Av. Dr. Paulo de Moraes, 200", categoria: "pilhas", horario: "Seg-Dom 5h-23h", telefone: "(19) 3403-3000", avaliacao: 4.3, icone: "🔋", tipo: "Pilhas", lat: -22.7348, lng: -47.6391, materiais: ["Pilhas", "Baterias"] },
+            { id: 15, nome: "Estação da Paulista", endereco: "Av. Rio Claro, 500 - Paulista", categoria: "pilhas", horario: "Seg-Dom 5h-23h", telefone: "(19) 3403-3100", avaliacao: 4.2, icone: "🔋", tipo: "Pilhas", lat: -22.7195, lng: -47.6543, materiais: ["Pilhas", "Baterias"] },
+            { id: 16, nome: "Farmácias Pague Menos", endereco: "Av. Independência, 1000", categoria: "pilhas", horario: "Seg-Dom 8h-22h", telefone: "(19) 3412-9000", avaliacao: 4.6, icone: "🔋", tipo: "Pilhas", lat: -22.7241, lng: -47.6419, materiais: ["Pilhas", "Baterias"] },
+            // Pontos de Eletrônicos
+            { id: 17, nome: "CDI Eletrônicos", endereco: "R. do Porto, 234 - Centro", categoria: "eletronicos", horario: "Seg-Sex 9h-18h", telefone: "(19) 3433-5678", avaliacao: 4.7, icone: "💻", tipo: "Eletrônicos", lat: -22.7232, lng: -47.6501, materiais: ["Computadores", "Celulares", "Eletrônicos"] },
+            { id: 18, nome: "ESALQ/USP", endereco: "Av. Pádua Dias, 11", categoria: "eletronicos", horario: "Seg-Sex 8h-17h", telefone: "(19) 3447-8500", avaliacao: 4.9, icone: "💻", tipo: "Eletrônicos", lat: -22.7082, lng: -47.6445, materiais: ["Computadores", "Eletrônicos"] },
+            { id: 19, nome: "UNIMEP", endereco: "R. do Rosário, 1301", categoria: "eletronicos", horario: "Seg-Sex 8h-22h", telefone: "(19) 3421-3000", avaliacao: 4.7, icone: "💻", tipo: "Eletrônicos", lat: -22.7295, lng: -47.6532, materiais: ["Computadores", "Celulares", "Eletrônicos"] },
+            { id: 20, nome: "FUMEP", endereco: "Av. Monsenhor Martinho Salgot, 560", categoria: "eletronicos", horario: "Seg-Sex 8h-17h", telefone: "(19) 3412-4000", avaliacao: 4.4, icone: "💻", tipo: "Eletrônicos", lat: -22.7364, lng: -47.6387, materiais: ["Eletrônicos"] },
+            { id: 21, nome: "Senai", endereco: "Av. Luiz Ralph Benatti, 500", categoria: "eletronicos", horario: "Seg-Sex 8h-17h", telefone: "(19) 3412-5000", avaliacao: 4.6, icone: "💻", tipo: "Eletrônicos", lat: -22.7248, lng: -47.6289, materiais: ["Computadores", "Eletrônicos"] },
+            { id: 22, nome: "Sesc", endereco: "R. Ipiranga, 155 - Centro", categoria: "eletronicos", horario: "Seg-Sex 9h-21h", telefone: "(19) 3437-9292", avaliacao: 4.8, icone: "💻", tipo: "Eletrônicos", lat: -22.7251, lng: -47.6465, materiais: ["Eletrônicos"] },
+            // Pontos de Óleo de Cozinha
+            { id: 23, nome: "Oleobom", endereco: "R. São João, 678 - Centro", categoria: "oleo", horario: "Seg-Sex 9h-18h", telefone: "(19) 3421-5678", avaliacao: 4.6, icone: "🫒", tipo: "Óleo", lat: -22.7281, lng: -47.6478, materiais: ["Óleo de Cozinha"] },
+            { id: 24, nome: "Supermercados Pague Menos", endereco: "Av. Limeira, 1200", categoria: "oleo", horario: "Seg-Dom 8h-22h", telefone: "(19) 3434-2000", avaliacao: 4.5, icone: "🫒", tipo: "Óleo", lat: -22.7152, lng: -47.6327, materiais: ["Óleo de Cozinha"] },
+            { id: 25, nome: "Supermercados Savegnago", endereco: "Av. Cruzeiro do Sul, 800", categoria: "oleo", horario: "Seg-Dom 8h-22h", telefone: "(19) 3433-3000", avaliacao: 4.7, icone: "🫒", tipo: "Óleo", lat: -22.7274, lng: -47.6589, materiais: ["Óleo de Cozinha"] },
+            { id: 26, nome: "Atacadão", endereco: "Av. Limeira, 2000", categoria: "oleo", horario: "Seg-Dom 8h-22h", telefone: "(19) 3434-5000", avaliacao: 4.4, icone: "🫒", tipo: "Óleo", lat: -22.7118, lng: -47.6274, materiais: ["Óleo de Cozinha"] },
+            { id: 27, nome: "Feira Noturna", endereco: "Praça José Bonifácio", categoria: "oleo", horario: "Qui 17h-22h", telefone: "(19) 3403-1100", avaliacao: 4.2, icone: "🫒", tipo: "Óleo", lat: -22.7262, lng: -47.6471, materiais: ["Óleo de Cozinha"] },
+            // Pontos de Vidros
+            { id: 28, nome: "Coopervidros", endereco: "R. Treze de Maio, 300", categoria: "vidros", horario: "Seg-Sex 8h-17h", telefone: "(19) 3421-1234", avaliacao: 4.2, icone: "🥃", tipo: "Vidros", lat: -22.7325, lng: -47.6428, materiais: ["Vidro"] },
+            { id: 29, nome: "Recicla Vidros", endereco: "Av. Rio Claro, 450", categoria: "vidros", horario: "Seg-Sex 8h-16h", telefone: "(19) 3434-5678", avaliacao: 4.3, icone: "🥃", tipo: "Vidros", lat: -22.7189, lng: -47.6549, materiais: ["Vidro"] },
+            { id: 30, nome: "Vidrocenter", endereco: "R. do Vergueiro, 600", categoria: "vidros", horario: "Seg-Sex 8h-18h", telefone: "(19) 3422-3344", avaliacao: 4.4, icone: "🥃", tipo: "Vidros", lat: -22.7301, lng: -47.6512, materiais: ["Vidro"] },
+            // Pontos de Papel/Papelão
+            { id: 31, nome: "Cooperativa Recicla", endereco: "R. dos Operários, 200", categoria: "papel", horario: "Seg-Sex 8h-16h", telefone: "(19) 3422-3344", avaliacao: 4.4, icone: "📄", tipo: "Papel", lat: -22.7159, lng: -47.6498, materiais: ["Papel", "Papelão"] },
+            { id: 32, nome: "Papelão Recicla", endereco: "Av. Independência, 1800", categoria: "papel", horario: "Seg-Sex 8h-17h", telefone: "(19) 3433-4455", avaliacao: 4.2, icone: "📄", tipo: "Papel", lat: -22.7201, lng: -47.6392, materiais: ["Papel", "Papelão"] },
+            { id: 33, nome: "Recicla Papel", endereco: "R. do Porto, 567", categoria: "papel", horario: "Seg-Sex 8h-16h", telefone: "(19) 3423-4567", avaliacao: 4.3, icone: "📄", tipo: "Papel", lat: -22.7247, lng: -47.6514, materiais: ["Papel", "Papelão"] },
+            { id: 34, nome: "Gráficas Unidas", endereco: "Av. Rio Claro, 300", categoria: "papel", horario: "Seg-Sex 8h-18h", telefone: "(19) 3423-4567", avaliacao: 4.3, icone: "📄", tipo: "Papel", lat: -22.7182, lng: -47.6545, materiais: ["Papel", "Papelão"] },
+            // Pontos de Roupas
+            { id: 35, nome: "Brechó Solidário", endereco: "R. Governador, 400", categoria: "roupas", horario: "Seg-Sex 9h-17h", telefone: "(19) 3421-4321", avaliacao: 4.5, icone: "👕", tipo: "Roupas", lat: -22.7292, lng: -47.6487, materiais: ["Roupas", "Calçados"] },
+            { id: 36, nome: "Casa da Fraternidade", endereco: "R. do Vergueiro, 200", categoria: "roupas", horario: "Seg-Sex 8h-16h", telefone: "(19) 3422-1234", avaliacao: 4.7, icone: "👕", tipo: "Roupas", lat: -22.7311, lng: -47.6505, materiais: ["Roupas"] },
+            { id: 37, nome: "Sesc", endereco: "R. Ipiranga, 155", categoria: "roupas", horario: "Seg-Sex 9h-21h", telefone: "(19) 3437-9292", avaliacao: 4.6, icone: "👕", tipo: "Roupas", lat: -22.7251, lng: -47.6465, materiais: ["Roupas"] },
+            { id: 38, nome: "Senac", endereco: "R. Santa Cruz, 1145", categoria: "roupas", horario: "Seg-Sex 8h-17h", telefone: "(19) 3412-3000", avaliacao: 4.5, icone: "👕", tipo: "Roupas", lat: -22.7274, lng: -47.6443, materiais: ["Roupas"] }
         ];
 
         // ===== FUNÇÃO QUE GERA O RANKING COM OS USUÁRIOS REAIS DA PLANILHA =====
@@ -2137,7 +2399,7 @@
                 case 'ranking': renderRanking(container); break;
                 case 'eventos': renderEventos(container); break;
                 case 'pontos': renderPontos(container); break;
-                default: renderInicio(container);
+                default: renderPontos(container);
             }
         }
 
@@ -2341,28 +2603,256 @@
         }
 
         function renderEventos(container) {
-            let html = '<div class="app-tab-content active"><h1 class="titulo-secao">📅 Eventos</h1><div class="card-grid">';
+            let html = '<div class="app-tab-content active"><h1 class="titulo-secao">📅 Eventos Sustentáveis 2026</h1><div class="card-grid">';
             eventos.forEach(e => {
                 const inscrito = inscricoesUsuario.includes(e.id);
-                html += `<div class="card-moderno"><h3>${e.titulo}</h3><p><i class="fas fa-calendar"></i> ${e.data} - ${e.local}</p><span class="badge badge-success">+${e.pontos} pts</span>${!inscrito ? `<button class="btn-auth" style="margin-top:15px" onclick="inscreverEvento(${e.id})">📝 Inscrever-se</button>` : '<span class="badge badge-info">✅ Inscrito</span>'}</div>`;
+                html += `<div class="card-moderno"><h3>${e.titulo}</h3><p><i class="fas fa-calendar"></i> ${e.data} - ${e.hora}</p><p><i class="fas fa-map-marker-alt"></i> ${e.local}</p><p style="font-size:12px;color:#8b4513">${e.descricao.substring(0,80)}...</p><span class="badge badge-success">+${e.pontos} pts</span><span class="badge badge-info">${e.vagas - e.inscritos} vagas</span>${!inscrito ? `<button class="btn-auth" style="margin-top:15px" onclick="inscreverEvento(${e.id})">📝 Inscrever-se</button>` : '<span class="badge badge-success" style="margin-top:15px;display:inline-block;">✅ Inscrito</span>'}</div>`;
             });
             html += '</div></div>';
             container.innerHTML = html;
         }
 
         function renderPontos(container) {
-            container.innerHTML = `<div class="app-tab-content active"><h1 class="titulo-secao">📍 Pontos de Coleta</h1><div class="mapa-container"><div id="mapaPontos"></div></div></div>`;
-            setTimeout(() => inicializarMapa(), 100);
+            // Conta estatísticas dos pontos
+            const totalPontos = pontosColeta.length;
+            const pontosPorTipo = {
+                'Ecoponto': pontosColeta.filter(p => p.tipo === 'Ecoponto').length,
+                'Pilhas': pontosColeta.filter(p => p.tipo === 'Pilhas').length,
+                'Eletrônicos': pontosColeta.filter(p => p.tipo === 'Eletrônicos').length,
+                'Óleo': pontosColeta.filter(p => p.tipo === 'Óleo').length,
+                'Vidros': pontosColeta.filter(p => p.tipo === 'Vidros').length,
+                'Papel': pontosColeta.filter(p => p.tipo === 'Papel').length,
+                'Roupas': pontosColeta.filter(p => p.tipo === 'Roupas').length
+            };
+            
+            // Gera HTML dos filtros e cards
+            let html = `
+                <div class="app-tab-content active">
+                    <h1 class="titulo-secao">📍 Pontos de Coleta</h1>
+                    
+                    <!-- Estatísticas -->
+                    <div class="pontos-stats">
+                        <div class="ponto-stat-card">
+                            <div class="ponto-stat-icon">🗑️</div>
+                            <div class="ponto-stat-number">${totalPontos}</div>
+                            <div class="ponto-stat-label">Pontos de Coleta</div>
+                        </div>
+                        <div class="ponto-stat-card">
+                            <div class="ponto-stat-icon">🏢</div>
+                            <div class="ponto-stat-number">${pontosPorTipo.Ecoponto}</div>
+                            <div class="ponto-stat-label">Ecopontos</div>
+                        </div>
+                        <div class="ponto-stat-card">
+                            <div class="ponto-stat-icon">🔋</div>
+                            <div class="ponto-stat-number">${pontosPorTipo.Pilhas}</div>
+                            <div class="ponto-stat-label">Pontos de Pilhas</div>
+                        </div>
+                        <div class="ponto-stat-card">
+                            <div class="ponto-stat-icon">💻</div>
+                            <div class="ponto-stat-number">${pontosPorTipo.Eletrônicos}</div>
+                            <div class="ponto-stat-label">Eletrônicos</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Mapa -->
+                    <div class="mapa-container">
+                        <div id="mapaPontos"></div>
+                    </div>
+                    
+                    <!-- Filtros -->
+                    <div class="pontos-filters">
+                        <div class="filter-row">
+                            <div class="filter-group">
+                                <label><i class="fas fa-search"></i> Buscar</label>
+                                <input type="text" id="searchPonto" placeholder="Nome ou endereço..." onkeyup="filterPontos()">
+                            </div>
+                            <div class="filter-group">
+                                <label><i class="fas fa-filter"></i> Tipo de Ponto</label>
+                                <select id="tipoPonto" onchange="filterPontos()">
+                                    <option value="todos">Todos os tipos</option>
+                                    <option value="Ecoponto">Ecopontos</option>
+                                    <option value="Pilhas">Pilhas e Baterias</option>
+                                    <option value="Eletrônicos">Eletrônicos</option>
+                                    <option value="Óleo">Óleo de Cozinha</option>
+                                    <option value="Vidros">Vidros</option>
+                                    <option value="Papel">Papel/Papelão</option>
+                                    <option value="Roupas">Roupas</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label><i class="fas fa-star"></i> Avaliação</label>
+                                <select id="avaliacaoPonto" onchange="filterPontos()">
+                                    <option value="todos">Todas</option>
+                                    <option value="4.5">4.5+ estrelas</option>
+                                    <option value="4.0">4.0+ estrelas</option>
+                                    <option value="3.5">3.5+ estrelas</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Lista de Pontos -->
+                    <div id="pontosLista" class="card-grid"></div>
+                </div>
+            `;
+            container.innerHTML = html;
+            
+            // Inicializa o mapa e a lista
+            setTimeout(() => {
+                inicializarMapa();
+                renderPontosLista();
+            }, 100);
+        }
+        
+        function renderPontosLista() {
+            const searchTerm = document.getElementById('searchPonto')?.value.toLowerCase() || '';
+            const tipoFilter = document.getElementById('tipoPonto')?.value || 'todos';
+            const avaliacaoFilter = parseFloat(document.getElementById('avaliacaoPonto')?.value) || 0;
+            
+            let filtered = [...pontosColeta];
+            
+            if (searchTerm) {
+                filtered = filtered.filter(p => 
+                    p.nome.toLowerCase().includes(searchTerm) || 
+                    p.endereco.toLowerCase().includes(searchTerm) ||
+                    p.materiais.some(m => m.toLowerCase().includes(searchTerm))
+                );
+            }
+            
+            if (tipoFilter !== 'todos') {
+                filtered = filtered.filter(p => p.tipo === tipoFilter);
+            }
+            
+            if (avaliacaoFilter > 0) {
+                filtered = filtered.filter(p => p.avaliacao >= avaliacaoFilter);
+            }
+            
+            const container = document.getElementById('pontosLista');
+            if (!container) return;
+            
+            if (filtered.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:40px;"><i class="fas fa-search" style="font-size:48px;color:#8b4513"></i><h3 style="margin-top:15px;">Nenhum ponto encontrado</h3><p>Tente outros filtros</p></div>';
+                return;
+            }
+            
+            let html = '';
+            filtered.forEach(ponto => {
+                // Determina classe do badge de material
+                let materialClass = '';
+                if (ponto.tipo === 'Eletrônicos') materialClass = 'eletronicos';
+                else if (ponto.tipo === 'Pilhas') materialClass = 'pilhas';
+                else if (ponto.tipo === 'Óleo') materialClass = 'oleo';
+                else if (ponto.tipo === 'Ecoponto') materialClass = 'geral';
+                
+                // Gera estrelas de avaliação
+                const stars = '★'.repeat(Math.floor(ponto.avaliacao)) + '☆'.repeat(5 - Math.floor(ponto.avaliacao));
+                
+                html += `
+                    <div class="ponto-card-premium">
+                        <div class="ponto-card-header">
+                            <div class="ponto-icon">${ponto.icone}</div>
+                            <div class="ponto-title">
+                                <h3>${ponto.nome}</h3>
+                                <p>${ponto.endereco}</p>
+                            </div>
+                        </div>
+                        <div class="ponto-card-body">
+                            <div class="ponto-info-row">
+                                <span class="ponto-info-label">📅 Horário:</span>
+                                <span class="ponto-info-value">${ponto.horario}</span>
+                            </div>
+                            <div class="ponto-info-row">
+                                <span class="ponto-info-label">📞 Telefone:</span>
+                                <span class="ponto-info-value">${ponto.telefone}</span>
+                            </div>
+                            <div class="ponto-info-row">
+                                <span class="ponto-info-label">♻️ Materiais:</span>
+                                <div class="ponto-materiais">
+                                    ${ponto.materiais.map(m => `<span class="material-badge ${materialClass}">${m}</span>`).join('')}
+                                </div>
+                            </div>
+                            <div class="ponto-rating">
+                                <span class="stars">${stars}</span>
+                                <span class="rating-value">${ponto.avaliacao}</span>
+                            </div>
+                        </div>
+                        <div class="ponto-card-footer">
+                            <button class="btn-route" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${ponto.lat},${ponto.lng}', '_blank')">
+                                <i class="fas fa-directions"></i> Como Chegar
+                            </button>
+                            <button class="btn-details" onclick="alert('${ponto.nome}\\n\\nEndereço: ${ponto.endereco}\\nHorário: ${ponto.horario}\\nMateriais: ${ponto.materiais.join(', ')}\\nAvaliação: ${ponto.avaliacao}★')">
+                                <i class="fas fa-info-circle"></i> Detalhes
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+        
+        function filterPontos() {
+            renderPontosLista();
+            atualizarMapaFiltrado();
+        }
+        
+        function atualizarMapaFiltrado() {
+            const searchTerm = document.getElementById('searchPonto')?.value.toLowerCase() || '';
+            const tipoFilter = document.getElementById('tipoPonto')?.value || 'todos';
+            const avaliacaoFilter = parseFloat(document.getElementById('avaliacaoPonto')?.value) || 0;
+            
+            let filtered = [...pontosColeta];
+            if (searchTerm) filtered = filtered.filter(p => p.nome.toLowerCase().includes(searchTerm) || p.endereco.toLowerCase().includes(searchTerm));
+            if (tipoFilter !== 'todos') filtered = filtered.filter(p => p.tipo === tipoFilter);
+            if (avaliacaoFilter > 0) filtered = filtered.filter(p => p.avaliacao >= avaliacaoFilter);
+            
+            if (mapaPontos) {
+                // Remove markers existentes                pontosMarkers.forEach(marker => marker.remove());
+                pontosMarkers = [];
+                
+                // Adiciona novos markers
+                filtered.forEach(ponto => {
+                    const marker = L.marker([ponto.lat, ponto.lng]).bindPopup(`
+                        <b>${ponto.nome}</b><br>
+                        ${ponto.endereco}<br>
+                        <i class="fas fa-clock"></i> ${ponto.horario}<br>
+                        <i class="fas fa-phone"></i> ${ponto.telefone}<br>
+                        <i class="fas fa-star" style="color:#ffc107"></i> ${ponto.avaliacao}
+                    `);
+                    marker.addTo(mapaPontos);
+                    pontosMarkers.push(marker);
+                });
+                
+                if (filtered.length > 0) {
+                    const bounds = L.latLngBounds(filtered.map(p => [p.lat, p.lng]));
+                    mapaPontos.fitBounds(bounds);
+                }
+            }
         }
 
         function inicializarMapa() {
-            if (mapaPontos) mapaPontos.remove();
+            if (mapaPontos) {
+                mapaPontos.remove();
+                pontosMarkers = [];
+            }
             const mapaDiv = document.getElementById('mapaPontos');
             if (!mapaDiv) return;
+            
             mapaPontos = L.map('mapaPontos').setView([-22.7253, -47.6492], 13);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(mapaPontos);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+            }).addTo(mapaPontos);
+            
+            // Adiciona todos os pontos ao mapa
             pontosColeta.forEach(p => {
-                L.marker([p.lat, p.lng]).bindPopup(`<b>${p.nome}</b><br>${p.endereco}`).addTo(mapaPontos);
+                const marker = L.marker([p.lat, p.lng]).bindPopup(`
+                    <b>${p.nome}</b><br>
+                    ${p.endereco}<br>
+                    <i class="fas fa-clock"></i> ${p.horario}<br>
+                    <i class="fas fa-phone"></i> ${p.telefone}<br>
+                    <i class="fas fa-star" style="color:#ffc107"></i> ${p.avaliacao}
+                `);
+                marker.addTo(mapaPontos);
+                pontosMarkers.push(marker);
             });
         }
 
@@ -2519,6 +3009,8 @@
         window.abrirPoliticaPrivacidade = abrirPoliticaPrivacidade;
         window.abrirTermosDeUso = abrirTermosDeUso;
         window.mostrarDetalheConquista = mostrarDetalheConquista;
+        window.filterPontos = filterPontos;
+        window.renderPontosLista = renderPontosLista;
     </script>
 </body>
 </html>
